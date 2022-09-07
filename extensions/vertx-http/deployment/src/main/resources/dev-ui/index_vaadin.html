@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Dev UI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="Quarkus Dev UI">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <script type="module">  
+      import 'https://unpkg.com/@vaadin/vaadin-lumo-styles@23.1.6/all-imports.js?module';
+      import 'https://unpkg.com/@vaadin/component-base@23.1.6/index.js?module';
+      import 'https://unpkg.com/@vaadin/icons@23.1.6/vaadin-iconset.js?module';
+      import 'https://unpkg.com/@vaadin/app-layout@23.1.6/vaadin-app-layout.js?module';
+      import 'https://unpkg.com/@vaadin/app-layout@23.1.6/vaadin-drawer-toggle.js?module';
+      import 'https://unpkg.com/@vaadin/vertical-layout@23.1.6/vaadin-vertical-layout.js?module';
+      import 'https://unpkg.com/@vaadin/horizontal-layout@23.1.6/vaadin-horizontal-layout.js?module';
+      import 'https://unpkg.com/@vaadin/tabs@23.1.6/vaadin-tabs.js?module';
+      import 'https://unpkg.com/@vaadin/tabs@23.1.6/vaadin-tab.js?module';
+      import 'https://unpkg.com/@vaadin/grid@23.1.6/vaadin-grid.js?module';
+      import 'https://unpkg.com/@vaadin/grid@23.1.6/vaadin-grid-selection-column.js?module';
+      import 'https://unpkg.com/@vaadin/grid@23.1.6/vaadin-grid-sort-column.js?module';
+
+    </script>
+  </head>
+  <body>
+
+    <vaadin-app-layout primary-section="drawer">
+      <h1 slot="drawer">MyApp</h1>
+      <vaadin-tabs slot="drawer" selected="1" orientation="vertical">
+        <vaadin-tab>
+          <a tabindex="-1">
+            <vaadin-icon icon="vaadin:dashboard"></vaadin-icon>
+            <span>Dashboard</span>
+          </a>
+        </vaadin-tab>
+        <vaadin-tab>
+          <a tabindex="-1">
+            <vaadin-icon icon="vaadin:cart"></vaadin-icon>
+            <span>Orders</span>
+          </a>
+        </vaadin-tab>
+      </vaadin-tabs>
+      <vaadin-vertical-layout slot="navbar">
+        <vaadin-horizontal-layout style="align-items: center;">
+          <vaadin-drawer-toggle></vaadin-drawer-toggle>
+          <h2>Orders</h2>
+        </vaadin-horizontal-layout>
+        <vaadin-tabs>
+          <vaadin-tab>
+            <a tabindex="-1">All</a>
+          </vaadin-tab>
+          <vaadin-tab>
+            <a tabindex="-1">Open</a>
+          </vaadin-tab>
+        </vaadin-tabs>
+      </vaadin-vertical-layout>
+    </vaadin-app-layout>
+
+
+    
+  </body>
+</html>

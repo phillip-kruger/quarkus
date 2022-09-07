@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="Quarkus Dev UI">
+    
+    <title>Dev UI</title>
+    
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="https://unpkg.com/@kor-ui/kor@1.11.3/kor-styles.css">
+    
+    <style>
+      html, body, kor-page {
+        --header-1: 20px/28px 'Arial';
+      }
+
+      .mainTabPage {
+        overflow-y: scroll;
+        overflow-x: hidden;
+      }
+    </style>
+
+  </head>
+  <body>
+    <kor-page id="mainPage" theme="light" flat>
+      
+      <kor-app-bar id="mainAppBar" slot="top" label="Dev UI" logo="img/light_banner.svg">
+        <kor-text size="body-2" slot="functions"><qwc-version-info></qwc-version-info></kor-text>
+        <kor-icon id="dayNightSwitch" slot="functions" icon="brightness_medium" button></kor-icon>
+      </kor-app-bar>
+
+      <kor-pane id="mainTab" slot="left" size="l">
+        <kor-tabs orientation="vertical">
+          <kor-tab-item class="mainTabItem" label="Extensions" icon="extension" active data-page="extensionsPage"></kor-tab-item>
+          <kor-tab-item class="mainTabItem" label="Configuration" icon="tune" data-page="configurationPage"></kor-tab-item>
+          <kor-tab-item class="mainTabItem" label="Continuous Testing" icon="science" data-page="continuousTestingPage"></kor-tab-item>
+          <kor-tab-item class="mainTabItem" label="Dev services" icon="auto_fix_high" data-page="devServicesPage"></kor-tab-item>
+          <kor-tab-item class="mainTabItem" label="Build steps" icon="build" data-page="buildStepsPage"></kor-tab-item>
+        </kor-tabs>
+        
+        <kor-icon id="tabToggleSizeButton" icon="chevron_left" slot="footer" button></kor-icon>  
+      </kor-pane>
+      
+      <kor-notifications id="notifications"></kor-notifications>
+
+      <kor-page id="extensionsPage" flex-direction="column" class="mainTabPage" padding="1px" flat>
+        <qwc-extensions active></qwc-extensions>
+        <kor-divider spacing="m" orientation="horizontal"></kor-divider>
+        <qwc-extensions></qwc-extensions>
+      </kor-page>
+      
+      <kor-page id="configurationPage" flex-direction="column" class="mainTabPage" style="display:none;" padding="1px" flat>
+        <kor-text>TODO: Configuration</kor-text>
+      </kor-page>
+
+      <kor-page id="continuousTestingPage" flex-direction="column" class="mainTabPage" style="display:none;" padding="1px" flat>
+        <kor-text>TODO: Continuous Testing</kor-text>
+      </kor-page>
+
+      <kor-page id="devServicesPage" flex-direction="column" class="mainTabPage" style="display:none;" padding="1px" flat>
+        <kor-text>TODO: Dev Services</kor-text>
+      </kor-page>
+      
+      <kor-page id="buildStepsPage" flex-direction="column" class="mainTabPage" style="display:none;" padding="1px" flat>
+        <kor-text>TODO: Build Step</kor-text>
+      </kor-page>
+      
+      <!-- TODO: Get more pages dynamically ?-->
+
+      <kor-nav-bar id="mainBottomDrawer" slot="bottom">
+        <kor-icon id="mainBottomDrawerButton" icon="expand_less" button ></kor-icon> 
+        <kor-text id="mainBottomDrawerText" style="cursor: pointer;">Open</kor-text>
+      </kor-nav-bar>
+
+      <kor-page id="mainBottomDrawerContent" slot="bottom" style="display:none;" padding="0px" flat>
+        <kor-text>TODO: Log file</kor-text>
+      </kor-page>
+      
+    </kor-page>  
+
+    <script type="module" src="https://unpkg.com/@kor-ui/kor@1.11.3/index.js?module"></script>
+    <script type="module" src="./qwc/qwc-version-info.js"></script>
+    <script type="module" src="./qwc/qwc-extensions.js"></script>
+    <script>  
+      addListeners();
+      restoreStateFromLocalStorage();
+
+      function addListeners(){
+        // Notification
+        var observer = new MutationObserver(function (mutations) {
+          for (const mutation of mutations) {
+            if (mutation.type === 'attributes') {
+              var elementToRemove = mutation.target;
+              elementToRemove.parentNode.removeChild(elementToRemove);
+            }
+          }
+        });
+
+        document.addEventListener('notification', (e) => { 
+          var notification = e.detail;
+          const notifications = document.getElementById('notifications');
+          
+          var korNotificationItem = document.createElement("kor-notification-item");
+          korNotificationItem.setAttribute("icon", notification.type);
+          korNotificationItem.setAttribute("label", notification.title);
+          korNotificationItem.setAttribute("visible", '');
+
+          observer.observe(korNotificationItem, { attributes: true, childList: false, subtree: false, attributeFilter : ["visible"]});
+
+          var korTextMessage = document.createElement("kor-text");
+          korTextMessage.setAttribute("size", "body-1");
+          korTextMessage.innerHTML = `${notification.message}`;
+          korNotificationItem.appendChild(korTextMessage);
+
+          var korTextTimestamp = document.createElement("kor-text");
+          korTextTimestamp.setAttribute("size", "body-2");
+          korTextTimestamp.setAttribute("slot", "footer");
+          korTextTimestamp.innerHTML = `${notification.time}`;
+          korNotificationItem.appendChild(korTextTimestamp);
+
+          notifications.appendChild(korNotificationItem);
+        }, false);
+
+        // Day night switch
+        const dayNightSwitch = document.getElementById('dayNightSwitch');
+        dayNightSwitch.addEventListener("click", switchMode);
+        
+        // Tabs / pages menu items
+        const tabItems = document.querySelectorAll('[class="mainTabItem"]');
+        tabItems.forEach((tabItem) => {
+          tabItem.addEventListener("click", function() {
+            showPage(tabItem.dataset.page);
+          }); 
+        });
+      
+        // Tab large / small toggle
+        const tabToggleSizeButton = document.getElementById('tabToggleSizeButton');
+        tabToggleSizeButton.addEventListener("click", toggleTabSize);
+        
+        // Extension card actions
+        const extensionItems = document.querySelectorAll('[class="extensionAction"]');
+        extensionItems.forEach((extensionItem) => {
+          let extensionTitle = extensionItem.parentElement.getAttribute("label");
+          extensionItem.addEventListener("click", function() {
+            doExtensionAction(extensionItem.dataset.action, extensionTitle);
+          }); 
+        });
+
+        // Bottom drawer open / close
+        const mainBottomDrawerButton = document.getElementById('mainBottomDrawerButton');
+        mainBottomDrawerButton.addEventListener("click", toggleBottomDrawer);
+        const mainBottomDrawerText = document.getElementById('mainBottomDrawerText');
+        mainBottomDrawerText.addEventListener("click", toggleBottomDrawer);
+
+        // Log file drawer
+        const mainBottomDrawer = document.getElementById('mainBottomDrawer');
+        mainBottomDrawer.addEventListener("mousedown", function(e){
+            m_pos = e.y;
+            document.addEventListener("mousemove", resizeMainBottomDrawer, false);   
+        }, false);
+
+        document.addEventListener("mouseup", function(){
+            document.removeEventListener("mousemove", resizeMainBottomDrawer, false);
+            saveMainBottomDrawerHeight();
+        }, false);   
+      }
+
+      function restoreStateFromLocalStorage(){
+        const storedDayNightMode = localStorage.getItem('dayNightMode');
+        if(storedDayNightMode){
+          changeToMode(storedDayNightMode);
+        }
+
+        const storedMainTabSize = localStorage.getItem('mainTabSize');
+        if(storedMainTabSize){
+          changeTabSize(storedMainTabSize);
+        }
+
+        const storedMainBottomDrawerState = localStorage.getItem('mainBottomDrawerState');
+        if(storedMainBottomDrawerState && storedMainBottomDrawerState === "open"){
+          openBottom();
+        }
+      }
+
+      function switchMode(){
+        const mainPage = document.getElementById('mainPage');
+        let currentValue = mainPage.getAttribute("theme");
+        if(currentValue === "dark"){
+          changeToMode("light");
+        }else {
+          changeToMode("dark");
+        }
+      }
+      
+      function changeToMode(mode){
+        const mainPage = document.getElementById('mainPage');  
+        mainPage.setAttribute("theme", mode);
+
+        const mainAppBar = document.getElementById('mainAppBar');
+        mainAppBar.setAttribute("logo", "img/" + mode + "_banner.svg");
+
+        localStorage.setItem('dayNightMode', mode);
+      }
+
+      function showPage(pageName){
+        const pages = document.querySelectorAll('[class="mainTabPage"]');
+        pages.forEach((page) => {
+          page.style.display = "none";
+        });
+        const pageToShow = document.getElementById(pageName);
+        pageToShow.removeAttribute("style");
+      }
+
+      function doExtensionAction(action, extension){
+        console.log(action + " " + extension);
+      }
+
+      function toggleBottomDrawer(){
+        const mainBottomDrawerState = localStorage.getItem('mainBottomDrawerState');
+        if(mainBottomDrawerState && mainBottomDrawerState === 'open'){
+          closeBottom();
+        }else{
+          openBottom();
+        }
+      }
+
+      function openBottom(){
+        const mainBottomDrawer = document.getElementById('mainBottomDrawer');
+        mainBottomDrawer.style.cursor = "row-resize";
+
+        const mainBottomDrawerButton = document.getElementById('mainBottomDrawerButton');
+        mainBottomDrawerButton.setAttribute("icon","expand_more");
+        
+        const mainBottomDrawerButtonText = mainBottomDrawerButton.nextElementSibling;
+        mainBottomDrawerButtonText.innerHTML = "Close";
+
+        const mainBottomDrawerContent = document.getElementById('mainBottomDrawerContent');
+        mainBottomDrawerContent.removeAttribute("style");
+
+        const storedMainBottomDrawerHeight = localStorage.getItem('mainBottomDrawerHeight');
+        if(storedMainBottomDrawerHeight){
+          mainBottomDrawerContent.style.height = storedMainBottomDrawerHeight;
+        }else{
+          mainBottomDrawerContent.style.height = "300px";
+        }
+
+        localStorage.setItem('mainBottomDrawerState', "open");
+      }
+
+      function closeBottom(){
+        const mainBottomDrawer = document.getElementById('mainBottomDrawer');
+        mainBottomDrawer.removeAttribute("style");
+
+        const mainBottomDrawerButton = document.getElementById('mainBottomDrawerButton');
+        mainBottomDrawerButton.setAttribute("icon","expand_less");
+        
+        const mainBottomDrawerButtonText = mainBottomDrawerButton.nextElementSibling;
+        mainBottomDrawerButtonText.innerHTML = "Open";
+
+        const mainBottomDrawerContent = document.getElementById('mainBottomDrawerContent');
+        mainBottomDrawerContent.removeAttribute("style");
+        mainBottomDrawerContent.style.display = "none";
+
+        localStorage.setItem('mainBottomDrawerState', "close");
+      }
+
+      function resizeMainBottomDrawer(e){
+        const dx = m_pos - e.y;
+        m_pos = e.y;
+        const mainBottomDrawerContent = document.getElementById('mainBottomDrawerContent');
+        const panel = document.getElementById("devUiFooter");
+        
+        if(mainBottomDrawerContent.style.height !== "unset"){
+          let height = parseInt(getComputedStyle(mainBottomDrawerContent, '').height) + dx;
+          if(height<50){
+            closeBottom();
+          }else{
+            height = "" + height;
+            if(!height.endsWith("vh") && !height.endsWith("px")){
+              height = height + "px";
+            }
+            mainBottomDrawerContent.style.height = height;
+          }
+        }
+      }
+
+      function saveMainBottomDrawerHeight(){
+        const mainBottomDrawerContent = document.getElementById('mainBottomDrawerContent');
+        
+        const currentDisplay = window.getComputedStyle(mainBottomDrawerContent).display;
+        
+        if(currentDisplay !== "none"){
+          const currentHeight = window.getComputedStyle(mainBottomDrawerContent).height;
+          localStorage.setItem('mainBottomDrawerHeight', currentHeight);
+        }
+      }
+
+      function toggleTabSize(){
+        const mainTab = document.getElementById('mainTab');
+        let currentSize = mainTab.getAttribute("size");
+
+        if(currentSize === "l"){
+          changeTabSize("s");
+        }else{
+          changeTabSize("l");
+        }
+      }
+
+      function changeTabSize(size){
+        const mainTab = document.getElementById('mainTab');
+        mainTab.setAttribute("size",size);
+        const tabToggleSizeButton = document.getElementById('tabToggleSizeButton');
+        if(size === "l"){
+          tabToggleSizeButton.setAttribute("icon","chevron_left");
+          const tabItems = document.querySelectorAll('[class="mainTabItem"]');
+          tabItems.forEach((tabItem) => {
+            tabItem.removeAttribute("title");
+          });
+        }else{
+          tabToggleSizeButton.setAttribute("icon","chevron_right");
+          const tabItems = document.querySelectorAll('[class="mainTabItem"]');
+          tabItems.forEach((tabItem) => {
+            let label = tabItem.getAttribute("label");
+            tabItem.setAttribute("title", label);
+          });
+
+        }
+        localStorage.setItem('mainTabSize', size);
+      }
+
+    </script>
+
+  </body>
+</html>
