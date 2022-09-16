@@ -14,6 +14,7 @@ import io.quarkus.dev.console.DevConsoleManager;
 import io.quarkus.dev.testing.ContinuousTestingSharedStateManager;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
+import io.quarkus.webjar.runtime.FileSystemStaticHandler;
 import io.smallrye.config.SmallRyeConfig;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;

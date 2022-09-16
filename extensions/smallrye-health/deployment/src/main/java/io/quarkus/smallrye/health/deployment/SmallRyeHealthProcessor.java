@@ -1,7 +1,5 @@
 package io.quarkus.smallrye.health.deployment;
 
-import static io.quarkus.arc.processor.Annotations.getAnnotations;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,9 +64,9 @@ import io.quarkus.smallrye.health.runtime.SmallRyeWellnessHandler;
 import io.quarkus.smallrye.openapi.deployment.spi.AddToOpenAPIDefinitionBuildItem;
 import io.quarkus.vertx.http.deployment.NonApplicationRootPathBuildItem;
 import io.quarkus.vertx.http.deployment.RouteBuildItem;
-import io.quarkus.vertx.http.deployment.webjar.WebJarBuildItem;
-import io.quarkus.vertx.http.deployment.webjar.WebJarResourcesFilter;
-import io.quarkus.vertx.http.deployment.webjar.WebJarResultsBuildItem;
+import io.quarkus.webjar.deployment.WebJarBuildItem;
+import io.quarkus.webjar.deployment.WebJarResourcesFilter;
+import io.quarkus.webjar.deployment.WebJarResultsBuildItem;
 import io.smallrye.health.SmallRyeHealthReporter;
 import io.smallrye.health.api.HealthGroup;
 import io.smallrye.health.api.HealthGroups;

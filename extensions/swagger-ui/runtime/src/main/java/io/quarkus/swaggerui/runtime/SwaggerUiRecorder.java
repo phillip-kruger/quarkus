@@ -4,9 +4,9 @@ import java.util.List;
 
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
-import io.quarkus.vertx.http.runtime.devmode.FileSystemStaticHandler;
-import io.quarkus.vertx.http.runtime.webjar.WebJarNotFoundHandler;
-import io.quarkus.vertx.http.runtime.webjar.WebJarStaticHandler;
+import io.quarkus.webjar.runtime.FileSystemStaticHandler;
+import io.quarkus.webjar.runtime.WebJarNotFoundHandler;
+import io.quarkus.webjar.runtime.WebJarStaticHandler;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 

@@ -33,6 +33,9 @@
         <module>jsonb</module>
         <module>hal</module>
 
+        <!-- Dev UI -->
+        <module>dev-ui</module>
+        
         <!-- HTTP -->
         <module>vertx-http</module>
         <module>undertow</module>
@@ -196,7 +199,7 @@
         <module>grpc-common</module>
 
         <module>awt</module>
-
+        <module>webjar</module>
     </modules>
 
     <build>
