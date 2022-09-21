@@ -1,4 +1,4 @@
-import { Router } from 'https://unpkg.com/@vaadin/router@1.7.4/dist/vaadin-router.min.js?module';
+import { Router } from '@vaadin/router';
 
 export class RouterController {
   static router = new Router(document.querySelector('qwc-page'));

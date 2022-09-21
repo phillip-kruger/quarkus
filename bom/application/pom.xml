@@ -1772,7 +1772,6 @@
                 <artifactId>quarkus-dev-ui-spi</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            
             <dependency>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-vertx-http</artifactId>

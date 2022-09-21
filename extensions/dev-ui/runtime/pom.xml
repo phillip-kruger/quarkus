@@ -13,6 +13,13 @@
     <name>Quarkus - Dev UI - Runtime</name>
     <description>Dev UI</description>
     
+    <properties>
+        <lit.version>2.3.1</lit.version>
+        <vaadin.version>23.2.1</vaadin.version>
+        <vaadin-router.version>1.7.4</vaadin-router.version>
+        <polymer.version>3.5.1</polymer.version>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -46,31 +53,119 @@
             <artifactId>snakeyaml</artifactId>
             <scope>provided</scope>
         </dependency>
+        
+        <!-- UI Libs -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-webjars-locator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>lit</artifactId>
+            <version>${lit.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vaadin__router</artifactId>
+            <version>${vaadin-router.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vaadin__component-base</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vaadin__icon</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vaadin__tabs</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vaadin__item</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vaadin__vaadin-lumo-styles</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vaadin__vaadin-themable-mixin</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vaadin__vaadin-list-mixin</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>polymer__polymer</artifactId>
+            <version>${polymer.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
-    
-    <build>
-        <plugins>
-<!--            <plugin>
-                <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-extension-maven-plugin</artifactId>
-                <configuration>
-                    <capabilities>
-                        <provides>io.quarkus.devui</provides>
-                    </capabilities>
-                </configuration>
-            </plugin>-->
-<!--            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>io.quarkus</groupId>
-                            <artifactId>quarkus-extension-processor</artifactId>
-                            <version>${project.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>-->
-        </plugins>
-    </build>
 </project>

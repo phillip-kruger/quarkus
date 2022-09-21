@@ -1,9 +1,10 @@
-import { LitElement, html, css} from 'https://unpkg.com/lit@2.3.1/index.js?module';
-import { until } from 'https://unpkg.com/lit@2.3.1/directives/until.js?module';
-import { JsonRpcController } from './../controller/jsonrpc-controller.js';
-import { RouterController } from './../controller/router-controller.js';
+import { LitElement, html, css} from 'lit';
+import { until } from 'lit/directives/until.js';
 
-import 'https://unpkg.com/@vaadin/icon@23.1.6/vaadin-icon.js?module';
+import { JsonRpcController } from 'controller/jsonrpc-controller.js';
+import { RouterController } from 'controller/router-controller.js';
+
+import '@vaadin/icon';
 
 /**
  * This component represent the Dev UI left menu

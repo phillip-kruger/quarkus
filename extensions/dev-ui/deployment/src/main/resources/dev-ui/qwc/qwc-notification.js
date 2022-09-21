@@ -1,6 +1,7 @@
-import { LitElement, html, css } from 'https://unpkg.com/lit@2.3.1/index.js?module';
-import { until } from 'https://unpkg.com/lit@2.3.1/directives/until.js?module';
-import 'https://unpkg.com/@vaadin/icon@23.1.6/vaadin-icon.js?module';
+import { LitElement, html, css} from 'lit';
+import { until } from 'lit/directives/until.js';
+
+import '@vaadin/icon';
 
 /**
  * This component shows any notification events

@@ -1,6 +1,6 @@
-import { LitElement, html, css } from 'https://unpkg.com/lit@2.3.1/index.js?module';
-import 'https://unpkg.com/@vaadin/icon@23.1.6/vaadin-icon.js?module';
-import { NotificationController } from './../controller/notification-controller.js';
+import { LitElement, html, css} from 'lit';
+import { NotificationController } from 'controller/notification-controller.js';
+import '@vaadin/icon';
 import './qwc-version-info.js';
 
 /**

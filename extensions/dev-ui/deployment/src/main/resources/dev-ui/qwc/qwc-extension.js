@@ -1,5 +1,5 @@
-import {LitElement, html, css} from 'https://unpkg.com/lit@2.3.0/index.js?module';
-import 'https://unpkg.com/@vaadin/icon@23.1.6/vaadin-icon.js?module';
+import { LitElement, html, css} from 'lit';
+import '@vaadin/icon';
 
 /**
  * This component represent one extension

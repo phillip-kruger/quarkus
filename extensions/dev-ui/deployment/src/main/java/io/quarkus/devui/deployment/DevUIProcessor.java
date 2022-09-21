@@ -130,7 +130,7 @@ public class DevUIProcessor {
                             try {
                                 extension.setGuide(new URL(guide));
                             } catch (MalformedURLException mue) {
-                                log.error("Could not set Guide URL [" + guide + "]", mue);
+                                log.warn("Could not set Guide URL [" + guide + "] for exception [" + name + "]");
                             }
                         }
 

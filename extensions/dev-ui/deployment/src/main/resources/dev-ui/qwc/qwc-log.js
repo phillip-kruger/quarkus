@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'https://unpkg.com/lit@2.3.1/index.js?module';
+import { LitElement, html, css} from 'lit';
 
 /**
  * This component represent the Dev UI Log

@@ -1,4 +1,4 @@
-import 'https://unpkg.com/@vaadin/icon@23.1.6/vaadin-iconset.js?module';
+import '@vaadin/icon';
 
 const template = document.createElement('template');
 

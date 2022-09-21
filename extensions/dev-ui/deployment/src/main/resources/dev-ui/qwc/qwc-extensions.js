@@ -1,7 +1,8 @@
-import { LitElement, html, css } from 'https://unpkg.com/lit@2.3.1/index.js?module';
-import { until } from 'https://unpkg.com/lit@2.3.1/directives/until.js?module';
-import { JsonRpcController } from './../controller/jsonrpc-controller.js';
-import { RouterController } from './../controller/router-controller.js';
+import { LitElement, html, css} from 'lit';
+import { until } from 'lit/directives/until.js';
+
+import { JsonRpcController } from 'controller/jsonrpc-controller.js';
+import { RouterController } from 'controller/router-controller.js';
 import './qwc-extension.js';
 import './qwc-extension-link.js'
 
