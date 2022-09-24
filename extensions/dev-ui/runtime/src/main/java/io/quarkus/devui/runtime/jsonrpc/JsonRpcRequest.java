@@ -10,8 +10,16 @@ public class JsonRpcRequest extends JsonRpcMessage {
         return method;
     }
 
+    public boolean isMethod(String m) {
+        return this.method.equalsIgnoreCase(m);
+    }
+
     public void setMethod(String method) {
         this.method = method;
+    }
+
+    public boolean hasParams() {
+        return params != null && !params.isEmpty();
     }
 
     public Map<String, ?> getParams() {

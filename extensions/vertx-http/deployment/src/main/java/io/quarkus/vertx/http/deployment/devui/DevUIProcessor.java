@@ -17,9 +17,14 @@ import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 
 /**
- * Processor for Dev UI. Most work happen in dev-ui extension, this just create the routes as needed
+ * Processor for Dev UI
  */
 public class DevUIProcessor {
+
+    private static final String DEVUI = "dev-ui";
+    private static final String SLASH = "/";
+    private static final String SLASH_ALL = SLASH + "*";
+    private static final String JSONRPC = "json-rpc-ws";
 
     @BuildStep(onlyIf = IsDevelopment.class)
     @Record(ExecutionTime.RUNTIME_INIT)
@@ -62,11 +67,4 @@ public class DevUIProcessor {
                     nonApplicationRootPathBuildItem.routeBuilder().route(route + SLASH_ALL).handler(routerhandler).build());
         }
     }
-
-    private static final String DEVUI = "dev-ui";
-    private static final String SLASH = "/";
-    private static final String SLASH_ALL = SLASH + "*";
-    private static final String JSONRPC = "json-rpc-ws";
-
-    //private static final String DESCRIPTION = "Dev UI 2.0";
 }

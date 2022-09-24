@@ -6,8 +6,8 @@ import { JsonRpcController } from 'controller/jsonrpc-controller.js';
  * This component shows the Arc Beans
  */
 export class QwcArcBeans extends LitElement {
-  //static methodName = "getDevServices";
-  jsonRpcController = new JsonRpcController(this);
+  static methodName = "getAllBeans";
+  jsonRpcController = new JsonRpcController(this, "ArC");
 
   static styles = css`
         .todo {
@@ -19,25 +19,25 @@ export class QwcArcBeans extends LitElement {
         }`;
 
   static properties = {
-    _services: {state: true}
+    _beans: {state: true}
   };
   
   connectedCallback() {
     super.connectedCallback();
-    //this.jsonRpcController.request(QwcBeans.methodName);
+    this.jsonRpcController.request(QwcArcBeans.methodName);
   }
 
   onJsonRpcResponse(result){
-    this._services = result;
+    this._beans = result;
   }
 
   render() {
-    return html`<div class="todo">Loading ArC beans...</div>`;
+    return html`${until(this._renderJsonRpcResponse(), html`<span>Loading ArC beans...</span>`)}`;
   }
 
   _renderJsonRpcResponse(){
-    if(this._services){
-      return html`<div class="todo">${this._services}</div>`;
+    if(this._beans){
+      return html`<div class="todo">${this._beans}</div>`;
     }
   }
 

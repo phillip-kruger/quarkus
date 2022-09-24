@@ -55,10 +55,11 @@
         </dependency>
         
         <!-- UI Libs -->
-        <dependency>
+<!--        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-webjars-locator</artifactId>
-        </dependency>
+            <scope>runtime</scope>
+        </dependency>-->
         <dependency>
             <groupId>org.webjars.npm</groupId>
             <artifactId>lit</artifactId>

@@ -1,6 +1,8 @@
 package io.quarkus.devui.deployment;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -13,12 +15,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Named;
+
 import org.jboss.logging.Logger;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
+import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
+import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -26,13 +33,25 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.devui.deployment.spi.CardLink;
 import io.quarkus.devui.deployment.spi.DevUICardLinksBuildItem;
+import io.quarkus.devui.deployment.spi.DevUIJsonRPCMethodBuildItem;
 import io.quarkus.devui.runtime.DevUIRecorder;
+import io.quarkus.devui.runtime.jsonrpc.JsonRPCMethodProvider;
+import io.quarkus.devui.runtime.jsonrpc.JsonRpcRequest;
+import io.quarkus.devui.runtime.jsonrpc.JsonRpcResponse;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcRouter;
-import io.quarkus.devui.runtime.jsonrpc.handler.DevUIPlatformHandler;
+import io.quarkus.devui.runtime.jsonrpc.handler.DevUIInternalJsonRPCMethodProvider;
 import io.quarkus.devui.runtime.service.extension.Codestart;
 import io.quarkus.devui.runtime.service.extension.Extension;
 import io.quarkus.devui.runtime.service.extension.ExtensionsService;
 import io.quarkus.devui.runtime.service.extension.Link;
+import io.quarkus.gizmo.AnnotationCreator;
+import io.quarkus.gizmo.AssignableResultHandle;
+import io.quarkus.gizmo.BranchResult;
+import io.quarkus.gizmo.BytecodeCreator;
+import io.quarkus.gizmo.ClassCreator;
+import io.quarkus.gizmo.MethodCreator;
+import io.quarkus.gizmo.MethodDescriptor;
+import io.quarkus.gizmo.ResultHandle;
 import io.quarkus.maven.dependency.GACT;
 import io.quarkus.maven.dependency.GACTV;
 import io.quarkus.webjar.deployment.WebJarBuildItem;
@@ -58,7 +77,7 @@ public class DevUIProcessor {
                 .addBeanClass(JsonRpcRouter.class)
                 .setUnremovable().build());
         additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
-                .addBeanClass(DevUIPlatformHandler.class)
+                .addBeanClass(DevUIInternalJsonRPCMethodProvider.class)
                 .setUnremovable().build());
 
         additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
@@ -214,6 +233,82 @@ public class DevUIProcessor {
         }
     }
 
+    @BuildStep(onlyIf = IsDevelopment.class)
+    void jsonRPCFacade(List<DevUIJsonRPCMethodBuildItem> devUIJsonRPCMethodBuildItems,
+            BuildProducer<GeneratedBeanBuildItem> generatedBeanBuildItemBuildProducer,
+            BuildProducer<AdditionalBeanBuildItem> additionalBeans) throws NoSuchMethodException {
+
+        for (DevUIJsonRPCMethodBuildItem devUIJsonRPCMethodBuildItem : devUIJsonRPCMethodBuildItems) {
+
+            String extensionName = devUIJsonRPCMethodBuildItem.getExtensionName();
+            Class jsonRPCMethodProviderClass = devUIJsonRPCMethodBuildItem.getJsonRPCMethodProviderClass();
+            System.out.println("JSONRPC: EXTENSION NAME = " + extensionName);
+            System.out.println("JSONRPC: PROVIDER CLASS = " + jsonRPCMethodProviderClass);
+
+            String beanName = JsonRPCMethodProvider.createBeanName(extensionName);
+
+            System.out.println("JSONRPC: BEAN NAME = " + beanName);
+            String fullClassName = "io.quarkus.devui.runtime.generated." + beanName;
+            System.out.println("JSONRPC: FULL NAME = " + fullClassName);
+            // TODO: Validate the uniqueness of the method names
+
+            try (ClassCreator cc = ClassCreator.builder()
+                    .classOutput(new GeneratedBeanGizmoAdaptor(generatedBeanBuildItemBuildProducer)).className(fullClassName)
+                    .superClass(jsonRPCMethodProviderClass)
+                    .interfaces(JsonRPCMethodProvider.class)
+                    .build()) {
+                cc.addAnnotation(ApplicationScoped.class.getName());
+                AnnotationCreator namedAnnotation = cc.addAnnotation(Named.class.getName());
+                namedAnnotation.add(VALUE, beanName);
+
+                // public <T> T request(JsonRpcRequest request);
+
+//                MethodCreator requestMethod = cc.getMethodCreator(REQUEST, Object.class, JsonRpcRequest.class);
+//                ResultHandle request = requestMethod.getMethodParam(0);
+//
+//                AssignableResultHandle jsonRpcResponse = requestMethod.createVariable(JsonRpcResponse.class);
+//
+//                // if (request.isMethod("getVersionInfo")) {
+//                MethodDescriptor isMethodMethod = MethodDescriptor
+//                        .ofMethod(JsonRpcRequest.class.getMethod("isMethod", String.class));
+//
+//                AssignableResultHandle methodNameInput = requestMethod.createVariable(String.class);
+//
+//                // for
+//                ResultHandle isMethodResult = requestMethod.invokeVirtualMethod(isMethodMethod, request,
+//                        requestMethod.load("getAllBeans"));
+//                BranchResult branchResult = requestMethod.ifTrue(isMethodResult);
+//                BytecodeCreator trueBranch = branchResult.trueBranch();
+//                MethodDescriptor superMethod = MethodDescriptor.ofMethod(jsonRPCMethodProviderClass, "getAllBeans",
+//                        List.class); // TODO: Input
+//                ResultHandle resultsFromSuper = trueBranch.invokeSpecialMethod(superMethod, request);
+//                requestMethod.returnValue(resultsFromSuper);
+                //
+
+            }
+
+            additionalBeans.produce(AdditionalBeanBuildItem.builder()
+                    .addBeanClass(jsonRPCMethodProviderClass)
+                    .build());
+        }
+    }
+
+    private List<Method> getJsonRPCMethods(Class jsonRPCMethodProviderClass) {
+        List<Method> jsonRPCMethods = new ArrayList<>();
+        Method[] methods = jsonRPCMethodProviderClass.getMethods();
+        for (Method method : methods) {
+            if (Modifier.isPublic(method.getModifiers())
+                    && !Modifier.isFinal(method.getModifiers())
+                    && !Modifier.isStatic(method.getModifiers())
+                    && !Modifier.isAbstract(method.getModifiers())
+                    && !method.getDeclaringClass().equals(Object.class)) {
+
+                jsonRPCMethods.add(method);
+            }
+        }
+        return jsonRPCMethods;
+    }
+
     private GACT getGACT(String artifactKey) {
         String[] split = artifactKey.split(DOUBLE_POINT);
         return new GACT(split[0], split[1] + DASH_DEPLOYMENT, null, JAR);
@@ -279,6 +374,9 @@ public class DevUIProcessor {
     private static final String UNLISTED = "unlisted";
     private static final String CODESTART = "codestart";
     private static final String LANGUAGES = "languages";
+
+    private static final String VALUE = "value";
+    private static final String REQUEST = "request";
 
     private static final String YAML_FILE = "/META-INF/quarkus-extension.yaml";
 

@@ -10,7 +10,7 @@ export class QwcExtensionLink extends LitElement {
    .extensionLink {
       display: flex;
       flex-direction: row;
-      justify-content: flex-start;
+      justify-content: space-between;
       align-items: center;
       color: #1C3D61;
 			font-size: small;
@@ -25,6 +25,20 @@ export class QwcExtensionLink extends LitElement {
     .icon {
       padding-right: 5px;
     }
+    .iconAndName {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: center;
+      color: #1C3D61;
+    }
+    .badge {
+      color: grey;
+      text-align: center;
+      font-size: x-small;
+      border-radius: 8px;
+      padding: 2px 5px;
+    }
   `;
 
   static properties = {
@@ -37,10 +51,19 @@ export class QwcExtensionLink extends LitElement {
 
   render() {
    
+    let badge;
+
+    if (this.label) {
+      badge = html`<span class="badge">${this.label}</span>`;
+    }
+
     return html`
       <a class="extensionLink" href="${this.path}">
-        <vaadin-icon class="icon" icon="${this.iconName}"></vaadin-icon>
-        ${this.displayName}
+        <span class="iconAndName">
+          <vaadin-icon class="icon" icon="${this.iconName}"></vaadin-icon>
+          ${this.displayName} 
+        </span>
+        ${badge} 
       </a>
     `;
   }

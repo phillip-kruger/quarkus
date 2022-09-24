@@ -5,8 +5,10 @@ export class JsonRpcController {
   static webSocket;  
   
   host;
-  
-  constructor(host) {
+  name;
+
+  constructor(host, name = "Internal") {
+    this.name = name;
     (this.host = host).addController(this);
   
     if(!JsonRpcController.webSocket){
@@ -61,7 +63,7 @@ export class JsonRpcController {
 
     var message = new Object();
     message.jsonrpc = "2.0";
-    message.method  = method;
+    message.method  = this.name + "." + method;
     message.params = params;
     message.id = uid;
 
