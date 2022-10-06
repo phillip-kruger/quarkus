@@ -41,7 +41,7 @@ export class JsonRpcController {
       }
   
       JsonRpcController.webSocket.onerror = function (error) {
-          console.log(error);
+          console.log("We go an error !!!!! [" + error + "]");
       }
     }
   }

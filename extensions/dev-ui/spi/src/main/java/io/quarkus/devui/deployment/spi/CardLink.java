@@ -1,5 +1,8 @@
 package io.quarkus.devui.deployment.spi;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Card Link on an extension card in Dev UI
  */
@@ -9,6 +12,7 @@ public class CardLink {
     private final String label;
     private final String component;
     private final String path;
+    private final Map<String, Object> buildTimeData;
 
     private CardLink(Builder builder) {
         this.iconName = builder.iconName;
@@ -16,6 +20,7 @@ public class CardLink {
         this.label = builder.label;
         this.path = builder.path;
         this.component = builder.component;
+        this.buildTimeData = builder.buildTimeData;
     }
 
     public String getIconName() {
@@ -42,6 +47,14 @@ public class CardLink {
         return this.component != null;
     }
 
+    public boolean hasBuildTimeData() {
+        return this.buildTimeData != null;
+    }
+
+    public Map<String, Object> getBuildTimeData() {
+        return this.buildTimeData;
+    }
+
     public static class Builder {
         private final String namespace;
         private String iconName;
@@ -49,6 +62,7 @@ public class CardLink {
         private String label;
         private String component;
         private String path;
+        private Map<String, Object> buildTimeData = new HashMap<>();
 
         public Builder(String namespace) {
             this.namespace = namespace;
@@ -95,6 +109,11 @@ public class CardLink {
             return this;
         }
 
+        public <T> Builder buildTimeData(String methodName, T methodResponse) {
+            this.buildTimeData.put(methodName, methodResponse);
+            return this;
+        }
+
         public CardLink build() {
             if (path == null && component == null && displayName == null) {
                 throw new RuntimeException(
@@ -124,9 +143,7 @@ public class CardLink {
                 this.iconName = "font-awesome-solid:arrow-right";
             }
 
-            CardLink cardLink = new CardLink(this);
-
-            return cardLink;
+            return new CardLink(this);
         }
     }
 

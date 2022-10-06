@@ -15,7 +15,7 @@
     
     <properties>
         <lit.version>2.3.1</lit.version>
-        <vaadin.version>23.2.1</vaadin.version>
+        <vaadin.version>23.2.3</vaadin.version>
         <vaadin-router.version>1.7.4</vaadin-router.version>
         <polymer.version>3.5.1</polymer.version>
     </properties>
@@ -120,6 +120,55 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vaadin__grid</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vaadin__checkbox</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vaadin__field-base</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vaadin__lit-renderer</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
         <dependency>
             <groupId>org.webjars.npm</groupId>
             <artifactId>vaadin__vaadin-lumo-styles</artifactId>

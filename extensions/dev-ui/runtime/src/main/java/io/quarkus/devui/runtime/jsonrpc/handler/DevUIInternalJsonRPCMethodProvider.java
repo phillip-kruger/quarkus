@@ -9,8 +9,6 @@ import javax.inject.Named;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import io.quarkus.devui.runtime.jsonrpc.JsonRPCMethodProvider;
-import io.quarkus.devui.runtime.jsonrpc.JsonRpcRequest;
 import io.quarkus.devui.runtime.service.extension.Extension;
 import io.quarkus.devui.runtime.service.extension.ExtensionGroup;
 import io.quarkus.devui.runtime.service.extension.ExtensionsService;
@@ -20,7 +18,7 @@ import io.quarkus.devui.runtime.service.extension.ExtensionsService;
  */
 @ApplicationScoped
 @Named("DevUIInternalJsonRPCMethodProvider")
-public class DevUIInternalJsonRPCMethodProvider implements JsonRPCMethodProvider {
+public class DevUIInternalJsonRPCMethodProvider {
 
     @ConfigProperty(name = "quarkus.application.name")
     String applicationName;
@@ -33,30 +31,6 @@ public class DevUIInternalJsonRPCMethodProvider implements JsonRPCMethodProvider
 
     @Inject
     ExtensionsService extensionsService;
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> T request(JsonRpcRequest request) {
-        if (request.isMethod(INTERNAL + DOT + GET_VERSION_INFO)) {
-            return (T) getVersionInfo();
-        } else if (request.isMethod(INTERNAL + DOT + GET_MENU_ITEMS)) {
-            return (T) getMenuItems();
-        } else if (request.isMethod(INTERNAL + DOT + GET_BOTTOM_DRAWER_ITEMS)) {
-            return (T) getBottomDrawerItems();
-        } else if (request.isMethod(INTERNAL + DOT + GET_EXTENSIONS)) {
-            return (T) getExtensions();
-        } else if (request.isMethod(INTERNAL + DOT + GET_CONFIGURATION)) {
-            return (T) getAllConfiguration();
-        } else if (request.isMethod(INTERNAL + DOT + GET_CONTINUOUS_TESTING)) {
-            return (T) getContinuousTesting();
-        } else if (request.isMethod(INTERNAL + DOT + GET_DEV_SERVICES)) {
-            return (T) getDevServices();
-        } else if (request.isMethod(INTERNAL + DOT + GET_BUILD_STEPS)) {
-            return (T) getBuildSteps();
-        } else {
-            throw new RuntimeException("Method " + request.getMethod() + " not found");
-        }
-    }
 
     public VersionInfo getVersionInfo() {
         return new VersionInfo(platformVersion, applicationName, applicationVersion);

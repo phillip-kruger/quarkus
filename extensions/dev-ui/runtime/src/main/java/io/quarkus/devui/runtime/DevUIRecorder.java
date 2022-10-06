@@ -1,8 +1,10 @@
 package io.quarkus.devui.runtime;
 
 import java.util.List;
+import java.util.Map;
 
 import io.quarkus.arc.runtime.BeanContainer;
+import io.quarkus.devui.runtime.jsonrpc.JsonRpcRouter;
 import io.quarkus.devui.runtime.service.extension.Extension;
 import io.quarkus.devui.runtime.service.extension.ExtensionsService;
 import io.quarkus.runtime.ShutdownContext;
@@ -19,6 +21,11 @@ public class DevUIRecorder {
             List<Extension> inactiveExtensions) {
         ExtensionsService extensionsService = beanContainer.instance(ExtensionsService.class);
         extensionsService.initialize(activeExtensions, inactiveExtensions);
+    }
+
+    public void createJsonRpcRouter(BeanContainer beanContainer, Map<String, String> jsonResponses) {
+        JsonRpcRouter jsonRpcRouter = beanContainer.instance(JsonRpcRouter.class);
+        jsonRpcRouter.buildTimeData(jsonResponses);
     }
 
     public Handler<RoutingContext> uiHandler(String finalDestination,

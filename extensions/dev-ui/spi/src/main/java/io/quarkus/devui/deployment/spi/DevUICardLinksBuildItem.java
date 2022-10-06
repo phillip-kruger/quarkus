@@ -30,4 +30,15 @@ public final class DevUICardLinksBuildItem extends MultiBuildItem {
     public List<CardLink> getLinks() {
         return links;
     }
+
+    public boolean hasBuildTimeData() {
+        if (this.links != null && !this.links.isEmpty()) {
+            for (CardLink link : this.links) {
+                if (link.hasBuildTimeData()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

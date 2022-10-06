@@ -36,8 +36,11 @@ public class DevUIProcessor {
             ShutdownContextBuildItem shutdownContext) throws IOException {
 
         // Websocket for JsonRPC comms
-        routeProducer.produce(nonApplicationRootPathBuildItem.routeBuilder().route(DEVUI + SLASH + JSONRPC)
-                .handler(recorder.communicationHandler()).build());
+        routeProducer.produce(
+                nonApplicationRootPathBuildItem
+                        .routeBuilder().route(DEVUI + SLASH + JSONRPC)
+                        .handler(recorder.communicationHandler())
+                        .build());
 
         // Static handler for components
         for (DevUIRoutesBuildItem devUIRoutesBuildItem : devUIRoutesBuildItems) {

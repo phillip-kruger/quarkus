@@ -21,6 +21,7 @@ import io.quarkus.arc.deployment.CompletedApplicationClassPredicateBuildItem;
 import io.quarkus.arc.deployment.CustomScopeAnnotationsBuildItem;
 import io.quarkus.arc.deployment.ValidationPhaseBuildItem;
 import io.quarkus.arc.deployment.devconsole.DependencyGraph.Link;
+import io.quarkus.arc.deployment.devui.ArcBeanInfoBuildItem;
 import io.quarkus.arc.processor.AnnotationsTransformer;
 import io.quarkus.arc.processor.BeanDeploymentValidator;
 import io.quarkus.arc.processor.BeanDeploymentValidator.ValidationContext;
@@ -108,7 +109,8 @@ public class ArcDevConsoleProcessor {
     @BuildStep(onlyIf = IsDevelopment.class)
     public void collectBeanInfo(ValidationPhaseBuildItem validationPhaseBuildItem,
             CompletedApplicationClassPredicateBuildItem predicate, BuildProducer<DevConsoleTemplateInfoBuildItem> templates,
-            BuildProducer<DevConsoleRouteBuildItem> routes) {
+            BuildProducer<DevConsoleRouteBuildItem> routes,
+            BuildProducer<ArcBeanInfoBuildItem> arcBeanInfoProducer) {
         BeanDeploymentValidator.ValidationContext validationContext = validationPhaseBuildItem.getContext();
         DevBeanInfos beanInfos = new DevBeanInfos();
         for (BeanInfo bean : validationContext.beans()) {
@@ -163,6 +165,7 @@ public class ArcDevConsoleProcessor {
 
         beanInfos.sort();
         templates.produce(new DevConsoleTemplateInfoBuildItem("devBeanInfos", beanInfos));
+        arcBeanInfoProducer.produce(new ArcBeanInfoBuildItem(beanInfos));
 
         routes.produce(new DevConsoleRouteBuildItem("toggleBeanDescription", "POST", new Handler<RoutingContext>() {
             @Override

@@ -16,7 +16,7 @@ import io.vertx.ext.web.RoutingContext;
  * This is the main entry point for Dev UI Json RPC communication
  */
 public class DevUIWebSocket implements Handler<RoutingContext> {
-    private static final Logger log = Logger.getLogger(DevUIWebSocket.class.getName());
+    private static final Logger LOG = Logger.getLogger(DevUIWebSocket.class.getName());
 
     private JsonRpcRouter jsonRpcRouter;
 
@@ -34,21 +34,21 @@ public class DevUIWebSocket implements Handler<RoutingContext> {
                         ServerWebSocket socket = event.result();
                         SessionState state = new SessionState(socket);
 
-                        socket.closeHandler(new Handler<Void>() {
-                            @Override
-                            public void handle(Void event) {
-                                onStop(state);
-                            }
+                        socket.closeHandler((e) -> {
+                            onStop(state);
                         });
-                        socket.textMessageHandler(new Handler<String>() {
-                            @Override
-                            public void handle(String event) {
-                                onMessage(event, state);
-                            }
+
+                        socket.textMessageHandler((e) -> {
+                            onMessage(e, state);
                         });
+
+                        socket.exceptionHandler((e) -> {
+                            onError(e, state);
+                        });
+
                         onStart(state);
                     } else {
-                        log.log(Level.SEVERE, "Failed to connect to dev ui communication server", event.cause());
+                        LOG.log(Level.SEVERE, "Failed to connect to dev ui communication server", event.cause());
                     }
                 }
             });
@@ -67,6 +67,11 @@ public class DevUIWebSocket implements Handler<RoutingContext> {
 
     private void onStart(SessionState session) {
         // ?
+    }
+
+    private void onError(Throwable t, SessionState session) {
+        LOG.log(Level.SEVERE, "Dev UI Session [" + session.id + "] received an error ", t);
+        t.printStackTrace();
     }
 
     static class SessionState {
