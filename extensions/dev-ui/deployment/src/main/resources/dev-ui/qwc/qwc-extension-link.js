@@ -50,7 +50,6 @@ export class QwcExtensionLink extends LitElement {
   };
 
   render() {
-   
     let badge;
 
     if (this.label) {

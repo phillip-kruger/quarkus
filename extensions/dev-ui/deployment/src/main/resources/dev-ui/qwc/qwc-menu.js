@@ -1,10 +1,11 @@
 import { LitElement, html, css} from 'lit';
 import { until } from 'lit/directives/until.js';
 
-import { JsonRpcController } from 'controller/jsonrpc-controller.js';
-import { RouterController } from 'controller/router-controller.js';
+import { JsonRpcController } from 'jsonrpc-controller';
+import { RouterController } from 'router-controller';
 
 import '@vaadin/icon';
+import '@qwc/app-info';
 
 /**
  * This component represent the Dev UI left menu
@@ -15,6 +16,13 @@ export class QwcMenu extends LitElement {
     routerController = new RouterController(this);
 
     static styles = css`
+
+            .left {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
 
             .menu {
                 height: 100%;
@@ -64,6 +72,13 @@ export class QwcMenu extends LitElement {
                 border-left: 5px solid #4695EB;
                 color: #20446B;
                 cursor: default;
+            }
+
+            qwc-app-info {
+                padding-bottom: 5px;
+                width: 100%;
+                display: flex;
+                justify-content: center;
             }
         `;
 
@@ -137,14 +152,23 @@ export class QwcMenu extends LitElement {
     _renderJsonRpcResponse(){
         if(this._menuItems){
             return html`
-                <div class="menu" style="width: ${this._width}px;">
-                    ${this._menuItems.map((menuItem) =>
-                        html`${this._renderItem(menuItem.icon, menuItem.webcomponent)}`
-                    )}
-                
-                    ${this._renderIcon("chevron-left", "smaller")}
-                    ${this._renderIcon("chevron-right", "larger")}
-            </div>`;
+                <div class="left">
+                    <div class="menu" style="width: ${this._width}px;">
+                        ${this._menuItems.map((menuItem) =>
+                            html`${this._renderItem(menuItem.icon, menuItem.webcomponent)}`
+                        )}
+                        ${this._renderIcon("chevron-left", "smaller")}
+                        ${this._renderIcon("chevron-right", "larger")}
+                    </div>
+                    
+                    ${this._renderAppInfo()}
+                </div>`
+        }
+    }
+
+    _renderAppInfo(){
+        if(this._show){
+            return html`<qwc-app-info></qwc-app-info>`;
         }
     }
 

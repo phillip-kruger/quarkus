@@ -1,31 +1,36 @@
 import { LitElement, html, css} from 'lit';
-import { NotificationController } from 'controller/notification-controller.js';
-import '@vaadin/icon';
-import './qwc-version-info.js';
+import '@vaadin/tabs';
+import '@qwc/quarkus-version';
 
 /**
  * This component represent the Dev UI Header
  */
 export class QwcHeader extends LitElement {
-    notificationController = new NotificationController(this);
+    static extensions = new Map();
+    static extensionNames = new Map();
 
     static styles = css`
         .top-bar {
-            height: 60px;
-        }
-        .horizontal-flex {
+            height: 70px;
             display: flex;
-            align-items:center;
+            align-items: center;
+            flex-direction: row;
+            justify-content: space-between;
         }
-
+        .logo-title {
+            display: flex;
+            align-items: center;
+            flex-direction: row;
+        }
         .top-bar img {
-            height: 40px;
-            padding: 10px;
+            height: 45px;
+            padding: 8px;
         }
 
         .logo-right-actions {
-            position: absolute;
-            right: 10px;
+            display: flex;
+            align-items:center;
+            padding-right: 10px;
         }
         
         .logo-reload-click {
@@ -40,62 +45,73 @@ export class QwcHeader extends LitElement {
             filter: brightness(90%);
         }
 
-        .icon {
-            width: 25px;
-            height: 25px;
-            cursor: pointer;
-            padding-left: 5px;
-        }
-
-        .zulip {
-            color: #5e91f6;
-        }
-
-        .twitter {
-            color: #1DA1F2;
-        }
-
-        .github {
-           color: #333;
-        }
-
-        .breadcrumb {
+        .title {
             display: flex;
             align-items:center;
             font-size: x-large;
             color: #6d7279;
             padding-left: 100px;
         }
-
-        qwc-version-info {
+        .submenu {
+            padding-left: 10px;
             display: flex;
+            flex-direction: row;
             justify-content: center;
-            align-content: center;
-            flex-direction: column;
-            font-size: small;
-            color: #20446B;
-            padding-right: 10px;
         }
+        
+        .logo-text {
+            line-height: 1;
+        }
+
+        .logo-text-version {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        
         `;
 
-        static properties = {
-            _breadcrumb: {state:true}
-        };
+    static properties = {
+        _title: {state:true},
+        _links: {state:true},
+        _selectedComponent: {state: true}
+    };
+    
+    constructor(){
+        super();
         
+        document.addEventListener('extensions', (e) => { 
+          var extensions = e.detail;
+
+          extensions.forEach((extension) => { 
+            extension.links.forEach((link) => {
+                if(link.component){
+                    let key = link.component.slice(0, -3);
+                    QwcHeader.extensions.set(key, extension.links);
+                    QwcHeader.extensionNames.set(key, extension.name);
+                }
+            });
+           });  
+        }, false);
+    
+      }
+
     render() {
         return html`
-        <div class="top-bar horizontal-flex">
-            <span class="logo-reload-click" title="Click to reload" @click="${this._reload}"><img src="img/light_icon.svg"></img> Dev UI</span>
-            <span class="breadcrumb">${this._breadcrumb}</span>
-            
-            <div class="logo-right-actions horizontal-flex">
-                <qwc-version-info></qwc-version-info>
-                
-                <vaadin-icon class="icon zulip" icon="font-awesome-solid:comment" @click="${this._zulip}" title="Go to the Quarkus Zulip page"></vaadin-icon>
-                <vaadin-icon class="icon twitter" icon="font-awesome-brands:twitter" @click="${this._twitter}" title="Go to the Quarkus Twitter page"></vaadin-icon>
-                <vaadin-icon class="icon github" icon="font-awesome-brands:github" @click="${this._github}" title="Go to the Quarkus GitHub page"></vaadin-icon>
-                <vaadin-icon class="icon" icon="font-awesome-solid:circle-half-stroke" @click="${this._dayNight}" title="Day / Night switch"></vaadin-icon>
+        <div class="top-bar">
+            <div class="logo-title">
+                <div class="logo-reload-click">
+                    <img src="img/light_icon.svg" @click="${this._reload}"></img> 
+                    <div class="logo-text-version">
+                        <span class="logo-text" @click="${this._reload}">Dev UI</span>
+                        <qwc-quarkus-version></qwc-quarkus-version>
+                    </div>
+                </div>
+                <span class="title">${this._title}</span>
             </div>
+            ${this._renderTabs()}
         </div>
         `;
     }
@@ -103,29 +119,46 @@ export class QwcHeader extends LitElement {
     connectedCallback() {
         super.connectedCallback();
         addEventListener('switchPage', (e) => { 
-            // TODO: Only show on small menu ?
-            this._breadcrumb = e.detail.display;
+
+            // Set the Title
+            if(QwcHeader.extensionNames && QwcHeader.extensionNames.size > 0 && QwcHeader.extensionNames.has(e.detail.component)){
+                this._title = QwcHeader.extensionNames.get(e.detail.component);
+            } else {
+                this._title = e.detail.display;
+            }
+            
+            // Add the links
+            if(QwcHeader.extensions && QwcHeader.extensions.size > 0 && QwcHeader.extensions.has(e.detail.component)){
+                this._links = QwcHeader.extensions.get(e.detail.component);
+                this._selectedComponent = e.detail.component;
+            }else {
+                this._links = null;
+                this._selectedComponent = null;
+            }
+
           }, false);
+    }
+
+    _renderTabs(){
+        if(this._links){
+            let js = this._selectedComponent + ".js";
+            const index = this._links.findIndex(object => {
+                return object.component === js;
+            });
+
+            return html`
+            <div class="submenu">
+                <vaadin-tabs theme="minimal" selected="${index}">
+                    ${this._links.map(link => 
+                        html`<vaadin-tab><a href="${link.path}">${link.displayName}</a></vaadin-tab>`
+                    )}
+                </vaadin-tabs>
+            </div>`;
+        }
     }
 
     disconnectedCallback() {
         super.disconnectedCallback();
-    }
-
-    _twitter(e) {
-        window.open("https://twitter.com/QuarkusIO", '_blank').focus();
-    }
-
-    _github(e) {
-        window.open("https://github.com/quarkusio", '_blank').focus();
-    }
-
-    _zulip(e) {
-        window.open("https://quarkusio.zulipchat.com", '_blank').focus();
-    }
-    
-    _dayNight(e){
-        this.notificationController.showInfoMessage("This is not implemented yet", "Day-night switch");
     }
 
     _reload(e){

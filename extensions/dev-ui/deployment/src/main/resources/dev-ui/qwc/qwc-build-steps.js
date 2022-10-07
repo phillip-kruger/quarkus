@@ -1,7 +1,7 @@
 import { LitElement, html, css} from 'lit';
 import { until } from 'lit/directives/until.js';
 
-import { JsonRpcController } from 'controller/jsonrpc-controller.js';
+import { JsonRpcController } from 'jsonrpc-controller';
 
 /**
  * This component shows the Build Steps Page

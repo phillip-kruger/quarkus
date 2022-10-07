@@ -1,10 +1,10 @@
 import { LitElement, html, css} from 'lit';
 import { until } from 'lit/directives/until.js';
 
-import { JsonRpcController } from 'controller/jsonrpc-controller.js';
-import { RouterController } from 'controller/router-controller.js';
-import './qwc-extension.js';
-import './qwc-extension-link.js'
+import { JsonRpcController } from 'jsonrpc-controller';
+import { RouterController } from 'router-controller';
+import '@qwc/extension';
+import '@qwc/extension-link';
 
 /**
  * This component create cards of all the extensions
@@ -64,7 +64,11 @@ export class QwcExtensions extends LitElement {
         });
       });
 
-
+      // Fire event that contains all active extensions
+      const event = new CustomEvent('extensions', { 
+        detail: active 
+      });
+      document.dispatchEvent(event);
 
       return html`<div class="page">
           <div class="grid">

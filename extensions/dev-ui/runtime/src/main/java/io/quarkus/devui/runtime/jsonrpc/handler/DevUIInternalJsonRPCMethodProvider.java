@@ -32,8 +32,12 @@ public class DevUIInternalJsonRPCMethodProvider {
     @Inject
     ExtensionsService extensionsService;
 
-    public VersionInfo getVersionInfo() {
-        return new VersionInfo(platformVersion, applicationName, applicationVersion);
+    public AppInfo getAppInfo() {
+        return new AppInfo(applicationName, applicationVersion);
+    }
+
+    public String getQuarkusVersion() {
+        return platformVersion;
     }
 
     // TODO: Allow extension to contribute to this

@@ -1,6 +1,6 @@
 import { LitElement, html, css} from 'lit';
 import { until } from 'lit/directives/until.js';
-import { JsonRpcController } from 'controller/jsonrpc-controller.js';
+import { JsonRpcController } from 'jsonrpc-controller';
 
 /**
  * This component allows users to change the configuration
