@@ -4,7 +4,7 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { JsonRpcController } from 'jsonrpc-controller';
 
 import '@vaadin/tabs';
-import '@vaadin/tab';
+import '@vaadin/tabs/vaadin-tab.js';
 import '@vaadin/icon';
 
 /**

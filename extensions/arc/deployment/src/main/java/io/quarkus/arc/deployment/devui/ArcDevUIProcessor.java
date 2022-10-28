@@ -11,8 +11,8 @@ import io.quarkus.arc.deployment.devconsole.DevObserverInfo;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.devui.deployment.spi.CardLink;
-import io.quarkus.devui.deployment.spi.DevUICardLinksBuildItem;
+import io.quarkus.devui.deployment.spi.page.WebComponentPage;
+import io.quarkus.devui.deployment.spi.page.WebComponentsPageBuildItem;
 
 public class ArcDevUIProcessor {
 
@@ -20,16 +20,16 @@ public class ArcDevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     public void cardLinks(ArcBeanInfoBuildItem arcBeanInfoBuildItem,
-            BuildProducer<DevUICardLinksBuildItem> devUICardLinksProducer) {
-        List<CardLink> links = new ArrayList<>();
+            BuildProducer<WebComponentsPageBuildItem> webComponentsPageProducer) {
+        List<WebComponentPage> componentPages = new ArrayList<>();
 
         DevBeanInfos beanInfos = arcBeanInfoBuildItem.getBeanInfos();
 
         List<DevBeanInfo> beans = beanInfos.getBeans();
         if (!beans.isEmpty()) {
-            links.add(new CardLink.Builder(NAME)
+            componentPages.add(new WebComponentPage.Builder(NAME)
                     .iconName("font-awesome-solid:egg")
-                    .component("qwc-arc-beans.js")
+                    .webComponent("qwc-arc-beans.js")
                     .label(String.valueOf(beans.size()))
                     .buildTimeData(GET_BEANS, toDevBeanWithInterceptorInfo(beans, beanInfos))
                     .build());
@@ -37,9 +37,9 @@ public class ArcDevUIProcessor {
 
         List<DevObserverInfo> observers = beanInfos.getObservers();
         if (!observers.isEmpty()) {
-            links.add(new CardLink.Builder(NAME)
+            componentPages.add(new WebComponentPage.Builder(NAME)
                     .iconName("font-awesome-solid:eye")
-                    .component("qwc-arc-observers.js")
+                    .webComponent("qwc-arc-observers.js")
                     .label(String.valueOf(observers.size()))
                     .buildTimeData(GET_OBSERVERS, observers)
                     .build());
@@ -47,9 +47,9 @@ public class ArcDevUIProcessor {
 
         List<DevInterceptorInfo> interceptors = beanInfos.getInterceptors();
         if (!interceptors.isEmpty()) {
-            links.add(new CardLink.Builder(NAME)
+            componentPages.add(new WebComponentPage.Builder(NAME)
                     .iconName("font-awesome-solid:traffic-light")
-                    .component("qwc-arc-interceptors.js")
+                    .webComponent("qwc-arc-interceptors.js")
                     .label(String.valueOf(interceptors.size()))
                     .buildTimeData(GET_INTERCEPTORS, interceptors)
                     .build());
@@ -57,29 +57,29 @@ public class ArcDevUIProcessor {
 
         List<DevDecoratorInfo> decorators = beanInfos.getDecorators();
         if (!decorators.isEmpty()) {
-            links.add(new CardLink.Builder(NAME)
+            componentPages.add(new WebComponentPage.Builder(NAME)
                     .iconName("font-awesome-solid:traffic-light")
-                    .component("qwc-arc-decorators.js")
+                    .webComponent("qwc-arc-decorators.js")
                     .label(String.valueOf(decorators.size()))
                     .buildTimeData(GET_DECORATORS, decorators)
                     .build());
         }
 
-        links.add(new CardLink.Builder(NAME)
+        componentPages.add(new WebComponentPage.Builder(NAME)
                 .iconName("font-awesome-solid:fire")
-                .component("qwc-arc-fired-events.js")
+                .webComponent("qwc-arc-fired-events.js")
                 .build());
 
-        links.add(new CardLink.Builder(NAME)
+        componentPages.add(new WebComponentPage.Builder(NAME)
                 .iconName("font-awesome-solid:diagram-project")
-                .component("qwc-arc-invocation-trees.js")
+                .webComponent("qwc-arc-invocation-trees.js")
                 .build());
 
         int removedComponents = beanInfos.getRemovedComponents();
         if (removedComponents > 0) {
-            links.add(new CardLink.Builder(NAME)
+            componentPages.add(new WebComponentPage.Builder(NAME)
                     .iconName("font-awesome-solid:trash-can")
-                    .component("qwc-arc-removed-components.js")
+                    .webComponent("qwc-arc-removed-components.js")
                     .label(String.valueOf(removedComponents))
                     .buildTimeData(GET_REMOVED_BEANS, beanInfos.getRemovedBeans())
                     .buildTimeData(GET_REMOVED_COMPONENTS, beanInfos.getRemovedComponents())
@@ -88,7 +88,7 @@ public class ArcDevUIProcessor {
                     .build());
         }
 
-        devUICardLinksProducer.produce(new DevUICardLinksBuildItem(NAME, links));
+        webComponentsPageProducer.produce(new WebComponentsPageBuildItem(NAME, componentPages));
     }
 
     private List<DevBeanWithInterceptorInfo> toDevBeanWithInterceptorInfo(List<DevBeanInfo> beans, DevBeanInfos devBeanInfos) {

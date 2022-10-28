@@ -1,22 +1,19 @@
 import { LitElement, html, css} from 'lit';
 import { until } from 'lit/directives/until.js';
-import { JsonRpcController } from 'controller/jsonrpc-controller.js';
+import { JsonRpcController } from 'jsonrpc-controller';
 
 /**
  * This component shows the Arc RemovedComponents
  */
 export class QwcArcRemovedComponents extends LitElement {
   //static methodName = "getDevServices";
-  jsonRpcController = new JsonRpcController(this);
+
+
+
+  jsonRpcController = new JsonRpcController(this, "ArC");
 
   static styles = css`
-        .todo {
-            font-size: small;
-            color: #4695EB;
-            padding-left: 10px;
-            background: white;
-            height: 100%;
-        }`;
+        `;
 
   static properties = {
     _services: {state: true}

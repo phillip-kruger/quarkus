@@ -1,6 +1,6 @@
 import { LitElement, html, css} from 'lit';
 import { until } from 'lit/directives/until.js';
-import { JsonRpcController } from 'controller/jsonrpc-controller.js';
+import { JsonRpcController } from 'jsonrpc-controller';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/grid';
 
@@ -74,31 +74,26 @@ export class QwcArcBeans extends LitElement {
   _renderJsonRpcResponse(){
     if(this._beans){
         return html`
-        <vaadin-grid .items="${this._beans}" class="arctable" >
+        <vaadin-grid .items="${this._beans}" class="arctable" theme="no-border">
 
-          <vaadin-grid-column 
+          <vaadin-grid-column auto-width
             header="Bean"
-            path="providerType.name"
             ${columnBodyRenderer(this._beanRenderer, [])}
             resizable>
           </vaadin-grid-column>
           
-          <vaadin-grid-column 
+          <vaadin-grid-column auto-width
             header="Kind"
-            path="kind"
             ${columnBodyRenderer(this._kindRenderer, [])}
             resizable>
           </vaadin-grid-column>
 
-          <vaadin-grid-column 
+          <vaadin-grid-column auto-width
             header="Associated Interceptors"
-            path="interceptors"
             ${columnBodyRenderer(this._interceptorsRenderer, [])}
             resizable>
           </vaadin-grid-column>
-        </vaadin-grid>
-        
-        `;
+        </vaadin-grid>`;
     }
   }
 
@@ -110,7 +105,7 @@ export class QwcArcBeans extends LitElement {
       )}
       <br/><code>${bean.providerType.name}</code>
     `;
-  };
+  }
 
   _kindRenderer(bean){
     return html`
@@ -120,7 +115,7 @@ export class QwcArcBeans extends LitElement {
         : html`<br/><code class="producer">${bean.memberName}</code>`
       }
     `;
-  };
+  }
 
   _interceptorsRenderer(bean){
     if(bean.interceptors && bean.interceptors.length > 0){

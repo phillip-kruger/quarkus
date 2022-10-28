@@ -29,18 +29,19 @@ import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
-import io.quarkus.devui.deployment.spi.CardLink;
-import io.quarkus.devui.deployment.spi.DevUIBuildtimeJsonRPCMethodBuildItem;
-import io.quarkus.devui.deployment.spi.DevUICardLinksBuildItem;
-import io.quarkus.devui.deployment.spi.DevUIRuntimeJsonRPCMethodBuildItem;
+import io.quarkus.devui.deployment.spi.buildtime.JsonRPCResponsesBuildItem;
+import io.quarkus.devui.deployment.spi.page.ExternalPage;
+import io.quarkus.devui.deployment.spi.page.ExternalPageBuildItem;
+import io.quarkus.devui.deployment.spi.page.WebComponentPage;
+import io.quarkus.devui.deployment.spi.page.WebComponentsPageBuildItem;
+import io.quarkus.devui.deployment.spi.runtime.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.runtime.DevUIRecorder;
 import io.quarkus.devui.runtime.jsonrpc.DevUIJsonRPCProviderNamer;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcRouter;
 import io.quarkus.devui.runtime.jsonrpc.handler.DevUIInternalJsonRPCMethodProvider;
+import io.quarkus.devui.runtime.service.extension.CardLink;
 import io.quarkus.devui.runtime.service.extension.Codestart;
 import io.quarkus.devui.runtime.service.extension.Extension;
-import io.quarkus.devui.runtime.service.extension.ExtensionsService;
-import io.quarkus.devui.runtime.service.extension.Link;
 import io.quarkus.gizmo.AnnotationCreator;
 import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.maven.dependency.GACT;
@@ -68,28 +69,20 @@ public class DevUIProcessor {
         additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
                 .addBeanClass(JsonRpcRouter.class)
                 .setUnremovable().build());
-        additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
-                .addBeanClass(DevUIInternalJsonRPCMethodProvider.class)
-                .setUnremovable().build());
 
         additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
-                .addBeanClass(ExtensionsService.class)
+                .addBeanClass(DevUIInternalJsonRPCMethodProvider.class)
                 .setUnremovable().build());
     }
 
     @BuildStep(onlyIf = IsDevelopment.class)
     @Record(ExecutionTime.STATIC_INIT)
-    void createRuntimeExtensions(DevUIRecorder recorder,
+    void createJsonRpcRouter(DevUIRecorder recorder,
             BeanContainerBuildItem beanContainer,
-            ExtensionsBuildItem extensionsBuildItem,
-            List<DevUIBuildtimeJsonRPCMethodBuildItem> buildTimeDataBuildItems) {
-
-        // TODO: Replace with BuildTimeData
-        recorder.createExtensionService(beanContainer.getValue(), extensionsBuildItem.getActiveExtensions(),
-                extensionsBuildItem.getInactiveExtensions());
+            List<JsonRPCResponsesBuildItem> buildTimeDataBuildItems) {
 
         Map<String, String> methodWithJsonResponseMap = new HashMap<String, String>();
-        for (DevUIBuildtimeJsonRPCMethodBuildItem bt : buildTimeDataBuildItems) {
+        for (JsonRPCResponsesBuildItem bt : buildTimeDataBuildItems) {
 
             String namespace = bt.getExtensionName();
             for (Map.Entry<String, Object> e : bt.getMethodNameAndResponseData().entrySet()) {
@@ -104,11 +97,12 @@ public class DevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     @SuppressWarnings("unchecked")
-    void getAllExtensions(List<DevUICardLinksBuildItem> activeCards,
+    void getAllExtensions(List<WebComponentsPageBuildItem> webComponentPages,
+            List<ExternalPageBuildItem> externalPages,
             BuildProducer<ExtensionsBuildItem> extensionsProducer,
             BuildProducer<WebJarBuildItem> webJarBuildProducer,
             BuildProducer<DevUIWebJarBuildItem> devUIWebJarProducer,
-            BuildProducer<DevUIBuildtimeJsonRPCMethodBuildItem> devUIBuildtimeJsonRPCMethodProducer) {
+            BuildProducer<JsonRPCResponsesBuildItem> devUIBuildtimeJsonRPCMethodProducer) {
 
         // First create the static resources for our own internal components
         webJarBuildProducer.produce(WebJarBuildItem.builder()
@@ -117,8 +111,9 @@ public class DevUIProcessor {
 
         devUIWebJarProducer.produce(new DevUIWebJarBuildItem(UI_JAR, DEVUI));
 
-        // Now go through all extensions and check them
-        Map<String, DevUICardLinksBuildItem> activeExtensionsMap = getActiveExtensionsMap(activeCards);
+        // Now go through all extensions and check them for active components
+        Map<String, WebComponentsPageBuildItem> webComponentPagesMap = getWebComponentPagesMap(webComponentPages);
+        Map<String, ExternalPageBuildItem> externalPagesMap = getExternalPagesMap(externalPages);
 
         try {
             final Yaml yaml = new Yaml(new SafeConstructor());
@@ -183,43 +178,60 @@ public class DevUIProcessor {
                             }
                         }
 
-                        // Check for active cards
-                        if (activeExtensionsMap.containsKey(name.toLowerCase())) {
-                            DevUICardLinksBuildItem cardLinksBuildItem = activeExtensionsMap.get(name.toLowerCase());
-                            List<CardLink> cardLinks = cardLinksBuildItem.getLinks();
+                        String nameKey = name.toLowerCase();
+                        // Check for cards activated by an external link
+                        if (externalPagesMap.containsKey(nameKey)) {
+                            ExternalPageBuildItem externalPageBuildItem = externalPagesMap.get(nameKey);
+                            List<ExternalPage> pages = externalPageBuildItem.getExternalPages();
+
+                            for (ExternalPage page : pages) {
+                                extension.addLink(new CardLink(page.getIconName(),
+                                        page.getDisplayName(),
+                                        page.getLabel(),
+                                        null,
+                                        page.getExternalURL()));
+                            }
+
+                            activeExtensions.add(extension);
+                        }
+
+                        // Check for cards activated by some webcomponent
+                        if (webComponentPagesMap.containsKey(nameKey)) {
+                            WebComponentsPageBuildItem webComponentsPageBuildItem = webComponentPagesMap.get(nameKey);
+                            List<WebComponentPage> pages = webComponentsPageBuildItem.getWebComponentPages();
 
                             Map<String, Object> buildTimeData = new HashMap<>();
 
-                            List<Link> links = new ArrayList<>();
-                            for (CardLink cardLink : cardLinks) {
-                                links.add(new Link(cardLink.getIconName(),
-                                        cardLink.getDisplayName(),
-                                        cardLink.getLabel(),
-                                        cardLink.getComponent(),
-                                        cardLink.getPath()));
+                            for (WebComponentPage page : pages) {
+                                extension.addLink(new CardLink(page.getIconName(),
+                                        page.getDisplayName(),
+                                        page.getLabel(),
+                                        page.getWebComponent(),
+                                        null));
 
                                 // If the card has some build time data that needs to be made available
-                                if (cardLink.hasBuildTimeData()) {
-                                    buildTimeData.putAll(cardLink.getBuildTimeData());
+                                if (page.hasBuildTimeData()) {
+                                    buildTimeData.putAll(page.getBuildTimeData());
                                 }
                             }
 
-                            if (cardLinksBuildItem.hasBuildTimeData()) {
-                                devUIBuildtimeJsonRPCMethodProducer.produce(new DevUIBuildtimeJsonRPCMethodBuildItem(
-                                        cardLinksBuildItem.getExtensionName(), buildTimeData));
+                            // Make all the build time data avalable
+                            if (!buildTimeData.isEmpty()) {
+                                devUIBuildtimeJsonRPCMethodProducer.produce(new JsonRPCResponsesBuildItem(
+                                        webComponentsPageBuildItem.getExtensionName(), buildTimeData));
                             }
-
-                            extension.setLinks(links);
-                            activeExtensions.add(extension);
 
                             // Also make sure the static resources for that static resource is available
                             GACT gact = getGACT(artifactId);
                             webJarBuildProducer.produce(WebJarBuildItem.builder()
                                     .artifactKey(gact)
-                                    .root(DEVUI + SLASH + cardLinksBuildItem.getExtensionPathName() + SLASH).build());
+                                    .root(DEVUI + SLASH + webComponentsPageBuildItem.getExtensionPathName() + SLASH).build());
 
                             devUIWebJarProducer.produce(
-                                    new DevUIWebJarBuildItem(gact, DEVUI + SLASH + cardLinksBuildItem.getExtensionPathName()));
+                                    new DevUIWebJarBuildItem(gact,
+                                            DEVUI + SLASH + webComponentsPageBuildItem.getExtensionPathName()));
+
+                            activeExtensions.add(extension);
                         } else {
                             inactiveExtensions.add(extension);
                         }
@@ -254,14 +266,14 @@ public class DevUIProcessor {
     }
 
     @BuildStep(onlyIf = IsDevelopment.class)
-    void jsonRPCRuntimeFacade(List<DevUIRuntimeJsonRPCMethodBuildItem> devUIJsonRPCMethodBuildItems,
+    void jsonRPCRuntimeFacade(List<JsonRPCProvidersBuildItem> jsonRPCProvidersBuildItems,
             BuildProducer<GeneratedBeanBuildItem> generatedBeanBuildItemBuildProducer,
             BuildProducer<AdditionalBeanBuildItem> additionalBeans) throws NoSuchMethodException {
 
-        for (DevUIRuntimeJsonRPCMethodBuildItem devUIJsonRPCMethodBuildItem : devUIJsonRPCMethodBuildItems) {
+        for (JsonRPCProvidersBuildItem provider : jsonRPCProvidersBuildItems) {
 
-            String extensionName = devUIJsonRPCMethodBuildItem.getExtensionName();
-            Class jsonRPCMethodProviderClass = devUIJsonRPCMethodBuildItem.getJsonRPCMethodProviderClass();
+            String extensionName = provider.getExtensionName();
+            Class jsonRPCMethodProviderClass = provider.getJsonRPCMethodProviderClass();
             String beanName = DevUIJsonRPCProviderNamer.createBeanName(extensionName);
             String fullClassName = "io.quarkus.devui.runtime.generated." + beanName;
 
@@ -287,12 +299,20 @@ public class DevUIProcessor {
         return new GACT(split[0], split[1] + DASH_DEPLOYMENT, null, JAR);
     }
 
-    private Map<String, DevUICardLinksBuildItem> getActiveExtensionsMap(List<DevUICardLinksBuildItem> activeCards) {
-        Map<String, DevUICardLinksBuildItem> activeExtensionsMap = new HashMap<>();
-        for (DevUICardLinksBuildItem activeCard : activeCards) {
-            activeExtensionsMap.put(activeCard.getExtensionName().toLowerCase(), activeCard);
+    private Map<String, WebComponentsPageBuildItem> getWebComponentPagesMap(List<WebComponentsPageBuildItem> pages) {
+        Map<String, WebComponentsPageBuildItem> m = new HashMap<>();
+        for (WebComponentsPageBuildItem page : pages) {
+            m.put(page.getExtensionName().toLowerCase(), page);
         }
-        return activeExtensionsMap;
+        return m;
+    }
+
+    private Map<String, ExternalPageBuildItem> getExternalPagesMap(List<ExternalPageBuildItem> pages) {
+        Map<String, ExternalPageBuildItem> m = new HashMap<>();
+        for (ExternalPageBuildItem page : pages) {
+            m.put(page.getExtensionName().toLowerCase(), page);
+        }
+        return m;
     }
 
     private String getExtensionNamespace(Map<String, Object> extensionMap) {
@@ -350,7 +370,6 @@ public class DevUIProcessor {
     private static final String LANGUAGES = "languages";
 
     private static final String VALUE = "value";
-    private static final String REQUEST = "request";
 
     private static final String YAML_FILE = "/META-INF/quarkus-extension.yaml";
 

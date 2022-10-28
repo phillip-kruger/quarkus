@@ -1,6 +1,7 @@
 package io.quarkus.devui.runtime.service.extension;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Extension {
@@ -19,30 +20,30 @@ public class Extension {
     private List<String> providesCapabilities;
     private List<String> extensionDependencies;
     private Codestart codestart;
-    private List<Link> links;
+    private final List<CardLink> links = new ArrayList<>();
 
     public Extension() {
 
     }
 
-    public Extension(String namespace, String artifact, String name, String shortName, String description, URL guide,
-            List<String> keywords, String status, List<String> configFilter, List<String> categories, String builtWith,
-            List<String> providesCapabilities, List<String> extensionDependencies, Codestart codestart) {
-        this.namespace = namespace;
-        this.artifact = artifact;
-        this.name = name;
-        this.shortName = shortName;
-        this.description = description;
-        this.guide = guide;
-        this.keywords = keywords;
-        this.status = status;
-        this.configFilter = configFilter;
-        this.categories = categories;
-        this.builtWith = builtWith;
-        this.providesCapabilities = providesCapabilities;
-        this.extensionDependencies = extensionDependencies;
-        this.codestart = codestart;
-    }
+    //    public Extension(String namespace, String artifact, String name, String shortName, String description, URL guide,
+    //            List<String> keywords, String status, List<String> configFilter, List<String> categories, String builtWith,
+    //            List<String> providesCapabilities, List<String> extensionDependencies, Codestart codestart) {
+    //        this.namespace = namespace;
+    //        this.artifact = artifact;
+    //        this.name = name;
+    //        this.shortName = shortName;
+    //        this.description = description;
+    //        this.guide = guide;
+    //        this.keywords = keywords;
+    //        this.status = status;
+    //        this.configFilter = configFilter;
+    //        this.categories = categories;
+    //        this.builtWith = builtWith;
+    //        this.providesCapabilities = providesCapabilities;
+    //        this.extensionDependencies = extensionDependencies;
+    //        this.codestart = codestart;
+    //    }
 
     public String getNamespace() {
         return namespace;
@@ -164,12 +165,20 @@ public class Extension {
         this.codestart = codestart;
     }
 
-    public List<Link> getLinks() {
+    public boolean hasLinks() {
+        return !this.links.isEmpty();
+    }
+
+    public List<CardLink> getLinks() {
         return this.links;
     }
 
-    public void setLinks(List<Link> links) {
-        this.links = links;
+    public void addLink(CardLink link) {
+        this.links.add(link);
+    }
+
+    public void addLinks(List<CardLink> links) {
+        this.links.addAll(links);
     }
 
     @Override

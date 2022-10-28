@@ -10,63 +10,64 @@ import '@qwc/extension-link';
  * This component create cards of all the extensions
  */
 export class QwcExtensions extends LitElement {
-  static methodName = "getExtensions";
-  jsonRpcController = new JsonRpcController(this);
-  routerController = new RouterController(this);
+    static methodName = "getExtensions";
+    jsonRpcController = new JsonRpcController(this);
+    routerController = new RouterController(this);
 
-  static styles = css`
-    .hr {
-      border-bottom: 1px solid rgba(28,110,164,0.1);
+    static styles = css`
+        .hr {
+            border-bottom: 1px solid rgba(28,110,164,0.1);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            padding-left: 5px;
+            width: 99%;
+        }
+    `;
+
+    static properties = {
+        _extensions: {state: true}
+    };
+
+    connectedCallback() {
+        super.connectedCallback();
+        this.jsonRpcController.request(QwcExtensions.methodName);
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1rem;
-      padding-left: 5px;
-      width: 99%;
-    }`;
 
-  static properties = {
-    _extensions: {state: true}
-  };
+    onJsonRpcResponse(result){
+        this._extensions = result;
+    }
 
-  connectedCallback() {
-    super.connectedCallback();
-    this.jsonRpcController.request(QwcExtensions.methodName);
-  }
+    render() {
+        return html`${until(this._renderJsonRpcResponse(), html`<span>Loading...</span>`)}`;
+    }
 
-  onJsonRpcResponse(result){
-    this._extensions = result;
-  }
-
-  render() {
-    return html`${until(this._renderJsonRpcResponse(), html`<span>Loading...</span>`)}`;
-  }
-
-  _renderJsonRpcResponse(){
-    if(this._extensions){
-      let active = this._extensions.active;
-      let inactive = this._extensions.inactive;
+    _renderJsonRpcResponse(){
+        if(this._extensions){
+            let active = this._extensions.active;
+            let inactive = this._extensions.inactive;
 
       
-      let base = this.routerController.getBasePath();
-      active.forEach(activeExtension => {
-        var extension = activeExtension.name.replace(/\s+/g, '-').toLowerCase();
-        activeExtension.links.forEach(componentLink => {
-          if(!componentLink.path){ // If path exist it's an external link
-            var componentRef = './../' + extension + '/' + componentLink.component;
-            import(componentRef);
-            var pagename = componentLink.component.toLowerCase().slice(0, componentLink.component.lastIndexOf('.'));
-            var page = extension + "-" + componentLink.displayName.replace(/\s+/g, '-').toLowerCase();
-            this.routerController.addRoute(page, pagename);
-            componentLink['path'] =  base + '/' + page;
-          }
-        });
+            let base = this.routerController.getBasePath();
+            active.forEach(activeExtension => {
+            var extension = activeExtension.name.replace(/\s+/g, '-').toLowerCase();
+            activeExtension.links.forEach(componentLink => {
+                if(!componentLink.path){ // If path exist it's an external link, so no need to register with the router
+                    var componentRef = './../' + extension + '/' + componentLink.component;
+                    import(componentRef);
+                    var pagename = componentLink.component.toLowerCase().slice(0, componentLink.component.lastIndexOf('.'));
+                    var page = extension + "-" + componentLink.displayName.replace(/\s+/g, '-').toLowerCase();
+                    this.routerController.addRoute(page, pagename);
+                    componentLink['path'] =  base + '/' + page;
+                }
+            });
       });
 
       // Fire event that contains all active extensions
       const event = new CustomEvent('extensions', { 
-        detail: active 
+            detail: active 
       });
       document.dispatchEvent(event);
 
@@ -92,13 +93,15 @@ export class QwcExtensions extends LitElement {
                     extensionDependencies="${extension.extensionDependencies}">
 
                     ${extension.links.map(link => html`
-                      <qwc-extension-link slot="link" 
+                        
+                        <qwc-extension-link slot="link" 
                                           extensionName="${extension.name}"
                                           iconName="${link.iconName}"
                                           displayName="${link.displayName}"
                                           label="${link.label}"
-                                          path="${link.path}">
-                      </qwc-extension-link>
+                                          path="${link.path}"
+                                          webcomponent="${link.component}" >
+                        </qwc-extension-link>
                     `)}
 
                 </qwc-extension>

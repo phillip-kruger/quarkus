@@ -5,8 +5,6 @@ import java.util.Map;
 
 import io.quarkus.arc.runtime.BeanContainer;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcRouter;
-import io.quarkus.devui.runtime.service.extension.Extension;
-import io.quarkus.devui.runtime.service.extension.ExtensionsService;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.webjar.runtime.FileSystemStaticHandler;
@@ -16,12 +14,6 @@ import io.vertx.ext.web.RoutingContext;
 
 @Recorder
 public class DevUIRecorder {
-
-    public void createExtensionService(BeanContainer beanContainer, List<Extension> activeExtensions,
-            List<Extension> inactiveExtensions) {
-        ExtensionsService extensionsService = beanContainer.instance(ExtensionsService.class);
-        extensionsService.initialize(activeExtensions, inactiveExtensions);
-    }
 
     public void createJsonRpcRouter(BeanContainer beanContainer, Map<String, String> jsonResponses) {
         JsonRpcRouter jsonRpcRouter = beanContainer.instance(JsonRpcRouter.class);
@@ -40,6 +32,10 @@ public class DevUIRecorder {
 
     public Handler<RoutingContext> routerHandler(String basePath) {
         return new DevUIRouterHandler(basePath);
+    }
+
+    public Handler<RoutingContext> buildTimeStaticHandler(String basePath, Map<String, String> pathAndContentMap) {
+        return new DevUIBuildTimeStaticHandler(basePath, pathAndContentMap);
     }
 
     public Handler<RoutingContext> communicationHandler() {

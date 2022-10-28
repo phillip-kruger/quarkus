@@ -22,19 +22,18 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-dev-ui-spi</artifactId>
         </dependency>
+        <!-- To create the import map -->
+        <dependency>
+            <groupId>org.mvnpm</groupId>
+            <artifactId>importmap</artifactId>
+            <version>1.0.3-SNAPSHOT</version>
+        </dependency>
+        
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-webjar-deployment</artifactId>
         </dependency>
-<!--        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-vertx-http-deployment</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-webjars-locator-deployment</artifactId>
-        </dependency>-->
-        
+
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-core-deployment</artifactId>

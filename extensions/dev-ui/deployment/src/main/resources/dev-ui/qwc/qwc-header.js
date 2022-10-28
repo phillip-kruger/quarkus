@@ -1,6 +1,5 @@
 import { LitElement, html, css} from 'lit';
 import '@vaadin/tabs';
-import '@qwc/quarkus-version';
 
 /**
  * This component represent the Dev UI Header
@@ -62,21 +61,20 @@ export class QwcHeader extends LitElement {
         .logo-text {
             line-height: 1;
         }
-
-        .logo-text-version {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
+    
+        .app-info {
+            font-size: small;
+            color: #6d7279;
+            padding-right: 10px;
         }
-        
         `;
 
     static properties = {
         _title: {state:true},
         _links: {state:true},
-        _selectedComponent: {state: true}
+        _selectedComponent: {state: true},
+        applicationName: {type: String},
+        applicationVersion: {type: String},
     };
     
     constructor(){
@@ -104,10 +102,7 @@ export class QwcHeader extends LitElement {
             <div class="logo-title">
                 <div class="logo-reload-click">
                     <img src="img/light_icon.svg" @click="${this._reload}"></img> 
-                    <div class="logo-text-version">
-                        <span class="logo-text" @click="${this._reload}">Dev UI</span>
-                        <qwc-quarkus-version></qwc-quarkus-version>
-                    </div>
+                    <span class="logo-text" @click="${this._reload}">Dev UI</span>
                 </div>
                 <span class="title">${this._title}</span>
             </div>
@@ -148,12 +143,14 @@ export class QwcHeader extends LitElement {
 
             return html`
             <div class="submenu">
-                <vaadin-tabs theme="minimal" selected="${index}">
+                <vaadin-tabs selected="${index}">
                     ${this._links.map(link => 
                         html`<vaadin-tab><a href="${link.path}">${link.displayName}</a></vaadin-tab>`
                     )}
                 </vaadin-tabs>
             </div>`;
+        }else{
+            return html`<div class="app-info">${this.applicationName} ${this.applicationVersion}</div>`;
         }
     }
 

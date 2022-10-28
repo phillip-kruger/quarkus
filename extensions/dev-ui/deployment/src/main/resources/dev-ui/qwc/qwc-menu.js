@@ -5,7 +5,7 @@ import { JsonRpcController } from 'jsonrpc-controller';
 import { RouterController } from 'router-controller';
 
 import '@vaadin/icon';
-import '@qwc/app-info';
+import '@qwc/quarkus-version';
 
 /**
  * This component represent the Dev UI left menu
@@ -74,11 +74,10 @@ export class QwcMenu extends LitElement {
                 cursor: default;
             }
 
-            qwc-app-info {
+            qwc-quarkus-version {
                 padding-bottom: 5px;
                 width: 100%;
-                display: flex;
-                justify-content: center;
+                text-align: center;
             }
         `;
 
@@ -87,7 +86,8 @@ export class QwcMenu extends LitElement {
         _selectedPage: {attribute: false},
         _selectedPageLabel: {attribute: false},
         _menuItems: {state: true},
-        _width: {state: true}
+        _width: {state: true},
+        version: {type: String},
     };
     
     constructor() {
@@ -161,14 +161,14 @@ export class QwcMenu extends LitElement {
                         ${this._renderIcon("chevron-right", "larger")}
                     </div>
                     
-                    ${this._renderAppInfo()}
+                    ${this._renderVersion()}
                 </div>`
         }
     }
 
-    _renderAppInfo(){
+    _renderVersion(){
         if(this._show){
-            return html`<qwc-app-info></qwc-app-info>`;
+            return html`<qwc-quarkus-version version="${this.version}"></qwc-quarkus-version>`;
         }
     }
 

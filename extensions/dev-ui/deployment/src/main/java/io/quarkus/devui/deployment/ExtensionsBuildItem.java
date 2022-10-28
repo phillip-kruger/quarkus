@@ -5,7 +5,7 @@ import java.util.List;
 import io.quarkus.builder.item.SimpleBuildItem;
 import io.quarkus.devui.runtime.service.extension.Extension;
 
-final class ExtensionsBuildItem extends SimpleBuildItem {
+public final class ExtensionsBuildItem extends SimpleBuildItem {
 
     private final List<Extension> activeExtensions;
     private final List<Extension> inactiveExtensions;

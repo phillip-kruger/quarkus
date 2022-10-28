@@ -3,7 +3,7 @@ package io.quarkus.devui.runtime.service.extension;
 /**
  * Card Link on an extension card in Dev UI
  */
-public class Link {
+public class CardLink {
 
     private String iconName;
     private String displayName;
@@ -11,10 +11,10 @@ public class Link {
     private String component;
     private String path;
 
-    public Link() {
+    public CardLink() {
     }
 
-    public Link(String iconName, String displayName, String label, String component, String path) {
+    public CardLink(String iconName, String displayName, String label, String component, String path) {
         this.iconName = iconName;
         this.displayName = displayName;
         this.label = label;

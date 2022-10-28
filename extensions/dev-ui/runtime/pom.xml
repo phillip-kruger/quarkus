@@ -6,6 +6,7 @@
         <artifactId>quarkus-dev-ui-parent</artifactId>
         <groupId>io.quarkus</groupId>
         <version>999-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -14,8 +15,8 @@
     <description>Dev UI</description>
     
     <properties>
-        <lit.version>2.3.1</lit.version>
-        <vaadin.version>23.2.3</vaadin.version>
+        <lit.version>2.4.0</lit.version>
+        <vaadin.version>23.2.6</vaadin.version>
         <vaadin-router.version>1.7.4</vaadin-router.version>
         <polymer.version>3.5.1</polymer.version>
     </properties>
@@ -55,165 +56,54 @@
         </dependency>
         
         <!-- UI Libs -->
-<!--        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-webjars-locator</artifactId>
-            <scope>runtime</scope>
-        </dependency>-->
         <dependency>
-            <groupId>org.webjars.npm</groupId>
+            <groupId>org.mvnpm</groupId>
             <artifactId>lit</artifactId>
             <version>${lit.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>vaadin__router</artifactId>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>router</artifactId>
             <version>${vaadin-router.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>vaadin__component-base</artifactId>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>tabs</artifactId>
             <version>${vaadin.version}</version>
             <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>vaadin__icon</artifactId>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>grid</artifactId>
             <version>${vaadin.version}</version>
             <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>vaadin__tabs</artifactId>
-            <version>${vaadin.version}</version>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>vaadin__item</artifactId>
-            <version>${vaadin.version}</version>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>vaadin__grid</artifactId>
-            <version>${vaadin.version}</version>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>vaadin__checkbox</artifactId>
-            <version>${vaadin.version}</version>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>vaadin__field-base</artifactId>
-            <version>${vaadin.version}</version>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>vaadin__lit-renderer</artifactId>
-            <version>${vaadin.version}</version>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         
+        <!-- There is a cyclic dependency on icon -->
+        <!-- TODO: Detect and fix in mvnpm -->
         <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>vaadin__vaadin-lumo-styles</artifactId>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>icon</artifactId>
             <version>${vaadin.version}</version>
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
+                    <groupId>org.mvnpm.at.vaadin</groupId>
+                    <artifactId>vaadin-lumo-styles</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>vaadin__vaadin-themable-mixin</artifactId>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>vaadin-lumo-styles</artifactId>
             <version>${vaadin.version}</version>
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>vaadin__vaadin-list-mixin</artifactId>
-            <version>${vaadin.version}</version>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>polymer__polymer</artifactId>
-            <version>${polymer.version}</version>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
+                    <groupId>org.mvnpm.at.vaadin</groupId>
+                    <artifactId>icon</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
