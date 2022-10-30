@@ -16,9 +16,13 @@ public class OpenApiDevUIProcessor {
     public void cardLinks(BuildProducer<ExternalPageBuildItem> externalPageProducer) {
         List<ExternalPage> links = List.of(
                 new ExternalPage.Builder(NAME)
-                        .iconName("font-awesome-solid:file-circle-check")
-                        .displayName("Schema Document")
+                        .iconName("font-awesome-solid:file-lines")
+                        .displayName("Schema Yaml")
                         .externalURL("/q/openapi").build(),
+                new ExternalPage.Builder(NAME)
+                        .iconName("font-awesome-solid:file-code")
+                        .displayName("Schema Json")
+                        .externalURL("/q/openapi?format=json").build(),
                 new ExternalPage.Builder(NAME)
                         .iconName("font-awesome-solid:signs-post")
                         .displayName("Swagger UI")

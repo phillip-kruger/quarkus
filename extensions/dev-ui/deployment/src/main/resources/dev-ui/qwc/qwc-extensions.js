@@ -28,7 +28,7 @@ export class QwcExtensions extends LitElement {
     `;
 
     static properties = {
-        _extensions: {state: true}
+        _extensions: {state: false}
     };
 
     connectedCallback() {
@@ -52,17 +52,27 @@ export class QwcExtensions extends LitElement {
       
             let base = this.routerController.getBasePath();
             active.forEach(activeExtension => {
-            var extension = activeExtension.name.replace(/\s+/g, '-').toLowerCase();
-            activeExtension.links.forEach(componentLink => {
-                if(!componentLink.path){ // If path exist it's an external link, so no need to register with the router
-                    var componentRef = './../' + extension + '/' + componentLink.component;
-                    import(componentRef);
-                    var pagename = componentLink.component.toLowerCase().slice(0, componentLink.component.lastIndexOf('.'));
-                    var page = extension + "-" + componentLink.displayName.replace(/\s+/g, '-').toLowerCase();
-                    this.routerController.addRoute(page, pagename);
-                    componentLink['path'] =  base + '/' + page;
-                }
-            });
+                var extension = activeExtension.name.replace(/\s+/g, '-').toLowerCase();
+                activeExtension.links.forEach(componentLink => {                
+                    if(componentLink.component){ // If this is linking to a component we need to register it with the router
+                        import(componentLink.componentRef);
+                        var pagename = componentLink.component.toLowerCase().slice(0, componentLink.component.lastIndexOf('.'));
+                        var page = extension + "-" + componentLink.displayName.replace(/\s+/g, '-').toLowerCase();
+
+                        if(componentLink.addPathParam){
+                            this.routerController.addRoute(page + "/:externalUrl", pagename, componentLink.displayName);
+                        }else{
+                            this.routerController.addRoute(page, pagename, componentLink.displayName);
+                        }
+
+                        if(componentLink.path){
+                            var encodedExternalUrl = window.btoa(componentLink.path);
+                            componentLink['path'] =  base + '/' + page + '/' + encodedExternalUrl ;
+                        }else{
+                            componentLink['path'] =  base + '/' + page;
+                        }
+                    }
+                });
       });
 
       // Fire event that contains all active extensions

@@ -73,6 +73,7 @@ export class QwcHeader extends LitElement {
         _title: {state:true},
         _links: {state:true},
         _selectedComponent: {state: true},
+        _location: {state: true},
         applicationName: {type: String},
         applicationVersion: {type: String},
     };
@@ -87,8 +88,8 @@ export class QwcHeader extends LitElement {
             extension.links.forEach((link) => {
                 if(link.component){
                     let key = link.component.slice(0, -3);
-                    QwcHeader.extensions.set(key, extension.links);
-                    QwcHeader.extensionNames.set(key, extension.name);
+                    QwcHeader.extensions.set(link.displayName, extension.links);
+                    QwcHeader.extensionNames.set(link.displayName, extension.name);
                 }
             });
            });  
@@ -116,16 +117,16 @@ export class QwcHeader extends LitElement {
         addEventListener('switchPage', (e) => { 
 
             // Set the Title
-            if(QwcHeader.extensionNames && QwcHeader.extensionNames.size > 0 && QwcHeader.extensionNames.has(e.detail.component)){
-                this._title = QwcHeader.extensionNames.get(e.detail.component);
+            if(QwcHeader.extensionNames && QwcHeader.extensionNames.size > 0 && QwcHeader.extensionNames.has(e.detail.displayName)){
+                this._title = QwcHeader.extensionNames.get(e.detail.displayName);
             } else {
                 this._title = e.detail.display;
             }
             
             // Add the links
-            if(QwcHeader.extensions && QwcHeader.extensions.size > 0 && QwcHeader.extensions.has(e.detail.component)){
-                this._links = QwcHeader.extensions.get(e.detail.component);
-                this._selectedComponent = e.detail.component;
+            if(QwcHeader.extensions && QwcHeader.extensions.size > 0 && QwcHeader.extensions.has(e.detail.displayName)){
+                this._links = QwcHeader.extensions.get(e.detail.displayName);
+                this._selectedComponent = e.detail.displayName;
             }else {
                 this._links = null;
                 this._selectedComponent = null;
@@ -136,9 +137,9 @@ export class QwcHeader extends LitElement {
 
     _renderTabs(){
         if(this._links){
-            let js = this._selectedComponent + ".js";
+            
             const index = this._links.findIndex(object => {
-                return object.component === js;
+                return object.displayName === this._selectedComponent;
             });
 
             return html`

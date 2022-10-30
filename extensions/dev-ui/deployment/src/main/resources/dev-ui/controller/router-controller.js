@@ -2,6 +2,7 @@ import { Router } from '@vaadin/router';
 
 export class RouterController {
   static router = new Router(document.querySelector('qwc-page'));
+  static addedPaths = [];
   host;
 
   constructor(host) {
@@ -10,13 +11,16 @@ export class RouterController {
     window.addEventListener('vaadin-router-location-changed', (event) => {
       var component = event.detail.location.route.component;
       var path = event.detail.location.route.path;
+      var name = event.detail.location.route.name;
+      
       var display = this.getPageDisplayName(component);
       const switchPageEvent = new CustomEvent('switchPage', 
       { 
         detail: {
           component: component,
           path : path,
-          display : display
+          display : display,
+          displayName: name
         }
       });
       dispatchEvent(switchPageEvent);
@@ -41,17 +45,25 @@ export class RouterController {
   /**
    * Add a route to the routes
    */
-  addRoute(path, component, defaultRoute = false){
+  addRoute(path, component, displayName = null, defaultRoute = false){
     var base = this.getBasePath();
     path = base + '/' + path;
-    var routes = [];
-    var route = {};
-    route.path = path;
-    route.component = component;
-    routes.push({...route});
     
-    RouterController.router.addRoutes(routes);
+    if(!displayName){
+        displayName = this.getPageDisplayName(component);
+    }
     
+    if(!RouterController.addedPaths.includes(path)){
+        RouterController.addedPaths.push(path);
+        var routes = [];
+        var route = {};
+        route.path = path;
+        route.component = component;
+        route.name = displayName;
+        routes.push({...route});
+        
+        RouterController.router.addRoutes(routes);
+    }
     // TODO: Pass the other parameters along ?
     var currentSelection = window.location.pathname;
 

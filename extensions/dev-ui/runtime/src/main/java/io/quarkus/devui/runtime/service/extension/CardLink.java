@@ -9,17 +9,26 @@ public class CardLink {
     private String displayName;
     private String label;
     private String component;
+    private String componentRef;
     private String path;
+    boolean addPathParam = false;
 
     public CardLink() {
     }
 
-    public CardLink(String iconName, String displayName, String label, String component, String path) {
+    public CardLink(String iconName, String displayName, String label, String component, String componentRef, String path) {
+        this(iconName, displayName, label, component, componentRef, path, false);
+    }
+
+    public CardLink(String iconName, String displayName, String label, String component, String componentRef, String path,
+            boolean addPathParam) {
         this.iconName = iconName;
         this.displayName = displayName;
         this.label = label;
         this.component = component;
+        this.componentRef = componentRef;
         this.path = path;
+        this.addPathParam = addPathParam;
     }
 
     public String getIconName() {
@@ -52,6 +61,22 @@ public class CardLink {
 
     public void setComponent(String component) {
         this.component = component;
+    }
+
+    public String getComponentRef() {
+        return this.componentRef;
+    }
+
+    public void setComponentRef(String componentRef) {
+        this.componentRef = componentRef;
+    }
+
+    public boolean isAddPathParam() {
+        return this.addPathParam;
+    }
+
+    public void setAddPathParam(boolean addPathParam) {
+        this.addPathParam = addPathParam;
     }
 
     public String getPath() {

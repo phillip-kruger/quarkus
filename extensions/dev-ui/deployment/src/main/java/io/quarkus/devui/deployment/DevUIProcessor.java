@@ -188,8 +188,10 @@ public class DevUIProcessor {
                                 extension.addLink(new CardLink(page.getIconName(),
                                         page.getDisplayName(),
                                         page.getLabel(),
-                                        null,
-                                        page.getExternalURL()));
+                                        QWC_EXTERNAL_PAGE_JS,
+                                        "./../qwc/" + QWC_EXTERNAL_PAGE_JS,
+                                        page.getExternalURL(),
+                                        true));
                             }
 
                             activeExtensions.add(extension);
@@ -202,11 +204,13 @@ public class DevUIProcessor {
 
                             Map<String, Object> buildTimeData = new HashMap<>();
 
+                            String pathname = name.replaceAll(" ", "-").toLowerCase();
                             for (WebComponentPage page : pages) {
                                 extension.addLink(new CardLink(page.getIconName(),
                                         page.getDisplayName(),
                                         page.getLabel(),
                                         page.getWebComponent(),
+                                        "./../" + pathname + "/" + page.getWebComponent(),
                                         null));
 
                                 // If the card has some build time data that needs to be made available
@@ -368,7 +372,7 @@ public class DevUIProcessor {
     private static final String UNLISTED = "unlisted";
     private static final String CODESTART = "codestart";
     private static final String LANGUAGES = "languages";
-
+    private static final String QWC_EXTERNAL_PAGE_JS = "qwc-external-page.js";
     private static final String VALUE = "value";
 
     private static final String YAML_FILE = "/META-INF/quarkus-extension.yaml";
