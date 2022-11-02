@@ -4,7 +4,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.quarkus.devui.deployment.spi.page.Page;
+
 public class Extension {
+    private static final String SPACE = " ";
+    private static final String DASH = "-";
+
     private String namespace;
     private String artifact;
     private String name;
@@ -20,30 +25,11 @@ public class Extension {
     private List<String> providesCapabilities;
     private List<String> extensionDependencies;
     private Codestart codestart;
-    private final List<CardLink> links = new ArrayList<>();
+    private final List<Page> pages = new ArrayList<>();
 
     public Extension() {
 
     }
-
-    //    public Extension(String namespace, String artifact, String name, String shortName, String description, URL guide,
-    //            List<String> keywords, String status, List<String> configFilter, List<String> categories, String builtWith,
-    //            List<String> providesCapabilities, List<String> extensionDependencies, Codestart codestart) {
-    //        this.namespace = namespace;
-    //        this.artifact = artifact;
-    //        this.name = name;
-    //        this.shortName = shortName;
-    //        this.description = description;
-    //        this.guide = guide;
-    //        this.keywords = keywords;
-    //        this.status = status;
-    //        this.configFilter = configFilter;
-    //        this.categories = categories;
-    //        this.builtWith = builtWith;
-    //        this.providesCapabilities = providesCapabilities;
-    //        this.extensionDependencies = extensionDependencies;
-    //        this.codestart = codestart;
-    //    }
 
     public String getNamespace() {
         return namespace;
@@ -67,6 +53,10 @@ public class Extension {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getPathName() {
+        return name.toLowerCase().replaceAll(SPACE, DASH);
     }
 
     public String getShortName() {
@@ -165,20 +155,16 @@ public class Extension {
         this.codestart = codestart;
     }
 
-    public boolean hasLinks() {
-        return !this.links.isEmpty();
+    public void addPage(Page page) {
+        this.pages.add(page);
     }
 
-    public List<CardLink> getLinks() {
-        return this.links;
+    public void addPages(List<Page> pages) {
+        this.pages.addAll(pages);
     }
 
-    public void addLink(CardLink link) {
-        this.links.add(link);
-    }
-
-    public void addLinks(List<CardLink> links) {
-        this.links.addAll(links);
+    public List<Page> getPages() {
+        return pages;
     }
 
     @Override

@@ -20,7 +20,7 @@ export class QwcQuarkusVersion extends LitElement {
     };
   
   render() {
-    return html`<span @click="${this._quarkus}">${this.version}</span>`;
+    return html`<span @click="${this._quarkus}">Quarkus ${this.version}</span>`;
   }
 
   _quarkus(e) {

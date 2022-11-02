@@ -18,10 +18,7 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-dev-ui</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-dev-ui-spi</artifactId>
-        </dependency>
+        
         <!-- To create the import map -->
         <dependency>
             <groupId>org.mvnpm</groupId>

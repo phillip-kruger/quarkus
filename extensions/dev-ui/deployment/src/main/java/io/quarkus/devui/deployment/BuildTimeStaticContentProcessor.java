@@ -5,13 +5,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.mvnpm.importmap.Aggregator;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkus.builder.Version;
 import io.quarkus.deployment.IsDevelopment;
@@ -21,6 +24,7 @@ import io.quarkus.deployment.util.IoUtil;
 import io.quarkus.devui.deployment.spi.DevUIContent;
 import io.quarkus.devui.deployment.spi.buildtime.QuteTemplateBuildItem;
 import io.quarkus.devui.deployment.spi.buildtime.StaticContentBuildItem;
+import io.quarkus.devui.deployment.spi.page.PageBuildItem;
 
 /**
  * Process all Build Time static content. (Content generated at build time)
@@ -30,24 +34,94 @@ public class BuildTimeStaticContentProcessor {
     private static final String BUILD_TIME_PATH = "dev-ui-templates" + File.separator + "build-time";
     final Config config = ConfigProvider.getConfig();
 
-    // Add our own internal files
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    /**
+     * Here we create references to internal dev ui file so that they can be imported by ref.
+     * This will be merged into the final importmap
+     */
     @BuildStep(onlyIf = IsDevelopment.class)
-    QuteTemplateBuildItem createBuildTimeTemplate() {
-        QuteTemplateBuildItem builtTimeTemplateBuildItem = new QuteTemplateBuildItem(
-                QuteTemplateBuildItem.INTERNAL);
+    InternalImportMapBuildItem createKnownInternalImportMap() {
+        InternalImportMapBuildItem internalImportMapBuildItem = new InternalImportMapBuildItem();
 
         // Also add some of our own
         // TODO: Test by adding this to an importMap.json ?
-        Aggregator.add("qwc/", "./qwc/");
-        Aggregator.add("icon/", "./icon/");
-        Aggregator.add("controller/", "./controller/");
-        Aggregator.add("jsonrpc-controller", "./controller/jsonrpc-controller.js");
-        Aggregator.add("router-controller", "./controller/router-controller.js");
-        Aggregator.add("notification-controller", "./controller/notification-controller.js");
-        Aggregator.add("@qwc/app-info", "./qwc/qwc-app-info.js");
-        Aggregator.add("@qwc/quarkus-version", "./qwc/qwc-quarkus-version.js");
-        Aggregator.add("@qwc/extension", "./qwc/qwc-extension.js");
-        Aggregator.add("@qwc/extension-link", "./qwc/qwc-extension-link.js");
+        internalImportMapBuildItem.add("qwc/", "./qwc/");
+        internalImportMapBuildItem.add("icon/", "./icon/");
+        internalImportMapBuildItem.add("controller/", "./controller/");
+        internalImportMapBuildItem.add("jsonrpc-controller", "./controller/jsonrpc-controller.js");
+        internalImportMapBuildItem.add("router-controller", "./controller/router-controller.js");
+        internalImportMapBuildItem.add("notification-controller", "./controller/notification-controller.js");
+        internalImportMapBuildItem.add("@qwc/quarkus-version", "./qwc/qwc-quarkus-version.js");
+        internalImportMapBuildItem.add("@qwc/extension", "./qwc/qwc-extension.js");
+        internalImportMapBuildItem.add("@qwc/extension-link", "./qwc/qwc-extension-link.js");
+
+        return internalImportMapBuildItem;
+    }
+
+    /**
+     * Here we find all build time data and make then available via a const
+     *
+     * js components can import the const with "import {constName} from '{ext}-data';"
+     *
+     * @param pageBuildItems
+     * @param quteTemplateProducer
+     * @param internalImportMapProducer
+     */
+    @BuildStep(onlyIf = IsDevelopment.class)
+    void createBuildTimeConstJsTemplate(
+            List<PageBuildItem> pageBuildItems,
+            BuildProducer<QuteTemplateBuildItem> quteTemplateProducer,
+            BuildProducer<InternalImportMapBuildItem> internalImportMapProducer) {
+        QuteTemplateBuildItem quteTemplateBuildItem = new QuteTemplateBuildItem(
+                QuteTemplateBuildItem.INTERNAL);
+
+        InternalImportMapBuildItem internalImportMapBuildItem = new InternalImportMapBuildItem();
+
+        Map<String, Object> data = new HashMap<>();
+
+        for (PageBuildItem pageBuildItem : pageBuildItems) {
+            if (pageBuildItem.hasBuildTimeData()) {
+                for (Map.Entry<String, Object> pageData : pageBuildItem.getBuildTimeData().entrySet()) {
+                    try {
+                        String key = pageData.getKey();
+                        String value = objectMapper.writerWithDefaultPrettyPrinter()
+                                .writeValueAsString(pageData.getValue());
+                        data.put(key, value);
+                    } catch (JsonProcessingException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+
+                Map<String, Object> qutedata = new HashMap<>();
+                qutedata.put("buildTimeData", data);
+                String ref = pageBuildItem.getExtensionPathName() + "-data";
+                String file = ref + ".js";
+                quteTemplateBuildItem.add("build-time-data.js", file, qutedata);
+                quteTemplateProducer.produce(quteTemplateBuildItem);
+                internalImportMapBuildItem.add(ref, "./" + file);
+            }
+        }
+
+        internalImportMapProducer.produce(internalImportMapBuildItem);
+    }
+
+    /**
+     * Here we create index.html
+     * We aggregate all import maps into one
+     * This includes import maps from 3rd party libs from mvnpm.org and internal ones defined above
+     *
+     * @return The QuteTemplate Build item that will create the end result
+     */
+    @BuildStep(onlyIf = IsDevelopment.class)
+    QuteTemplateBuildItem createIndexHtmlTemplate(List<InternalImportMapBuildItem> internalImportMapBuildItems) {
+        QuteTemplateBuildItem quteTemplateBuildItem = new QuteTemplateBuildItem(
+                QuteTemplateBuildItem.INTERNAL);
+
+        for (InternalImportMapBuildItem importMapBuildItem : internalImportMapBuildItems) {
+            Map<String, String> importMap = importMapBuildItem.getImportMap();
+            Aggregator.add(importMap);
+        }
 
         String importmap = Aggregator.aggregateAsJson();
 
@@ -57,9 +131,9 @@ public class BuildTimeStaticContentProcessor {
                 "applicationName", config.getOptionalValue("quarkus.application.name", String.class).orElse(""),
                 "applicationVersion", config.getOptionalValue("quarkus.application.version", String.class).orElse(""));
 
-        builtTimeTemplateBuildItem.add("index.html", data);
+        quteTemplateBuildItem.add("index.html", data);
 
-        return builtTimeTemplateBuildItem;
+        return quteTemplateBuildItem;
     }
 
     // Here load all templates
@@ -72,12 +146,13 @@ public class BuildTimeStaticContentProcessor {
             List<DevUIContent> contentPerExtension = new ArrayList<>();
 
             if (template.isInternal()) {
-                Map<String, Map<String, Object>> fileAndData = template.getFileAndData();
-                Set<Map.Entry<String, Map<String, Object>>> entrySet = fileAndData.entrySet();
-                for (Map.Entry<String, Map<String, Object>> e : entrySet) {
-                    String fileName = e.getKey(); // Relative to BUILD_TIME_PATH
-                    Map<String, Object> data = e.getValue();
-                    String resourceName = BUILD_TIME_PATH + File.separator + fileName;
+                List<QuteTemplateBuildItem.TemplateData> templatesWithData = template.getTemplateDatas();
+                for (QuteTemplateBuildItem.TemplateData e : templatesWithData) {
+
+                    String templateName = e.getTemplateName(); // Relative to BUILD_TIME_PATH
+                    Map<String, Object> data = e.getData();
+                    String resourceName = BUILD_TIME_PATH + File.separator + templateName;
+                    String fileName = e.getFileName();
                     // TODO: What if we find more than one ?
                     try (InputStream templateStream = cl.getResourceAsStream(resourceName)) {
                         if (templateStream != null) {
@@ -95,7 +170,7 @@ public class BuildTimeStaticContentProcessor {
                     }
                 }
                 buildTimeContentProducer.produce(new StaticContentBuildItem(
-                        StaticContentBuildItem.INTERNAL, contentPerExtension));
+                        StaticContentBuildItem.INTERNAL, contentPerExtension)); // TODO: This should not be internal ?
             } else {
                 // TODO: Also handle case for extensions
             }

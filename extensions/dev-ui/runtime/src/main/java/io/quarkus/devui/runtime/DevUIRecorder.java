@@ -34,8 +34,8 @@ public class DevUIRecorder {
         return new DevUIRouterHandler(basePath);
     }
 
-    public Handler<RoutingContext> buildTimeStaticHandler(String basePath, Map<String, String> pathAndContentMap) {
-        return new DevUIBuildTimeStaticHandler(basePath, pathAndContentMap);
+    public Handler<RoutingContext> buildTimeStaticHandler(String basePath, Map<String, String> urlAndPath) {
+        return new DevUIBuildTimeStaticHandler(basePath, urlAndPath);
     }
 
     public Handler<RoutingContext> communicationHandler() {

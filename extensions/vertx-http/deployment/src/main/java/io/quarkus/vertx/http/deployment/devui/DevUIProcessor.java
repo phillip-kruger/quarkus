@@ -1,6 +1,9 @@
 package io.quarkus.vertx.http.deployment.devui;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +47,7 @@ public class DevUIProcessor {
     }
 
     @BuildStep(onlyIf = IsDevelopment.class)
-    @Record(ExecutionTime.RUNTIME_INIT)
+    @Record(ExecutionTime.STATIC_INIT)
     void registerDevUiHandler(
             DevUIQuteEngineBuildItem engineBuildItem,
             List<DevUIRoutesBuildItem> devUIRoutesBuildItems,
@@ -84,21 +87,29 @@ public class DevUIProcessor {
         Engine engine = engineBuildItem.getEngine();
         for (StaticContentBuildItem buildTimeContent : staticContentBuildItem) {
 
-            Map<String, String> pathAndContentMap = new HashMap<>();
+            Map<String, String> urlAndPath = new HashMap<>();
             if (buildTimeContent.isInternal()) {
                 List<DevUIContent> content = buildTimeContent.getContent();
                 for (DevUIContent c : content) {
                     Template t = engine.parse(new String(c.getTemplate()));
                     String parsedContent = t.data(c.getData()).render();
-                    pathAndContentMap.put(c.getFileName(), parsedContent);
+
+                    Path tempFile = Files.createTempFile("quarkus-dev-ui-", c.getFileName());
+                    Files.write(tempFile, parsedContent.getBytes(StandardCharsets.UTF_8));
+
+                    urlAndPath.put(c.getFileName(), tempFile.toString());
                 }
-                Handler<RoutingContext> buildTimeStaticHandler = recorder.buildTimeStaticHandler(basepath, pathAndContentMap);
+                Handler<RoutingContext> buildTimeStaticHandler = recorder.buildTimeStaticHandler(basepath, urlAndPath);
                 routeProducer.produce(
                         nonApplicationRootPathBuildItem.routeBuilder().route(basepath + SLASH_ALL)
                                 .handler(buildTimeStaticHandler)
                                 .build());
             } else {
                 // TODO: Handle extension content
+
+                System.err.println(">>>>>>>>>>>>>>> IGNORING " + buildTimeContent.getExtensionName()
+                        + buildTimeContent.getExtensionPathName());
+
             }
         }
 

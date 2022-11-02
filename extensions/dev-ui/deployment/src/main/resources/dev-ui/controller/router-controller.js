@@ -45,13 +45,9 @@ export class RouterController {
   /**
    * Add a route to the routes
    */
-  addRoute(path, component, displayName = null, defaultRoute = false){
+  addRoute(path, component, name, defaultRoute = false){
     var base = this.getBasePath();
     path = base + '/' + path;
-    
-    if(!displayName){
-        displayName = this.getPageDisplayName(component);
-    }
     
     if(!RouterController.addedPaths.includes(path)){
         RouterController.addedPaths.push(path);
@@ -59,7 +55,8 @@ export class RouterController {
         var route = {};
         route.path = path;
         route.component = component;
-        route.name = displayName;
+        route.name = name;
+
         routes.push({...route});
         
         RouterController.router.addRoutes(routes);

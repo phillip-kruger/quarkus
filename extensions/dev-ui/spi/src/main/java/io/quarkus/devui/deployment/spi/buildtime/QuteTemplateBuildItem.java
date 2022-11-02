@@ -1,6 +1,7 @@
 package io.quarkus.devui.deployment.spi.buildtime;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import io.quarkus.devui.deployment.spi.AbstractDevUIBuildItem;
@@ -15,17 +16,49 @@ import io.quarkus.devui.deployment.spi.AbstractDevUIBuildItem;
  * From a runtime p.o.v this is file served from "disk"
  */
 public final class QuteTemplateBuildItem extends AbstractDevUIBuildItem {
-    private final Map<String, Map<String, Object>> fileAndData = new HashMap<>();
+    private final List<TemplateData> templateDatas = new ArrayList<>();
 
     public QuteTemplateBuildItem(String extensionName) {
         super(extensionName);
     }
 
-    public Map<String, Map<String, Object>> getFileAndData() {
-        return fileAndData;
+    public List<TemplateData> getTemplateDatas() {
+        return templateDatas;
     }
 
-    public void add(String filename, Map<String, Object> data) {
-        fileAndData.put(filename, data);
+    public void add(String templatename, Map<String, Object> data) {
+        add(templatename, templatename, data); // By default the template is used for only one file.
+    }
+
+    public void add(String templatename, String fileName, Map<String, Object> data) {
+        add(new TemplateData(templatename, fileName, data));
+    }
+
+    public void add(TemplateData templateData) {
+        templateDatas.add(templateData);
+    }
+
+    public static class TemplateData {
+        final String templateName;
+        final String fileName;
+        final Map<String, Object> data;
+
+        public TemplateData(String templateName, String fileName, Map<String, Object> data) {
+            this.templateName = templateName;
+            this.fileName = fileName;
+            this.data = data;
+        }
+
+        public String getTemplateName() {
+            return templateName;
+        }
+
+        public String getFileName() {
+            return fileName;
+        }
+
+        public Map<String, Object> getData() {
+            return data;
+        }
     }
 }

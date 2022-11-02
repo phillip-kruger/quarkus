@@ -1,6 +1,5 @@
 import { LitElement, html, css} from 'lit';
-import { until } from 'lit/directives/until.js';
-import { JsonRpcController } from 'jsonrpc-controller';
+import { observers } from 'arc-data';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/grid';
 import '@vaadin/icon';
@@ -9,107 +8,101 @@ import '@vaadin/icon';
  * This component shows the Arc Observers
  */
 export class QwcArcObservers extends LitElement {
-  static methodName = "getObservers";
-  jsonRpcController = new JsonRpcController(this, "ArC");
   
-  static styles = css`
+    static styles = css`
         .arctable {
-          height: 100%;
-          padding-bottom: 10px;
+            height: 100%;
+            padding-bottom: 10px;
         }
 
         code {
-          font-size: 80%;
+            font-size: 80%;
         }
 
         .text {
-          font-size: 80%;
+            font-size: 80%;
         }
 
         .method {
-          color: #e94cb6;
+            color: #e94cb6;
         }
 
         .annotation {
-          color: grey;
+            color: grey;
         }
 
         .badge {
-          font-size: 80%;
-          color: grey;
-          padding: 4px 8px;
-          text-align: center;
-          border-radius: 5px;
-          background-color: lightblue;
+            font-size: 80%;
+            color: grey;
+            padding: 4px 8px;
+            text-align: center;
+            border-radius: 5px;
+            background-color: lightblue;
         }
 
         vaadin-icon {
-          font-size: 80%;
-          color: grey;
+            font-size: 80%;
+            color: grey;
         }
         `;
 
-  static properties = {
-    _observers: {state: true}
-  };
+    static properties = {
+        _observers: {attribute: false}
+    };
   
-  connectedCallback() {
-    super.connectedCallback();
-    this.jsonRpcController.request(QwcArcObservers.methodName);
-  }
-
-  onJsonRpcResponse(result){
-    this._observers = result;
-  }
-
-  render() {
-    return html`${until(this._renderJsonRpcResponse(), html`<span>Loading ArC observers...</span>`)}`;
-  }
-
-  _renderJsonRpcResponse(){
-    if(this._observers){
-
-      return html`
-        <vaadin-grid .items="${this._observers}" class="arctable" theme="no-border">
-
-          <vaadin-grid-column auto-width
-            header="Source"
-            ${columnBodyRenderer(this._sourceRenderer, [])}
-            resizable>
-          </vaadin-grid-column>
-          
-          <vaadin-grid-column auto-width
-            header="Observed Type / Qualifiers"
-            ${columnBodyRenderer(this._typeRenderer, [])}
-            resizable>
-          </vaadin-grid-column>
-
-          <vaadin-grid-column auto-width
-            header="Priority"
-            ${columnBodyRenderer(this._priorityRenderer, [])}
-            resizable>
-          </vaadin-grid-column>
-
-          <vaadin-grid-column auto-width
-            header="Reception"
-            ${columnBodyRenderer(this._receptionRenderer, [])}
-            resizable>
-          </vaadin-grid-column>
-
-          <vaadin-grid-column auto-width
-            header="Transaction Phase"
-            ${columnBodyRenderer(this._transactionPhaseRenderer, [])}
-            resizable>
-          </vaadin-grid-column>
-
-          <vaadin-grid-column auto-width 
-            header="Async"
-            ${columnBodyRenderer(this._asyncRenderer, [])}
-            resizable>
-          </vaadin-grid-column>
-
-        </vaadin-grid>`;
+    constructor() {
+        super();
+        this._observers = observers;
     }
+  
+    connectedCallback() {
+        super.connectedCallback();
+    }
+
+    render() {
+        if(this._observers){
+
+            return html`
+                <vaadin-grid .items="${this._observers}" class="arctable" theme="no-border">
+
+                    <vaadin-grid-column auto-width
+                        header="Source"
+                        ${columnBodyRenderer(this._sourceRenderer, [])}
+                        resizable>
+                    </vaadin-grid-column>
+
+                    <vaadin-grid-column auto-width
+                        header="Observed Type / Qualifiers"
+                        ${columnBodyRenderer(this._typeRenderer, [])}
+                        resizable>
+                    </vaadin-grid-column>
+
+                    <vaadin-grid-column auto-width
+                        header="Priority"
+                        ${columnBodyRenderer(this._priorityRenderer, [])}
+                        resizable>
+                    </vaadin-grid-column>
+
+                    <vaadin-grid-column auto-width
+                        header="Reception"
+                        ${columnBodyRenderer(this._receptionRenderer, [])}
+                        resizable>
+                    </vaadin-grid-column>
+
+                    <vaadin-grid-column auto-width
+                        header="Transaction Phase"
+                        ${columnBodyRenderer(this._transactionPhaseRenderer, [])}
+                        resizable>
+                    </vaadin-grid-column>
+
+                    <vaadin-grid-column auto-width 
+                        header="Async"
+                        ${columnBodyRenderer(this._asyncRenderer, [])}
+                        resizable>
+                    </vaadin-grid-column>
+
+                </vaadin-grid>`;
+        }
   }
 
   _sourceRenderer(bean){

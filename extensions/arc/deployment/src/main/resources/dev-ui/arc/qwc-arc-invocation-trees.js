@@ -1,14 +1,10 @@
 import { LitElement, html, css} from 'lit';
-import { until } from 'lit/directives/until.js';
-import { JsonRpcController } from 'controller/jsonrpc-controller.js';
 
 /**
  * This component shows the Arc Invocation Trees
  */
 export class QwcArcInvocationTrees extends LitElement {
-  //static methodName = "getDevServices";
-  jsonRpcController = new JsonRpcController(this);
-
+  
   static styles = css`
         .todo {
             font-size: small;
@@ -18,28 +14,16 @@ export class QwcArcInvocationTrees extends LitElement {
             height: 100%;
         }`;
 
-  static properties = {
-    _services: {state: true}
-  };
+    static properties = {
+    
+    };
   
-  connectedCallback() {
-    super.connectedCallback();
-    //this.jsonRpcController.request(QwcInvocationTrees.methodName);
-  }
-
-  onJsonRpcResponse(result){
-    this._services = result;
-  }
-
-  render() {
-    return html`<div class="todo">Loading invocation trees...</div>`;
-  }
-
-  _renderJsonRpcResponse(){
-    if(this._services){
-      return html`<div class="todo">${this._services}</div>`;
+    connectedCallback() {
+        super.connectedCallback();
     }
-  }
 
+    render() {
+        return html`<div class="todo">Loading invocation trees...</div>`;
+    }
 }
 customElements.define('qwc-arc-invocation-trees', QwcArcInvocationTrees);

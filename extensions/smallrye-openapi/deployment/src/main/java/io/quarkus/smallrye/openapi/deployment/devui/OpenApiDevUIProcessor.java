@@ -1,34 +1,33 @@
 package io.quarkus.smallrye.openapi.deployment.devui;
 
-import java.util.List;
-
 import io.quarkus.deployment.IsDevelopment;
-import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.devui.deployment.spi.page.ExternalPage;
-import io.quarkus.devui.deployment.spi.page.ExternalPageBuildItem;
+import io.quarkus.devui.deployment.spi.page.Page;
+import io.quarkus.devui.deployment.spi.page.PageBuildItem;
+import io.quarkus.vertx.http.deployment.NonApplicationRootPathBuildItem;
 
 public class OpenApiDevUIProcessor {
 
-    private static final String NAME = "smallrye openapi";
+    private static final String NAME = "Smallrye Openapi";
 
     @BuildStep(onlyIf = IsDevelopment.class)
-    public void cardLinks(BuildProducer<ExternalPageBuildItem> externalPageProducer) {
-        List<ExternalPage> links = List.of(
-                new ExternalPage.Builder(NAME)
-                        .iconName("font-awesome-solid:file-lines")
-                        .displayName("Schema Yaml")
-                        .externalURL("/q/openapi").build(),
-                new ExternalPage.Builder(NAME)
-                        .iconName("font-awesome-solid:file-code")
-                        .displayName("Schema Json")
-                        .externalURL("/q/openapi?format=json").build(),
-                new ExternalPage.Builder(NAME)
-                        .iconName("font-awesome-solid:signs-post")
-                        .displayName("Swagger UI")
-                        .externalURL("/q/swagger-ui").build());
+    public PageBuildItem pages(NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem) {
 
-        externalPageProducer.produce(new ExternalPageBuildItem(NAME, links));
+        PageBuildItem pageBuildItem = new PageBuildItem(NAME);
+
+        pageBuildItem.addPage(Page.externalPageBuilder("Schema yaml")
+                .url(nonApplicationRootPathBuildItem.resolvePath("openapi"))
+                .icon("font-awesome-solid:file-lines").build());
+
+        pageBuildItem.addPage(Page.externalPageBuilder("Schema json")
+                .url(nonApplicationRootPathBuildItem.resolvePath("openapi") + "?format=json")
+                .icon("font-awesome-solid:file-code").build());
+
+        pageBuildItem.addPage(Page.externalPageBuilder("Swagger UI")
+                .url(nonApplicationRootPathBuildItem.resolvePath("swagger-ui"))
+                .icon("font-awesome-solid:signs-post").build());
+
+        return pageBuildItem;
     }
 
 }

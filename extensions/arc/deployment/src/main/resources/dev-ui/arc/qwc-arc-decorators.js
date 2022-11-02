@@ -1,15 +1,11 @@
 import { LitElement, html, css} from 'lit';
-import { until } from 'lit/directives/until.js';
-import { JsonRpcController } from 'controller/jsonrpc-controller.js';
-
+import { decorators } from 'arc-data';
 /**
  * This component shows the Arc Decorators
  */
 export class QwcArcDecorators extends LitElement {
-  //static methodName = "getDevServices";
-  jsonRpcController = new JsonRpcController(this);
 
-  static styles = css`
+    static styles = css`
         .todo {
             font-size: small;
             color: #4695EB;
@@ -18,28 +14,24 @@ export class QwcArcDecorators extends LitElement {
             height: 100%;
         }`;
 
-  static properties = {
-    _services: {state: true}
-  };
+    static properties = {
+        _decorators: {attribute: false},
+    };
   
-  connectedCallback() {
-    super.connectedCallback();
-    //this.jsonRpcController.request(QwcDecorators.methodName);
-  }
-
-  onJsonRpcResponse(result){
-    this._services = result;
-  }
-
-  render() {
-    return html`<div class="todo">Loading decorators...</div>`;
-  }
-
-  _renderJsonRpcResponse(){
-    if(this._services){
-      return html`<div class="todo">${this._services}</div>`;
+    constructor() {
+        super();
+        this._decorators = decorators;
     }
-  }
+  
+    connectedCallback() {
+        super.connectedCallback();
+    }
+
+    render() {
+        if (this._decorators) {
+            html`${this._decorators}`;
+        }
+    }
 
 }
 customElements.define('qwc-arc-decorators', QwcArcDecorators);

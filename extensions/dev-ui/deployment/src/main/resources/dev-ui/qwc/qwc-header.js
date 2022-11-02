@@ -1,12 +1,11 @@
 import { LitElement, html, css} from 'lit';
+import { RouterController } from 'router-controller';
 import '@vaadin/tabs';
 
 /**
  * This component represent the Dev UI Header
  */
 export class QwcHeader extends LitElement {
-    static extensions = new Map();
-    static extensionNames = new Map();
 
     static styles = css`
         .top-bar {
@@ -70,32 +69,11 @@ export class QwcHeader extends LitElement {
         `;
 
     static properties = {
-        _title: {state:true},
-        _links: {state:true},
-        _selectedComponent: {state: true},
-        _location: {state: true},
+        _title: {state: true},
+        _rightSideNav: {state: true},
         applicationName: {type: String},
         applicationVersion: {type: String},
     };
-    
-    constructor(){
-        super();
-        
-        document.addEventListener('extensions', (e) => { 
-          var extensions = e.detail;
-
-          extensions.forEach((extension) => { 
-            extension.links.forEach((link) => {
-                if(link.component){
-                    let key = link.component.slice(0, -3);
-                    QwcHeader.extensions.set(link.displayName, extension.links);
-                    QwcHeader.extensionNames.set(link.displayName, extension.name);
-                }
-            });
-           });  
-        }, false);
-    
-      }
 
     render() {
         return html`
@@ -107,61 +85,81 @@ export class QwcHeader extends LitElement {
                 </div>
                 <span class="title">${this._title}</span>
             </div>
-            ${this._renderTabs()}
+            ${this._rightSideNav}
         </div>
         `;
     }
 
-    connectedCallback() {
-        super.connectedCallback();
-        addEventListener('switchPage', (e) => { 
-
-            // Set the Title
-            if(QwcHeader.extensionNames && QwcHeader.extensionNames.size > 0 && QwcHeader.extensionNames.has(e.detail.displayName)){
-                this._title = QwcHeader.extensionNames.get(e.detail.displayName);
-            } else {
-                this._title = e.detail.display;
-            }
-            
-            // Add the links
-            if(QwcHeader.extensions && QwcHeader.extensions.size > 0 && QwcHeader.extensions.has(e.detail.displayName)){
-                this._links = QwcHeader.extensions.get(e.detail.displayName);
-                this._selectedComponent = e.detail.displayName;
-            }else {
-                this._links = null;
-                this._selectedComponent = null;
-            }
-
-          }, false);
+    constructor() {
+        super();
+        this._title = "Extensions";
+        this._rightSideNav = "";
+        
+        window.addEventListener('vaadin-router-location-changed', (event) => {
+            this._updateHeader();
+        });
     }
+    
+    _updateHeader(){
+        
+        var title = "Extensions"; // default
+        var rightSideNav = html`<div class="app-info">${this.applicationName} ${this.applicationVersion}</div>`; // default
+        
+        
+        var location = RouterController.router.location;
+        if(location.route){
+            var currentRoutePath = location.route.path;
+            if(currentRoutePath.includes('/dev-ui/')){
+                var currentPage = currentRoutePath.substring(currentRoutePath.indexOf('/dev-ui/') + 8);
+                if(currentPage.includes('/')){
+                    // This is a submenu
+                    var extension = currentPage.substring(0, currentPage.lastIndexOf("/"));
+                    title = this._formatTitle(extension);
+                    
+                    const links = [];
+                    var startOfPath = currentRoutePath.substring(0, currentRoutePath.lastIndexOf("/"));
+                    var routes = RouterController.router.getRoutes();
 
-    _renderTabs(){
-        if(this._links){
-            
-            const index = this._links.findIndex(object => {
-                return object.displayName === this._selectedComponent;
-            });
-
-            return html`
-            <div class="submenu">
-                <vaadin-tabs selected="${index}">
-                    ${this._links.map(link => 
-                        html`<vaadin-tab><a href="${link.path}">${link.displayName}</a></vaadin-tab>`
-                    )}
-                </vaadin-tabs>
-            </div>`;
-        }else{
-            return html`<div class="app-info">${this.applicationName} ${this.applicationVersion}</div>`;
+                    var counter = 0;
+                    var index = 0;
+                    routes.forEach((route) => {
+                        if(route.path.startsWith(startOfPath)){
+                            links.push(route);
+                            if(route.name === location.route.name){
+                                index = counter;
+                            }
+                            counter = counter + 1;
+                        }
+                    });
+                    
+                    if (links && links.length > 1) {
+                        rightSideNav = html`
+                            <div class="submenu">
+                                <vaadin-tabs selected="${index}">
+                                    ${links.map(link =>
+                                        html`<vaadin-tab><a href="${link.path}">${link.name}</a></vaadin-tab>`
+                                    )}
+                                </vaadin-tabs>
+                            </div>`;
+                    }
+                }else{
+                    // This is a main section
+                    title = this._formatTitle(currentPage);
+                }
+            }
         }
+        
+        this._title = title;
+        this._rightSideNav = rightSideNav;
     }
 
-    disconnectedCallback() {
-        super.disconnectedCallback();
+    _formatTitle(title) {
+        title = title.charAt(0).toUpperCase() + title.slice(1);
+        return title.split("-").join(" ");
     }
 
-    _reload(e){
+    _reload(e) {
         console.log("TODO: Reload");
     }
 }
-
 customElements.define('qwc-header', QwcHeader);

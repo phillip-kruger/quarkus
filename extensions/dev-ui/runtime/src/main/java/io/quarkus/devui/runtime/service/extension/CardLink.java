@@ -3,6 +3,7 @@ package io.quarkus.devui.runtime.service.extension;
 /**
  * Card Link on an extension card in Dev UI
  */
+@Deprecated
 public class CardLink {
 
     private String iconName;

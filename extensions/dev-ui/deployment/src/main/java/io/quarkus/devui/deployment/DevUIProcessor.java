@@ -20,6 +20,8 @@ import org.jboss.logging.Logger;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
@@ -30,16 +32,13 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.devui.deployment.spi.buildtime.JsonRPCResponsesBuildItem;
-import io.quarkus.devui.deployment.spi.page.ExternalPage;
-import io.quarkus.devui.deployment.spi.page.ExternalPageBuildItem;
-import io.quarkus.devui.deployment.spi.page.WebComponentPage;
-import io.quarkus.devui.deployment.spi.page.WebComponentsPageBuildItem;
+import io.quarkus.devui.deployment.spi.page.Page;
+import io.quarkus.devui.deployment.spi.page.PageBuildItem;
 import io.quarkus.devui.deployment.spi.runtime.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.runtime.DevUIRecorder;
 import io.quarkus.devui.runtime.jsonrpc.DevUIJsonRPCProviderNamer;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcRouter;
 import io.quarkus.devui.runtime.jsonrpc.handler.DevUIInternalJsonRPCMethodProvider;
-import io.quarkus.devui.runtime.service.extension.CardLink;
 import io.quarkus.devui.runtime.service.extension.Codestart;
 import io.quarkus.devui.runtime.service.extension.Extension;
 import io.quarkus.gizmo.AnnotationCreator;
@@ -61,8 +60,12 @@ public class DevUIProcessor {
     private static final GACT UI_JAR = new GACT("io.quarkus", "quarkus-dev-ui-deployment", null, JAR);
     private static final String DEVUI = "dev-ui";
     private static final String SLASH = "/";
+    private static final String SPACE = " ";
+    private static final String DASH = "-";
     private static final String DOUBLE_POINT = ":";
     private static final String DASH_DEPLOYMENT = "-deployment";
+
+    private final static ObjectMapper objectMapper = new ObjectMapper();
 
     @BuildStep(onlyIf = IsDevelopment.class)
     void additionalBean(BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer) {
@@ -97,8 +100,7 @@ public class DevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     @SuppressWarnings("unchecked")
-    void getAllExtensions(List<WebComponentsPageBuildItem> webComponentPages,
-            List<ExternalPageBuildItem> externalPages,
+    void getAllExtensions(List<PageBuildItem> pageBuildItems,
             BuildProducer<ExtensionsBuildItem> extensionsProducer,
             BuildProducer<WebJarBuildItem> webJarBuildProducer,
             BuildProducer<DevUIWebJarBuildItem> devUIWebJarProducer,
@@ -112,8 +114,7 @@ public class DevUIProcessor {
         devUIWebJarProducer.produce(new DevUIWebJarBuildItem(UI_JAR, DEVUI));
 
         // Now go through all extensions and check them for active components
-        Map<String, WebComponentsPageBuildItem> webComponentPagesMap = getWebComponentPagesMap(webComponentPages);
-        Map<String, ExternalPageBuildItem> externalPagesMap = getExternalPagesMap(externalPages);
+        Map<String, PageBuildItem> pagesMap = getPagesMap(pageBuildItems);
 
         try {
             final Yaml yaml = new Yaml(new SafeConstructor());
@@ -178,66 +179,81 @@ public class DevUIProcessor {
                             }
                         }
 
-                        String nameKey = name.toLowerCase();
-                        // Check for cards activated by an external link
-                        if (externalPagesMap.containsKey(nameKey)) {
-                            ExternalPageBuildItem externalPageBuildItem = externalPagesMap.get(nameKey);
-                            List<ExternalPage> pages = externalPageBuildItem.getExternalPages();
+                        String nameKey = name.toLowerCase().replaceAll(SPACE, DASH);
+                        // Inactive card
+                        if (!pagesMap.containsKey(nameKey)) {
+                            inactiveExtensions.add(extension);
+                        } else {
+                            //                            PageBuildItem externalPageBuildItem = externalPagesMap.get(nameKey);
+                            //                            List<ExternalPage> pages = externalPageBuildItem.getExternalPages();
+                            //
+                            //                            for (ExternalPage page : pages) {
+                            //                                extension.addLink(new CardLink(page.getIconName(),
+                            //                                        page.getTitle(),
+                            //                                        page.getLabel(),
+                            //                                        QWC_EXTERNAL_PAGE_JS,
+                            //                                        "./../qwc/" + QWC_EXTERNAL_PAGE_JS,
+                            //                                        page.getExternalURL(),
+                            //                                        true));
+                            //                            }
+                            //
+                            //                            activeExtensions.add(extension);
 
-                            for (ExternalPage page : pages) {
-                                extension.addLink(new CardLink(page.getIconName(),
-                                        page.getDisplayName(),
-                                        page.getLabel(),
-                                        QWC_EXTERNAL_PAGE_JS,
-                                        "./../qwc/" + QWC_EXTERNAL_PAGE_JS,
-                                        page.getExternalURL(),
-                                        true));
+                            PageBuildItem pageBuildItem = pagesMap.get(nameKey);
+                            List<Page> pages = pageBuildItem.getPages();
+
+                            for (Page page : pages) {
+                                page.setNamespace(extension.getPathName());
+                                extension.addPage(page);
                             }
 
-                            activeExtensions.add(extension);
-                        }
+                            //                            Map<String, Object> buildTimeData = new HashMap<>();
+                            //
+                            //                            String pathname = name.replaceAll(" ", "-").toLowerCase();
+                            //                            for (WebComponentPage page : pages) {
+                            //                                extension.addLink(new CardLink(page.getIconName(),
+                            //                                        page.getDisplayName(),
+                            //                                        page.getLabel(),
+                            //                                        page.getWebComponent(),
+                            //                                        "./../" + pathname + "/" + page.getWebComponent(),
+                            //                                        null));
+                            //
+                            //                                // If the card has some build time data that needs to be made available
+                            //                                if (page.hasBuildTimeData()) {
+                            //                                    buildTimeData.putAll(page.getBuildTimeData());
+                            //                                }
+                            //                            }
 
-                        // Check for cards activated by some webcomponent
-                        if (webComponentPagesMap.containsKey(nameKey)) {
-                            WebComponentsPageBuildItem webComponentsPageBuildItem = webComponentPagesMap.get(nameKey);
-                            List<WebComponentPage> pages = webComponentsPageBuildItem.getWebComponentPages();
-
-                            Map<String, Object> buildTimeData = new HashMap<>();
-
-                            String pathname = name.replaceAll(" ", "-").toLowerCase();
-                            for (WebComponentPage page : pages) {
-                                extension.addLink(new CardLink(page.getIconName(),
-                                        page.getDisplayName(),
-                                        page.getLabel(),
-                                        page.getWebComponent(),
-                                        "./../" + pathname + "/" + page.getWebComponent(),
-                                        null));
-
-                                // If the card has some build time data that needs to be made available
-                                if (page.hasBuildTimeData()) {
-                                    buildTimeData.putAll(page.getBuildTimeData());
-                                }
-                            }
-
+                            // TODO: Change from JsonRPC to build time json injection
+                            //Map<String, Object> buildTimeData = pageBuildItem.getAggegatedBuildTimeData();
                             // Make all the build time data avalable
-                            if (!buildTimeData.isEmpty()) {
-                                devUIBuildtimeJsonRPCMethodProducer.produce(new JsonRPCResponsesBuildItem(
-                                        webComponentsPageBuildItem.getExtensionName(), buildTimeData));
-                            }
+                            //if (!buildTimeData.isEmpty()) {
+
+                            //                                System.out.println("===================== " + pageBuildItem.getExtensionName()
+                            //                                        + " =============================");
+                            //
+                            //                                for (Map.Entry<String, Object> btd : buildTimeData.entrySet()) {
+                            //                                    System.out.println("\n\n\t" + btd.getKey());
+                            //                                    String json = objectMapper.writerWithDefaultPrettyPrinter()
+                            //                                            .writeValueAsString(btd.getValue());
+                            //                                    System.out.println("\n\t\t" + json);
+                            //                                }
+                            //
+                            //                                devUIBuildtimeJsonRPCMethodProducer.produce(new JsonRPCResponsesBuildItem(
+                            //                                        pageBuildItem.getExtensionName(), buildTimeData));
+                            //                            }
 
                             // Also make sure the static resources for that static resource is available
                             GACT gact = getGACT(artifactId);
                             webJarBuildProducer.produce(WebJarBuildItem.builder()
                                     .artifactKey(gact)
-                                    .root(DEVUI + SLASH + webComponentsPageBuildItem.getExtensionPathName() + SLASH).build());
+                                    .root(DEVUI + SLASH + pageBuildItem.getExtensionPathName() + SLASH).build());
 
                             devUIWebJarProducer.produce(
                                     new DevUIWebJarBuildItem(gact,
-                                            DEVUI + SLASH + webComponentsPageBuildItem.getExtensionPathName()));
+                                            DEVUI + SLASH + pageBuildItem.getExtensionPathName()));
 
                             activeExtensions.add(extension);
-                        } else {
-                            inactiveExtensions.add(extension);
                         }
                     }
 
@@ -303,18 +319,10 @@ public class DevUIProcessor {
         return new GACT(split[0], split[1] + DASH_DEPLOYMENT, null, JAR);
     }
 
-    private Map<String, WebComponentsPageBuildItem> getWebComponentPagesMap(List<WebComponentsPageBuildItem> pages) {
-        Map<String, WebComponentsPageBuildItem> m = new HashMap<>();
-        for (WebComponentsPageBuildItem page : pages) {
-            m.put(page.getExtensionName().toLowerCase(), page);
-        }
-        return m;
-    }
-
-    private Map<String, ExternalPageBuildItem> getExternalPagesMap(List<ExternalPageBuildItem> pages) {
-        Map<String, ExternalPageBuildItem> m = new HashMap<>();
-        for (ExternalPageBuildItem page : pages) {
-            m.put(page.getExtensionName().toLowerCase(), page);
+    private Map<String, PageBuildItem> getPagesMap(List<PageBuildItem> pages) {
+        Map<String, PageBuildItem> m = new HashMap<>();
+        for (PageBuildItem pageBuildItem : pages) {
+            m.put(pageBuildItem.getExtensionPathName(), pageBuildItem);
         }
         return m;
     }
@@ -372,7 +380,6 @@ public class DevUIProcessor {
     private static final String UNLISTED = "unlisted";
     private static final String CODESTART = "codestart";
     private static final String LANGUAGES = "languages";
-    private static final String QWC_EXTERNAL_PAGE_JS = "qwc-external-page.js";
     private static final String VALUE = "value";
 
     private static final String YAML_FILE = "/META-INF/quarkus-extension.yaml";

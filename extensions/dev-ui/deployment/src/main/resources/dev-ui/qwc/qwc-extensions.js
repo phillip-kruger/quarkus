@@ -52,25 +52,28 @@ export class QwcExtensions extends LitElement {
       
             let base = this.routerController.getBasePath();
             active.forEach(activeExtension => {
-                var extension = activeExtension.name.replace(/\s+/g, '-').toLowerCase();
-                activeExtension.links.forEach(componentLink => {                
-                    if(componentLink.component){ // If this is linking to a component we need to register it with the router
-                        import(componentLink.componentRef);
-                        var pagename = componentLink.component.toLowerCase().slice(0, componentLink.component.lastIndexOf('.'));
-                        var page = extension + "-" + componentLink.displayName.replace(/\s+/g, '-').toLowerCase();
+                activeExtension.pages.forEach(page => {   
+                    if(page.embed){ // we need to register with the router
 
-                        if(componentLink.addPathParam){
-                            this.routerController.addRoute(page + "/:externalUrl", pagename, componentLink.displayName);
-                        }else{
-                            this.routerController.addRoute(page, pagename, componentLink.displayName);
-                        }
+                        import(page.componentRef);
+                        
+                        this.routerController.addRoute(page.id, page.componentName, page.title);
 
-                        if(componentLink.path){
-                            var encodedExternalUrl = window.btoa(componentLink.path);
-                            componentLink['path'] =  base + '/' + page + '/' + encodedExternalUrl ;
-                        }else{
-                            componentLink['path'] =  base + '/' + page;
-                        }
+                        // var pagename = componentLink.component.toLowerCase().slice(0, componentLink.component.lastIndexOf('.'));
+                        // var page = extension + "-" + componentLink.displayName.replace(/\s+/g, '-').toLowerCase();
+
+                        // if(componentLink.addPathParam){
+                        //     this.routerController.addRoute(page + "/:externalUrl", pagename, componentLink.displayName);
+                        // }else{
+                        //     this.routerController.addRoute(page, pagename, componentLink.displayName);
+                        // }
+
+                        // if(componentLink.path){
+                        //     var encodedExternalUrl = window.btoa(componentLink.path);
+                        //     componentLink['path'] =  base + '/' + page + '/' + encodedExternalUrl ;
+                        // }else{
+                        //     componentLink['path'] =  base + '/' + page;
+                        // }
                     }
                 });
       });
@@ -102,15 +105,15 @@ export class QwcExtensions extends LitElement {
                     providesCapabilities="${extension.providesCapabilities}"
                     extensionDependencies="${extension.extensionDependencies}">
 
-                    ${extension.links.map(link => html`
+                    ${extension.pages.map(page => html`
                         
                         <qwc-extension-link slot="link" 
                                           extensionName="${extension.name}"
-                                          iconName="${link.iconName}"
-                                          displayName="${link.displayName}"
-                                          label="${link.label}"
-                                          path="${link.path}"
-                                          webcomponent="${link.component}" >
+                                          iconName="${page.icon}"
+                                          displayName="${page.title}"
+                                          label="${page.label}"
+                                          path="${page.id}" 
+                                          webcomponent="${page.componentLink}" >
                         </qwc-extension-link>
                     `)}
 

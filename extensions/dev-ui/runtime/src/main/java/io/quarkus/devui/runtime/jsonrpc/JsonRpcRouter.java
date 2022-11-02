@@ -2,8 +2,6 @@ package io.quarkus.devui.runtime.jsonrpc;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -116,21 +114,21 @@ public class JsonRpcRouter {
     }
 
     // TODO: Cache
-    private List<Method> getJsonRPCMethods(Class jsonRPCMethodProviderClass) {
-        List<Method> jsonRPCMethods = new ArrayList<>();
-        Method[] methods = jsonRPCMethodProviderClass.getMethods();
-        for (Method method : methods) {
-            if (Modifier.isPublic(method.getModifiers())
-                    && !Modifier.isFinal(method.getModifiers())
-                    && !Modifier.isStatic(method.getModifiers())
-                    && !Modifier.isAbstract(method.getModifiers())
-                    && !method.getDeclaringClass().equals(Object.class)) {
-
-                jsonRPCMethods.add(method);
-            }
-        }
-        return jsonRPCMethods;
-    }
+    //    private List<Method> getJsonRPCMethods(Class jsonRPCMethodProviderClass) {
+    //        List<Method> jsonRPCMethods = new ArrayList<>();
+    //        Method[] methods = jsonRPCMethodProviderClass.getMethods();
+    //        for (Method method : methods) {
+    //            if (Modifier.isPublic(method.getModifiers())
+    //                    && !Modifier.isFinal(method.getModifiers())
+    //                    && !Modifier.isStatic(method.getModifiers())
+    //                    && !Modifier.isAbstract(method.getModifiers())
+    //                    && !method.getDeclaringClass().equals(Object.class)) {
+    //
+    //                jsonRPCMethods.add(method);
+    //            }
+    //        }
+    //        return jsonRPCMethods;
+    //    }
 
     private JsonRpcRequest toJsonRpcRequest(String message) {
         // TODO: Handle parsing error ?
