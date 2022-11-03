@@ -1,5 +1,5 @@
 import { Router } from '@vaadin/router';
-
+// TODO: Some Method can be static
 export class RouterController {
     static router = new Router(document.querySelector('qwc-page'));
     static pathContext = new Map();

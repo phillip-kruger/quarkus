@@ -1,22 +1,56 @@
 package io.quarkus.devui.deployment.spi.page;
 
-// TODO: Add content type
+import io.quarkus.logging.Log;
+
 public class ExternalPageBuilder extends AbstractBuilder<ExternalPageBuilder> {
     private static final String QWC_EXTERNAL_PAGE_JS = "qwc-external-page.js";
     private static final String EXTERNAL_URL = "externalUrl";
+    private static final String MIME_TYPE = "mimeType";
+
+    public static final String MIME_TYPE_HTML = "text/html";
+    public static final String MIME_TYPE_JSON = "application/json";
+    public static final String MIME_TYPE_YAML = "application/yaml";
+    public static final String MIME_TYPE_PDF = "application/pdf";
 
     protected ExternalPageBuilder(String title) {
         super();
         super.title = title;
+        super.componentLink = QWC_EXTERNAL_PAGE_JS;
+        super.namespace = "qwc"; // As external page runs on "internal" namespace
     }
 
     public ExternalPageBuilder url(String url) {
-        if (url.isEmpty()) {
+        if (url == null || url.isEmpty()) {
             throw new RuntimeException("Invalid external URL, can not be empty");
         }
-        super.componentLink = QWC_EXTERNAL_PAGE_JS;
         super.metadata.put(EXTERNAL_URL, url);
-        super.namespace = "qwc"; // As external page runs on "internal" namespace
+        return this;
+    }
+
+    public ExternalPageBuilder isHtmlContent() {
+        return mimeType(MIME_TYPE_HTML);
+    }
+
+    public ExternalPageBuilder isJsonContent() {
+        return mimeType(MIME_TYPE_JSON);
+    }
+
+    public ExternalPageBuilder isYamlContent() {
+        return mimeType(MIME_TYPE_YAML);
+    }
+
+    public ExternalPageBuilder isPdfContent() {
+        return mimeType(MIME_TYPE_PDF);
+    }
+
+    public ExternalPageBuilder mimeType(String mimeType) {
+        if (mimeType == null || mimeType.isEmpty()) {
+            throw new RuntimeException("Invalid mimeType, can not be empty");
+        }
+        if (super.metadata.containsKey(MIME_TYPE)) {
+            Log.warn("MimeType already set to " + super.metadata.get(MIME_TYPE) + ", overriding with new value");
+        }
+        super.metadata.put(MIME_TYPE, mimeType);
         return this;
     }
 
