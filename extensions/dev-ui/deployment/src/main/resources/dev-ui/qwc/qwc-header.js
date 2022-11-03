@@ -6,7 +6,8 @@ import '@vaadin/tabs';
  * This component represent the Dev UI Header
  */
 export class QwcHeader extends LitElement {
-
+    routerController = new RouterController(this);
+    
     static styles = css`
         .top-bar {
             height: 70px;
@@ -101,61 +102,20 @@ export class QwcHeader extends LitElement {
     }
     
     _updateHeader(){
-        
-        var title = "Extensions"; // default
-        var rightSideNav = html`<div class="app-info">${this.applicationName} ${this.applicationVersion}</div>`; // default
-        
-        
-        var location = RouterController.router.location;
-        if(location.route){
-            var currentRoutePath = location.route.path;
-            if(currentRoutePath.includes('/dev-ui/')){
-                var currentPage = currentRoutePath.substring(currentRoutePath.indexOf('/dev-ui/') + 8);
-                if(currentPage.includes('/')){
-                    // This is a submenu
-                    var extension = currentPage.substring(0, currentPage.lastIndexOf("/"));
-                    title = this._formatTitle(extension);
-                    
-                    const links = [];
-                    var startOfPath = currentRoutePath.substring(0, currentRoutePath.lastIndexOf("/"));
-                    var routes = RouterController.router.getRoutes();
-
-                    var counter = 0;
-                    var index = 0;
-                    routes.forEach((route) => {
-                        if(route.path.startsWith(startOfPath)){
-                            links.push(route);
-                            if(route.name === location.route.name){
-                                index = counter;
-                            }
-                            counter = counter + 1;
-                        }
-                    });
-                    
-                    if (links && links.length > 1) {
-                        rightSideNav = html`
+        this._title = this.routerController.getCurrentTitle();
+        var subMenu = this.routerController.getCurrentSubMenu();
+        if(subMenu){
+            this._rightSideNav = html`
                             <div class="submenu">
-                                <vaadin-tabs selected="${index}">
-                                    ${links.map(link =>
+                                <vaadin-tabs selected="${subMenu.index}">
+                                    ${subMenu.links.map(link =>
                                         html`<vaadin-tab><a href="${link.path}">${link.name}</a></vaadin-tab>`
                                     )}
                                 </vaadin-tabs>
                             </div>`;
-                    }
-                }else{
-                    // This is a main section
-                    title = this._formatTitle(currentPage);
-                }
-            }
+        }else{
+            this._rightSideNav = html`<div class="app-info">${this.applicationName} ${this.applicationVersion}</div>`; // default
         }
-        
-        this._title = title;
-        this._rightSideNav = rightSideNav;
-    }
-
-    _formatTitle(title) {
-        title = title.charAt(0).toUpperCase() + title.slice(1);
-        return title.split("-").join(" ");
     }
 
     _reload(e) {

@@ -1,5 +1,7 @@
 package io.quarkus.devui.deployment.spi.page;
 
+import java.util.Map;
+
 /**
  * Define a page in Dev UI.
  * This not a full web page, but rather the section in the middle where extensions can display data.
@@ -14,24 +16,29 @@ public class Page {
 
     private final String componentName; // This is name of the component
     private final String componentLink; // This is a link to the component, excluding namespace
+    private final Map<String, String> metadata; // Key value Metadata
 
     private boolean embed = true; // default
 
-    private String namespace = null;
+    private String namespace = null; // The namespace can be the extension path or, if internal, qwc
 
     protected Page(String icon,
             String title,
             String label,
             String componentName,
             String componentLink,
-            boolean embed) {
+            Map<String, String> metadata,
+            boolean embed,
+            String namespace) {
 
         this.icon = icon;
         this.title = title;
         this.label = label;
         this.componentName = componentName;
         this.componentLink = componentLink;
+        this.metadata = metadata;
         this.embed = embed;
+        this.namespace = namespace;
     }
 
     public String getId() {
@@ -50,8 +57,16 @@ public class Page {
         return DOT + SLASH + DOT + DOT + SLASH + group + SLASH + this.componentLink;
     }
 
+    public boolean hasNamespace() {
+        return this.namespace != null;
+    }
+
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+    }
+
+    public void setExtension(String extension) {
+        this.metadata.put("extensionName", extension);
     }
 
     public String getNamespace() {
@@ -82,6 +97,10 @@ public class Page {
         return embed;
     }
 
+    public Map<String, String> getMetadata() {
+        return metadata;
+    }
+
     @Override
     public String toString() {
         return "Page {\n\ticon=" + icon
@@ -104,4 +123,5 @@ public class Page {
     private static final String DASH = "-";
     private static final String SLASH = "/";
     private static final String DOT = ".";
+
 }

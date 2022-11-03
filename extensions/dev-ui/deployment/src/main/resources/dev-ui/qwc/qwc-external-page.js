@@ -1,6 +1,6 @@
 import { LitElement, html, css} from 'lit';
 import { until } from 'lit/directives/until.js';
-import { Router } from '@vaadin/router';
+import { RouterController } from 'router-controller';
 import '@vanillawc/wc-codemirror';
 import '@vanillawc/wc-codemirror/mode/yaml/yaml.js';
 import '@vanillawc/wc-codemirror/mode/properties/properties.js';
@@ -10,7 +10,8 @@ import '@vanillawc/wc-codemirror/mode/javascript/javascript.js';
  * This component loads an external page
  */
 export class QwcExternalPage extends LitElement {
-  
+    routerController = new RouterController(this);
+    
     static styles = css`
         
     `;
@@ -19,7 +20,6 @@ export class QwcExternalPage extends LitElement {
         _externalUrl: {type: String},
         _mode: {type: String},
         _contentType: {type: String},
-        _location: {state: true},
     };
 
     constructor() {
@@ -28,24 +28,28 @@ export class QwcExternalPage extends LitElement {
 
     connectedCallback() {
         super.connectedCallback();
-        this._externalUrl = window.atob(this._location.params.externalUrl);
-        
-        fetch(this._externalUrl)
-            .then((res) => {
-                    this._contentType = res.headers.get('content-type');
-                    if(this._contentType.startsWith('application/yaml')){
-                        this._mode = "yaml";
-                    }else if(this._contentType.startsWith('application/json')){
-                        this._mode = "javascript";
-                    }else if(this._contentType.startsWith('text/html')){
-                        this._mode = "html";
-                    }else if(this._contentType.startsWith('application/pdf')){
-                        this._mode = "pdf";
-                    }else{
-                        this._mode = "properties";
+        var metadata = this.routerController.getCurrentMetaData();
+        if(metadata){
+            this._externalUrl = metadata.externalUrl;
+        }
+        if(this._externalUrl){
+            fetch(this._externalUrl)
+                .then((res) => {
+                        this._contentType = res.headers.get('content-type');
+                        if(this._contentType.startsWith('application/yaml')){
+                            this._mode = "yaml";
+                        }else if(this._contentType.startsWith('application/json')){
+                            this._mode = "javascript";
+                        }else if(this._contentType.startsWith('text/html')){
+                            this._mode = "html";
+                        }else if(this._contentType.startsWith('application/pdf')){
+                            this._mode = "pdf";
+                        }else{
+                            this._mode = "properties";
+                        }
                     }
-                }
-            );
+                );
+        }
     }
     
     render() {
@@ -69,9 +73,5 @@ export class QwcExternalPage extends LitElement {
             }
         }   
     } 
-    
-    async onBeforeEnter(location) {
-        this._location = location;
-    }
 }
 customElements.define('qwc-external-page', QwcExternalPage);

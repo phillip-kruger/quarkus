@@ -49,7 +49,6 @@ export class QwcExtensions extends LitElement {
             let active = this._extensions.active;
             let inactive = this._extensions.inactive;
 
-      
             let base = this.routerController.getBasePath();
             active.forEach(activeExtension => {
                 activeExtension.pages.forEach(page => {   
@@ -57,23 +56,9 @@ export class QwcExtensions extends LitElement {
 
                         import(page.componentRef);
                         
-                        this.routerController.addRoute(page.id, page.componentName, page.title);
-
-                        // var pagename = componentLink.component.toLowerCase().slice(0, componentLink.component.lastIndexOf('.'));
-                        // var page = extension + "-" + componentLink.displayName.replace(/\s+/g, '-').toLowerCase();
-
-                        // if(componentLink.addPathParam){
-                        //     this.routerController.addRoute(page + "/:externalUrl", pagename, componentLink.displayName);
-                        // }else{
-                        //     this.routerController.addRoute(page, pagename, componentLink.displayName);
-                        // }
-
-                        // if(componentLink.path){
-                        //     var encodedExternalUrl = window.btoa(componentLink.path);
-                        //     componentLink['path'] =  base + '/' + page + '/' + encodedExternalUrl ;
-                        // }else{
-                        //     componentLink['path'] =  base + '/' + page;
-                        // }
+                        
+                        var routePath = page.id;
+                        this.routerController.addRoute(routePath, page.componentName, page.title, page.metadata);
                     }
                 });
       });

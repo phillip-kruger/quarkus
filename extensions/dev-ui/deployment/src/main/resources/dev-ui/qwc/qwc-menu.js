@@ -119,8 +119,6 @@ export class QwcMenu extends LitElement {
     onJsonRpcResponse(result){
         var pagename = result[0].webcomponent;
         
-        this.routerController.addRoute(pagename, "", pagename);
-        
         result.forEach(menuItem => {
             var pagename = menuItem.webcomponent;
             var defaultSelection = menuItem.defaultSelection;
@@ -128,7 +126,7 @@ export class QwcMenu extends LitElement {
             import(componentLink);
             var page = this.routerController.getPageRef(pagename);
 
-            this.routerController.addRoute(page, pagename, pagename, defaultSelection);
+            this.routerController.addRoute(page, pagename, pagename, null, defaultSelection);
         });
 
         this._menuItems = result;

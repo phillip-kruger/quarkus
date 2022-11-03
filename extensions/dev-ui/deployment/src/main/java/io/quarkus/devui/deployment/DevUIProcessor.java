@@ -203,7 +203,11 @@ public class DevUIProcessor {
                             List<Page> pages = pageBuildItem.getPages();
 
                             for (Page page : pages) {
-                                page.setNamespace(extension.getPathName());
+                                if (!page.hasNamespace()) {
+                                    page.setNamespace(extension.getPathName());
+                                }
+                                page.setExtension(extension.getName());
+
                                 extension.addPage(page);
                             }
 

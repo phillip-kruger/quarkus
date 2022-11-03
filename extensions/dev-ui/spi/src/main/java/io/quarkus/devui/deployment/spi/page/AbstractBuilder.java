@@ -1,5 +1,8 @@
 package io.quarkus.devui.deployment.spi.page;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public abstract class AbstractBuilder<T> {
     protected static final String EMPTY = "";
     protected static final String SPACE = " ";
@@ -14,7 +17,9 @@ public abstract class AbstractBuilder<T> {
     protected String label = null;
     protected String componentName;
     protected String componentLink;
+    protected Map<String, String> metadata = new HashMap<>();
     protected boolean embed = true; // default
+    protected String namespace = null;
 
     @SuppressWarnings("unchecked")
     public T icon(String icon) {
@@ -31,6 +36,12 @@ public abstract class AbstractBuilder<T> {
     @SuppressWarnings("unchecked")
     public T label(String label) {
         this.label = label;
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T metadata(String key, String value) {
+        this.metadata.put(key, value);
         return (T) this;
     }
 
@@ -62,6 +73,6 @@ public abstract class AbstractBuilder<T> {
             this.title = n.substring(0, 1).toUpperCase() + n.substring(1); // Capitalize first letter
         }
 
-        return new Page(icon, title, label, componentName, componentLink, embed);
+        return new Page(icon, title, label, componentName, componentLink, metadata, embed, namespace);
     }
 }
