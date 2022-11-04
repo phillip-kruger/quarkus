@@ -19,6 +19,7 @@ public abstract class AbstractBuilder<T> {
     protected String componentLink;
     protected Map<String, String> metadata = new HashMap<>();
     protected boolean embed = true; // default
+    protected boolean internalComponent = false; // default
     protected String namespace = null;
 
     @SuppressWarnings("unchecked")
@@ -73,6 +74,6 @@ public abstract class AbstractBuilder<T> {
             this.title = n.substring(0, 1).toUpperCase() + n.substring(1); // Capitalize first letter
         }
 
-        return new Page(icon, title, label, componentName, componentLink, metadata, embed, namespace);
+        return new Page(icon, title, label, componentName, componentLink, metadata, embed, internalComponent, namespace);
     }
 }

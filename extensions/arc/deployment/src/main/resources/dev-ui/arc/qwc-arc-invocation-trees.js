@@ -18,10 +18,6 @@ export class QwcArcInvocationTrees extends LitElement {
     
     };
   
-    connectedCallback() {
-        super.connectedCallback();
-    }
-
     render() {
         return html`<div class="todo">Loading invocation trees...</div>`;
     }

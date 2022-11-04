@@ -33,10 +33,6 @@ export class QwcArcRemovedComponents extends LitElement {
         this._content = JSON.stringify(this._removedBeans);
     }
 
-    connectedCallback() {
-        super.connectedCallback();
-    }
-
     render() {
         return html`
             <vaadin-tabs theme="minimal" @selected-changed="${this._selectedChanged}">

@@ -23,10 +23,6 @@ export class QwcArcDecorators extends LitElement {
         this._decorators = decorators;
     }
   
-    connectedCallback() {
-        super.connectedCallback();
-    }
-
     render() {
         if (this._decorators) {
             html`${this._decorators}`;

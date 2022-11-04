@@ -16,7 +16,7 @@ public class ExternalPageBuilder extends AbstractBuilder<ExternalPageBuilder> {
         super();
         super.title = title;
         super.componentLink = QWC_EXTERNAL_PAGE_JS;
-        super.namespace = "qwc"; // As external page runs on "internal" namespace
+        super.internalComponent = true;// As external page runs on "internal" namespace
     }
 
     public ExternalPageBuilder url(String url) {

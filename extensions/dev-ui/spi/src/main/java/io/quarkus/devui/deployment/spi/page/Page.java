@@ -19,6 +19,7 @@ public class Page {
     private final Map<String, String> metadata; // Key value Metadata
 
     private boolean embed = true; // default
+    private boolean internalComponent = false; // default. If this component is provided by dev-ui (usually provided by the extension)
 
     private String namespace = null; // The namespace can be the extension path or, if internal, qwc
 
@@ -29,6 +30,7 @@ public class Page {
             String componentLink,
             Map<String, String> metadata,
             boolean embed,
+            boolean internalComponent,
             String namespace) {
 
         this.icon = icon;
@@ -38,6 +40,7 @@ public class Page {
         this.componentLink = componentLink;
         this.metadata = metadata;
         this.embed = embed;
+        this.internalComponent = internalComponent;
         this.namespace = namespace;
     }
 
@@ -50,11 +53,13 @@ public class Page {
     }
 
     public String getComponentRef() {
-        String group = "qwc";
-        if (this.namespace != null) {
-            group = this.namespace;
+        if (internalComponent) {
+            return DOT + SLASH + DOT + DOT + SLASH + "qwc" + SLASH + this.componentLink;
+        } else if (this.namespace != null) {
+            return DOT + SLASH + DOT + DOT + SLASH + this.namespace + SLASH + this.componentLink;
         }
-        return DOT + SLASH + DOT + DOT + SLASH + group + SLASH + this.componentLink;
+        // TODO: Create a not found component to display here ?
+        throw new RuntimeException("Could not find component reference");
     }
 
     public boolean hasNamespace() {

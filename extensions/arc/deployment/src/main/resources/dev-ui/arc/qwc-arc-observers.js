@@ -55,10 +55,6 @@ export class QwcArcObservers extends LitElement {
         this._observers = observers;
     }
   
-    connectedCallback() {
-        super.connectedCallback();
-    }
-
     render() {
         if(this._observers){
 

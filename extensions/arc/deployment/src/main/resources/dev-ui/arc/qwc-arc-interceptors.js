@@ -45,10 +45,6 @@ export class QwcArcInterceptors extends LitElement {
         this._interceptors = interceptors;
     }
   
-    connectedCallback() {
-        super.connectedCallback();
-    }
-
     render() {
         if(this._interceptors){
             return html`

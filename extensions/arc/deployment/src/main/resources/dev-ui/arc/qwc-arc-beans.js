@@ -60,10 +60,6 @@ export class QwcArcBeans extends LitElement {
         this._beans = beans;
     }
 
-    connectedCallback() {
-        super.connectedCallback();
-    }
-
     render() {
         if (this._beans) {
 

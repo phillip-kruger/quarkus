@@ -90,7 +90,12 @@
             <version>${vaadin.version}</version>
             <scope>runtime</scope>
         </dependency>
-        
+        <dependency>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>message-list</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+        </dependency>
         <!-- There is a cyclic dependency on icon -->
         <!-- TODO: Detect and fix in mvnpm -->
         <dependency>
@@ -117,6 +122,8 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        
+        <!-- Code editor TODO: investigate codemirror 6 -->
         <dependency>
             <groupId>org.mvnpm.at.vanillawc</groupId>
             <artifactId>wc-codemirror</artifactId>

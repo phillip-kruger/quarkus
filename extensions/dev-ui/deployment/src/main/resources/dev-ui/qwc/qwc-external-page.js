@@ -86,7 +86,7 @@ export class QwcExternalPage extends LitElement {
                                 width='100%' 
                                 height='100%'>
                             </object>`;
-            }else {
+            } else {
                 return html`<wc-codemirror 
                                 mode='${this._mode}'
                                 src='${this._externalUrl}'
