@@ -20,7 +20,7 @@ export class QwcArcRemovedComponents extends LitElement {
         _removedComponents: {attribute: false},
         _removedDecorators: {attribute: false},
         _removedInterceptors: {attribute: false},
-        _content: {state: true}
+        _content: {state: true},
     };
 
     constructor() {
@@ -54,10 +54,9 @@ export class QwcArcRemovedComponents extends LitElement {
 
     _selectedChanged(e) {
         
-        console.log("----------> _selectedChanged = " + e.detail);
-        
         var json = JSON.stringify(e.detail);
-        this.content = `This is the ${json} tab`;
+        console.log("----------> _selectedChanged = " + json);
+        this._content = html`This is the ${json} tab`;
     }
 
 }

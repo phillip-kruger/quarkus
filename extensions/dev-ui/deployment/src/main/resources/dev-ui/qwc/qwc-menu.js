@@ -13,8 +13,7 @@ import '@qwc/quarkus-version';
  */
 export class QwcMenu extends LitElement {
     jsonRpcController = new JsonRpcController(this);
-    routerController = new RouterController(this);
-
+    
     static styles = css`
 
             .left {
@@ -93,10 +92,14 @@ export class QwcMenu extends LitElement {
     constructor() {
         super();
         
+        window.addEventListener('vaadin-router-location-changed', (event) => {
+            this._updateSelection(event);
+        });
+
         this.jsonRpcController.request("getMenuItems");
         const storedState = localStorage.getItem("qwc-menu-state");
-        this._selectedPage = "qwc-extensions";
-        this._selectedPageLabel = this.routerController.getPageDisplayName(this._selectedPage);
+        this._selectedPage = "qwc-extensions"; // default
+        this._selectedPageLabel = "Extensions"; // default
         this._menuItems = null;
         if(storedState && storedState === "small"){
             this._smaller();
@@ -105,28 +108,19 @@ export class QwcMenu extends LitElement {
         }
     }
     
-    connectedCallback() {
-        super.connectedCallback();
-
-        addEventListener('switchPage', (e) => { 
-            if(this._componentIsInMenu(e.detail.component)){
-                this._selectedPage = e.detail.component;
-                this._selectedPageLabel = e.detail.display;
-            }
-          }, false);
+    _updateSelection(event){
+        var pageDetails = RouterController.parseLocationChangedEvent(event);
+        this._selectedPage = pageDetails.component;
+        this._selectedPageLabel = pageDetails.title;
     }
 
     onJsonRpcResponse(result){
-        var pagename = result[0].webcomponent;
-        
         result.forEach(menuItem => {
             var pagename = menuItem.webcomponent;
             var defaultSelection = menuItem.defaultSelection;
             var componentLink = './' + pagename + '.js';
             import(componentLink);
-            var page = this.routerController.getPageRef(pagename);
-
-            this.routerController.addRoute(page, pagename, pagename, null, defaultSelection);
+            RouterController.addMenuRoute(pagename, defaultSelection);
         });
 
         this._menuItems = result;
@@ -173,10 +167,9 @@ export class QwcMenu extends LitElement {
     _renderItem(pageicon, pagename){
         let displayName = "";
         if(this._show){
-            displayName = this.routerController.getPageDisplayName(pagename);
+            displayName = RouterController.displayMenuItem(pagename);
         }
-        let base = this.routerController.getBasePath();
-        let pageRef = base + '/' + this.routerController.getPageRef(pagename);
+        let pageRef = RouterController.pageRefWithBase(pagename);
         const selected = this._selectedPage == pagename;
         let classnames = "item";
         if(selected){

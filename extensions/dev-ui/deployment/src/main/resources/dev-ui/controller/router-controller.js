@@ -1,86 +1,47 @@
 import { Router } from '@vaadin/router';
-// TODO: Some Method can be static
+
 export class RouterController {
     static router = new Router(document.querySelector('qwc-page'));
     static pathContext = new Map();
 
-    host;
+    /**
+     * Parse the event change event
+     */
+    static parseLocationChangedEvent(event){
+        var component = event.detail.location.route.component;
+        var path = event.detail.location.route.path;
+        var name = event.detail.location.route.name;
+        var title = RouterController.currentTitle();
+        var subMenu = RouterController.currentSubMenu();
 
-    constructor(host) {
-        (this.host = host).addController(this);
-
-        window.addEventListener('vaadin-router-location-changed', (event) => {
-            var component = event.detail.location.route.component;
-            var path = event.detail.location.route.path;
-            var name = event.detail.location.route.name;
-
-            var display = this.getPageDisplayName(component);
-            const switchPageEvent = new CustomEvent('switchPage',
-                    {
-                        detail: {
-                            component: component,
-                            path: path,
-                            display: display,
-                            displayName: name
-                        }
-                    });
-            dispatchEvent(switchPageEvent);
-        });
+        return {
+            'component': component,
+            'path': path,
+            'name': name,
+            'title': title,
+            'subMenu': subMenu,
+        };
     }
 
-    getPageDisplayName(pageName) {
-        pageName = pageName.substring(pageName.indexOf('-') + 1);
-        pageName = pageName.charAt(0).toUpperCase() + pageName.slice(1);
-        return pageName.replaceAll('-', ' ');
-    }
-
-    getBasePath() {
-        var base = window.location.pathname;
-        return base.substring(0, base.indexOf('/dev')) + "/dev-ui";
-    }
-
-    getPageRef(pageName) {
-        return pageName.substring(pageName.indexOf('-') + 1);
-    }
-
-    pathExist(path) {
-        if (RouterController.pathContext && RouterController.pathContext.size > 0 && RouterController.pathContext.has(path)) {
-            return true;
-        }
-        return false;
-    }
-
-    getCurrentMetaData() {
+    /**
+     * Get the header title for the current path
+     */
+    static currentTitle(){
         var location = RouterController.router.location;
         if (location.route) {
             var currentRoutePath = location.route.path;
-            return this.getMetaDataForPath(currentRoutePath);
+            return RouterController.titleForPath(currentRoutePath);
         }else{
             return null;
         }
     }
 
-    getMetaDataForPath(path) {
-        if (this.pathExist(path)) {
-            return RouterController.pathContext.get(path);
-        }else{
-            return null;
-        }
-    }
-
-    getCurrentTitle(){
-        var location = RouterController.router.location;
-        if (location.route) {
-            var currentRoutePath = location.route.path;
-            return this.getTitleForPath(currentRoutePath);
-        }else{
-            return null;
-        }
-    }
-
-    getTitleForPath(path){
+    /**
+     * Get the header title for a certain path
+     */
+    static titleForPath(path){
         if(path.includes('/dev-ui/')){
-            var metadata = this.getMetaDataForPath(path);
+            var metadata = RouterController.metaDataForPath(path);
             if(metadata && metadata.extensionName){
                 return metadata.extensionName;
             }else{
@@ -88,27 +49,33 @@ export class RouterController {
                 if(currentPage.includes('/')){
                     // This is a submenu
                     var extension = currentPage.substring(0, currentPage.lastIndexOf("/"));
-                    return this.formatTitle(extension);
+                    return RouterController.displayTitle(extension);
                 }else{
                     // This is a main section
-                    return this.formatTitle(currentPage);
+                    return RouterController.displayTitle(currentPage);
                 }
             }
         }
         return "";
     }
 
-    getCurrentSubMenu(){
+    /**
+     * Get the sub menu (if any) for the current certain path 
+     */
+    static currentSubMenu(){
         var location = RouterController.router.location;
         if (location.route) {
             var currentRoutePath = location.route.path;
-            return this.getSubMenuForPath(currentRoutePath);
+            return RouterController.subMenuForPath(currentRoutePath);
         }else{
             return null;
         }
     }
 
-    getSubMenuForPath(path){
+    /**
+     * Get the sub menu (if any) for a certain path 
+     */
+    static subMenuForPath(path){
         
         if(path.includes('/dev-ui/')){
             var currentPage = path.substring(path.indexOf('/dev-ui/') + 8);
@@ -141,19 +108,93 @@ export class RouterController {
         return null;
     }
 
-    formatTitle(title) {
+    /**
+     * Get the metadata for the current path
+     */
+    static currentMetaData() {
+        var location = RouterController.router.location;
+        if (location.route) {
+            var currentRoutePath = location.route.path;
+            return RouterController.metaDataForPath(currentRoutePath);
+        }else{
+            return null;
+        }
+    }
+
+    /**
+     * Get all the metadata for a certain path
+     */
+    static metaDataForPath(path) {
+        if (RouterController.existingPath(path)) {
+            return RouterController.pathContext.get(path);
+        }else{
+            return null;
+        }
+    }
+
+    /**
+     * Check if we already know about this path
+     */
+    static existingPath(path) {
+        if (RouterController.pathContext && RouterController.pathContext.size > 0 && RouterController.pathContext.has(path)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Format a title
+     */
+    static displayTitle(title) {
         title = title.charAt(0).toUpperCase() + title.slice(1);
         return title.split("-").join(" ");
     }
 
     /**
+     * Creating the display Title for the Section Menu
+     */
+    static displayMenuItem(pageName) {
+        pageName = pageName.substring(pageName.indexOf('-') + 1);
+        pageName = pageName.charAt(0).toUpperCase() + pageName.slice(1);
+        return pageName.replaceAll('-', ' ');
+    }
+
+    /**
+     * This adds a route for Extensions (typically sub-menu pages)
+     */
+    static addExtensionRoute(page){
+        RouterController.addRoute(page.id, page.componentName, page.title, page.metadata);
+    }
+
+    /**
+     * This adds a route for the Menu section
+     */
+    static addMenuRoute(pagename, defaultSelection){
+        var pageref = RouterController.pageRef(pagename);
+        RouterController.addRoute(pageref, pagename, pagename, null, defaultSelection);
+    }
+
+    static basePath(){
+        var base = window.location.pathname;
+        return base.substring(0, base.indexOf('/dev')) + "/dev-ui";
+    }
+
+    static pageRef(pageName) {
+        return pageName.substring(pageName.indexOf('-') + 1);
+    }
+
+    static pageRefWithBase(pageName){
+        return RouterController.basePath() + '/' + RouterController.pageRef(pageName);
+    }
+
+    /**
      * Add a route to the routes
      */
-    addRoute(path, component, name, metadata, defaultRoute = false) {
-        var base = this.getBasePath();
+    static addRoute(path, component, name, metadata, defaultRoute = false) {
+        var base = RouterController.basePath();
         path = base + '/' + path;
 
-        if (!this.pathExist(path)) {
+        if (!RouterController.existingPath(path)) {
             RouterController.pathContext.set(path, metadata);
             var routes = [];
             var route = {};
@@ -168,7 +209,7 @@ export class RouterController {
         // TODO: Pass the other parameters along ?
         var currentSelection = window.location.pathname;
 
-        var relocationRequest = this.getFromQueryParameter();
+        var relocationRequest = RouterController.from();
         if (relocationRequest) {
             // We know and already loaded the requested location
             if (relocationRequest === path) {
@@ -188,15 +229,24 @@ export class RouterController {
                     search: '?from=' + currentSelection,
                 });
             }
-    }
+        }
     }
 
-    getFromQueryParameter() {
+    static queryParameters() {
         const params = new Proxy(new URLSearchParams(window.location.search), {
             get: (searchParams, prop) => searchParams.get(prop),
         });
 
-        return params.from;
+        return params;
+    }
+
+    static from(){
+        var params = RouterController.queryParameters();
+        if(params){
+            return params.from;
+        }else {
+            return null;
+        }
     }
 
 }

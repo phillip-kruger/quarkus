@@ -11,7 +11,6 @@ import '@vaadin/icon';
  * This component loads an external page
  */
 export class QwcExternalPage extends LitElement {
-    routerController = new RouterController(this);
     
     static styles = css`
         .download {
@@ -38,7 +37,7 @@ export class QwcExternalPage extends LitElement {
 
     connectedCallback() {
         super.connectedCallback();
-        var metadata = this.routerController.getCurrentMetaData();
+        var metadata = RouterController.currentMetaData();
         if(metadata){
             this._externalUrl = metadata.externalUrl;
             if(metadata.mimeType){

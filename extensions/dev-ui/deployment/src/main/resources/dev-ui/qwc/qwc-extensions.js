@@ -12,8 +12,7 @@ import '@qwc/extension-link';
 export class QwcExtensions extends LitElement {
     static methodName = "getExtensions";
     jsonRpcController = new JsonRpcController(this);
-    routerController = new RouterController(this);
-
+    
     static styles = css`
         .hr {
             border-bottom: 1px solid rgba(28,110,164,0.1);
@@ -49,25 +48,14 @@ export class QwcExtensions extends LitElement {
             let active = this._extensions.active;
             let inactive = this._extensions.inactive;
 
-            let base = this.routerController.getBasePath();
             active.forEach(activeExtension => {
                 activeExtension.pages.forEach(page => {   
                     if(page.embed){ // we need to register with the router
-
                         import(page.componentRef);
-                        
-                        
-                        var routePath = page.id;
-                        this.routerController.addRoute(routePath, page.componentName, page.title, page.metadata);
+                        RouterController.addExtensionRoute(page);
                     }
                 });
       });
-
-      // Fire event that contains all active extensions
-      const event = new CustomEvent('extensions', { 
-            detail: active 
-      });
-      document.dispatchEvent(event);
 
       return html`<div class="page">
           <div class="grid">
@@ -93,12 +81,12 @@ export class QwcExtensions extends LitElement {
                     ${extension.pages.map(page => html`
                         
                         <qwc-extension-link slot="link" 
-                                          extensionName="${extension.name}"
-                                          iconName="${page.icon}"
-                                          displayName="${page.title}"
-                                          label="${page.label}"
-                                          path="${page.id}" 
-                                          webcomponent="${page.componentLink}" >
+                            extensionName="${extension.name}"
+                            iconName="${page.icon}"
+                            displayName="${page.title}"
+                            label="${page.label}"
+                            path="${page.id}" 
+                            webcomponent="${page.componentLink}" >
                         </qwc-extension-link>
                     `)}
 

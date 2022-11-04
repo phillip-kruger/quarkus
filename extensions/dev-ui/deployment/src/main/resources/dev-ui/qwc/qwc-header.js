@@ -6,7 +6,6 @@ import '@vaadin/tabs';
  * This component represent the Dev UI Header
  */
 export class QwcHeader extends LitElement {
-    routerController = new RouterController(this);
     
     static styles = css`
         .top-bar {
@@ -97,13 +96,16 @@ export class QwcHeader extends LitElement {
         this._rightSideNav = "";
         
         window.addEventListener('vaadin-router-location-changed', (event) => {
-            this._updateHeader();
+            this._updateHeader(event);
         });
     }
     
-    _updateHeader(){
-        this._title = this.routerController.getCurrentTitle();
-        var subMenu = this.routerController.getCurrentSubMenu();
+    _updateHeader(event){
+        var pageDetails = RouterController.parseLocationChangedEvent(event);
+        
+        this._title = pageDetails.title;
+        var subMenu = pageDetails.subMenu;
+
         if(subMenu){
             this._rightSideNav = html`
                             <div class="submenu">
