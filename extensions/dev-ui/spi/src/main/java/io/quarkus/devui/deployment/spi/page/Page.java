@@ -72,6 +72,7 @@ public class Page {
 
     public void setExtension(String extension) {
         this.metadata.put("extensionName", extension);
+        this.metadata.put("extensionId", extension.toLowerCase().replaceAll(SPACE, DASH));
     }
 
     public String getNamespace() {
@@ -116,12 +117,27 @@ public class Page {
                 + ", \n\tembed=" + embed + "\n}";
     }
 
+    /**
+     * Here you provide the Web Component that should be rendered. You have full control over the page.
+     * You can use build time data if you made it available
+     */
     public static WebComponentPageBuilder webComponentPageBuilder() {
         return new WebComponentPageBuilder();
     }
 
+    /**
+     * Here you provide a url to an external resource. When code/markup, if can be displayed in a code view, when HTML it can
+     * render the HTML
+     */
     public static ExternalPageBuilder externalPageBuilder(String name) {
         return new ExternalPageBuilder(name);
+    }
+
+    /**
+     * Here you provide the data that should be rendered in a table
+     */
+    public static TableDataPageBuilder tableDataPageBuilder(String name) {
+        return new TableDataPageBuilder(name);
     }
 
     private static final String SPACE = " ";

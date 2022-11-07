@@ -19,7 +19,7 @@ import io.quarkus.devui.deployment.spi.DevUIContent;
 import io.quarkus.devui.deployment.spi.buildtime.StaticContentBuildItem;
 import io.quarkus.devui.runtime.DevUIRecorder;
 import io.quarkus.qute.Engine;
-import io.quarkus.qute.Template;
+import io.quarkus.qute.Qute;
 import io.quarkus.vertx.http.deployment.NonApplicationRootPathBuildItem;
 import io.quarkus.vertx.http.deployment.RouteBuildItem;
 import io.vertx.core.Handler;
@@ -51,7 +51,7 @@ public class DevUIProcessor {
     void registerDevUiHandler(
             DevUIQuteEngineBuildItem engineBuildItem,
             List<DevUIRoutesBuildItem> devUIRoutesBuildItems,
-            List<StaticContentBuildItem> staticContentBuildItem,
+            List<StaticContentBuildItem> staticContentBuildItems,
             BuildProducer<RouteBuildItem> routeProducer,
             DevUIRecorder recorder,
             NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem,
@@ -85,15 +85,13 @@ public class DevUIProcessor {
         String basepath = nonApplicationRootPathBuildItem.resolvePath(DEVUI);
         // For static content generated at build time
         Engine engine = engineBuildItem.getEngine();
-        for (StaticContentBuildItem buildTimeContent : staticContentBuildItem) {
+        for (StaticContentBuildItem staticContentBuildItem : staticContentBuildItems) {
 
             Map<String, String> urlAndPath = new HashMap<>();
-            if (buildTimeContent.isInternal()) {
-                List<DevUIContent> content = buildTimeContent.getContent();
+            if (staticContentBuildItem.isInternal()) {
+                List<DevUIContent> content = staticContentBuildItem.getContent();
                 for (DevUIContent c : content) {
-                    Template t = engine.parse(new String(c.getTemplate()));
-                    String parsedContent = t.data(c.getData()).render();
-
+                    String parsedContent = Qute.fmt(new String(c.getTemplate()), c.getData());
                     Path tempFile = Files.createTempFile("quarkus-dev-ui-", c.getFileName());
                     Files.write(tempFile, parsedContent.getBytes(StandardCharsets.UTF_8));
 
@@ -107,8 +105,8 @@ public class DevUIProcessor {
             } else {
                 // TODO: Handle extension content
 
-                System.err.println(">>>>>>>>>>>>>>> IGNORING " + buildTimeContent.getExtensionName()
-                        + buildTimeContent.getExtensionPathName());
+                System.err.println(">>>>>>>>>>>>>>> IGNORING " + staticContentBuildItem.getExtensionName()
+                        + staticContentBuildItem.getExtensionPathName());
 
             }
         }

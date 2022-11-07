@@ -16,10 +16,11 @@ import io.quarkus.devui.deployment.spi.AbstractDevUIBuildItem;
  * From a runtime p.o.v this is file served from "disk"
  */
 public final class QuteTemplateBuildItem extends AbstractDevUIBuildItem {
-    private final List<TemplateData> templateDatas = new ArrayList<>();
+    private final List<TemplateData> templateDatas;
 
     public QuteTemplateBuildItem(String extensionName) {
         super(extensionName);
+        this.templateDatas = new ArrayList<>();
     }
 
     public List<TemplateData> getTemplateDatas() {
@@ -27,15 +28,11 @@ public final class QuteTemplateBuildItem extends AbstractDevUIBuildItem {
     }
 
     public void add(String templatename, Map<String, Object> data) {
-        add(templatename, templatename, data); // By default the template is used for only one file.
+        templateDatas.add(new TemplateData(templatename, templatename, data)); // By default the template is used for only one file.
     }
 
     public void add(String templatename, String fileName, Map<String, Object> data) {
-        add(new TemplateData(templatename, fileName, data));
-    }
-
-    public void add(TemplateData templateData) {
-        templateDatas.add(templateData);
+        templateDatas.add(new TemplateData(templatename, fileName, data));
     }
 
     public static class TemplateData {
@@ -43,7 +40,7 @@ public final class QuteTemplateBuildItem extends AbstractDevUIBuildItem {
         final String fileName;
         final Map<String, Object> data;
 
-        public TemplateData(String templateName, String fileName, Map<String, Object> data) {
+        private TemplateData(String templateName, String fileName, Map<String, Object> data) {
             this.templateName = templateName;
             this.fileName = fileName;
             this.data = data;

@@ -29,12 +29,17 @@ public class DevUIContent {
         return data;
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
     public static class Builder {
         private String fileName;
         private byte[] template;
-        private Map<String, Object> data = new HashMap<>();
+        private Map<String, Object> data;
 
-        public Builder() {
+        private Builder() {
+            this.data = new HashMap<>();
         }
 
         public Builder fileName(String fileName) {

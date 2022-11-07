@@ -73,14 +73,14 @@ public class BuildTimeStaticContentProcessor {
             List<PageBuildItem> pageBuildItems,
             BuildProducer<QuteTemplateBuildItem> quteTemplateProducer,
             BuildProducer<InternalImportMapBuildItem> internalImportMapProducer) {
+
         QuteTemplateBuildItem quteTemplateBuildItem = new QuteTemplateBuildItem(
                 QuteTemplateBuildItem.INTERNAL);
 
         InternalImportMapBuildItem internalImportMapBuildItem = new InternalImportMapBuildItem();
 
-        Map<String, Object> data = new HashMap<>();
-
         for (PageBuildItem pageBuildItem : pageBuildItems) {
+            Map<String, Object> data = new HashMap<>();
             if (pageBuildItem.hasBuildTimeData()) {
                 for (Map.Entry<String, Object> pageData : pageBuildItem.getBuildTimeData().entrySet()) {
                     try {
@@ -92,17 +92,18 @@ public class BuildTimeStaticContentProcessor {
                         ex.printStackTrace();
                     }
                 }
-
+            }
+            if (!data.isEmpty()) {
                 Map<String, Object> qutedata = new HashMap<>();
                 qutedata.put("buildTimeData", data);
                 String ref = pageBuildItem.getExtensionPathName() + "-data";
                 String file = ref + ".js";
                 quteTemplateBuildItem.add("build-time-data.js", file, qutedata);
-                quteTemplateProducer.produce(quteTemplateBuildItem);
                 internalImportMapBuildItem.add(ref, "./" + file);
             }
         }
 
+        quteTemplateProducer.produce(quteTemplateBuildItem);
         internalImportMapProducer.produce(internalImportMapBuildItem);
     }
 
@@ -158,7 +159,7 @@ public class BuildTimeStaticContentProcessor {
                         if (templateStream != null) {
                             byte[] templateContent = IoUtil.readBytes(templateStream);
                             // Internal runs on "naked" namespace
-                            DevUIContent content = new DevUIContent.Builder()
+                            DevUIContent content = DevUIContent.builder()
                                     .fileName(fileName)
                                     .template(templateContent)
                                     .addData(data)

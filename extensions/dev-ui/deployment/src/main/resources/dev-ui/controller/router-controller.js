@@ -27,13 +27,11 @@ export class RouterController {
      * Get the header title for the current path
      */
     static currentTitle(){
-        var location = RouterController.router.location;
-        if (location.route) {
-            var currentRoutePath = location.route.path;
+        var currentRoutePath = RouterController.currentRoutePath();
+        if (currentRoutePath) {
             return RouterController.titleForPath(currentRoutePath);
-        }else{
-            return null;
         }
+        return null;
     }
 
     /**
@@ -63,13 +61,11 @@ export class RouterController {
      * Get the sub menu (if any) for the current certain path 
      */
     static currentSubMenu(){
-        var location = RouterController.router.location;
-        if (location.route) {
-            var currentRoutePath = location.route.path;
+        var currentRoutePath = RouterController.currentRoutePath();
+        if (currentRoutePath) {
             return RouterController.subMenuForPath(currentRoutePath);
-        }else{
-            return null;
         }
+        return null;
     }
 
     /**
@@ -112,13 +108,27 @@ export class RouterController {
      * Get the metadata for the current path
      */
     static currentMetaData() {
+        var currentRoutePath = RouterController.currentRoutePath();
+        if (currentRoutePath) {
+            return RouterController.metaDataForPath(currentRoutePath);
+        }
+        return null;
+    }
+
+    static currentRoutePath(){
         var location = RouterController.router.location;
         if (location.route) {
-            var currentRoutePath = location.route.path;
-            return RouterController.metaDataForPath(currentRoutePath);
-        }else{
-            return null;
+            return location.route.path;
         }
+        return null;
+    }
+
+    static currentExtensionId(){
+        var metadata = RouterController.currentMetaData();
+        if(metadata){
+            return metadata.extensionId;
+        }
+        return null;
     }
 
     /**

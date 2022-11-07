@@ -65,7 +65,7 @@ public class DevUIProcessor {
     private static final String DOUBLE_POINT = ":";
     private static final String DASH_DEPLOYMENT = "-deployment";
 
-    private final static ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BuildStep(onlyIf = IsDevelopment.class)
     void additionalBean(BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer) {
@@ -82,13 +82,13 @@ public class DevUIProcessor {
     @Record(ExecutionTime.STATIC_INIT)
     void createJsonRpcRouter(DevUIRecorder recorder,
             BeanContainerBuildItem beanContainer,
-            List<JsonRPCResponsesBuildItem> buildTimeDataBuildItems) {
+            List<JsonRPCResponsesBuildItem> jsonRPCResponsesBuildItems) {
 
         Map<String, String> methodWithJsonResponseMap = new HashMap<String, String>();
-        for (JsonRPCResponsesBuildItem bt : buildTimeDataBuildItems) {
+        for (JsonRPCResponsesBuildItem jsonRPCResponsesBuildItem : jsonRPCResponsesBuildItems) {
 
-            String namespace = bt.getExtensionName();
-            for (Map.Entry<String, Object> e : bt.getMethodNameAndResponseData().entrySet()) {
+            String namespace = jsonRPCResponsesBuildItem.getExtensionName();
+            for (Map.Entry<String, Object> e : jsonRPCResponsesBuildItem.getMethodNameAndResponseData().entrySet()) {
                 String key = namespace + DOT + e.getKey();
                 String value = Json.encodePrettily(e.getValue());
                 methodWithJsonResponseMap.put(key, value);
@@ -184,21 +184,6 @@ public class DevUIProcessor {
                         if (!pagesMap.containsKey(nameKey)) {
                             inactiveExtensions.add(extension);
                         } else {
-                            //                            PageBuildItem externalPageBuildItem = externalPagesMap.get(nameKey);
-                            //                            List<ExternalPage> pages = externalPageBuildItem.getExternalPages();
-                            //
-                            //                            for (ExternalPage page : pages) {
-                            //                                extension.addLink(new CardLink(page.getIconName(),
-                            //                                        page.getTitle(),
-                            //                                        page.getLabel(),
-                            //                                        QWC_EXTERNAL_PAGE_JS,
-                            //                                        "./../qwc/" + QWC_EXTERNAL_PAGE_JS,
-                            //                                        page.getExternalURL(),
-                            //                                        true));
-                            //                            }
-                            //
-                            //                            activeExtensions.add(extension);
-
                             PageBuildItem pageBuildItem = pagesMap.get(nameKey);
                             List<Page> pages = pageBuildItem.getPages();
 
@@ -210,42 +195,6 @@ public class DevUIProcessor {
 
                                 extension.addPage(page);
                             }
-
-                            //                            Map<String, Object> buildTimeData = new HashMap<>();
-                            //
-                            //                            String pathname = name.replaceAll(" ", "-").toLowerCase();
-                            //                            for (WebComponentPage page : pages) {
-                            //                                extension.addLink(new CardLink(page.getIconName(),
-                            //                                        page.getDisplayName(),
-                            //                                        page.getLabel(),
-                            //                                        page.getWebComponent(),
-                            //                                        "./../" + pathname + "/" + page.getWebComponent(),
-                            //                                        null));
-                            //
-                            //                                // If the card has some build time data that needs to be made available
-                            //                                if (page.hasBuildTimeData()) {
-                            //                                    buildTimeData.putAll(page.getBuildTimeData());
-                            //                                }
-                            //                            }
-
-                            // TODO: Change from JsonRPC to build time json injection
-                            //Map<String, Object> buildTimeData = pageBuildItem.getAggegatedBuildTimeData();
-                            // Make all the build time data avalable
-                            //if (!buildTimeData.isEmpty()) {
-
-                            //                                System.out.println("===================== " + pageBuildItem.getExtensionName()
-                            //                                        + " =============================");
-                            //
-                            //                                for (Map.Entry<String, Object> btd : buildTimeData.entrySet()) {
-                            //                                    System.out.println("\n\n\t" + btd.getKey());
-                            //                                    String json = objectMapper.writerWithDefaultPrettyPrinter()
-                            //                                            .writeValueAsString(btd.getValue());
-                            //                                    System.out.println("\n\t\t" + json);
-                            //                                }
-                            //
-                            //                                devUIBuildtimeJsonRPCMethodProducer.produce(new JsonRPCResponsesBuildItem(
-                            //                                        pageBuildItem.getExtensionName(), buildTimeData));
-                            //                            }
 
                             // Also make sure the static resources for that static resource is available
                             GACT gact = getGACT(artifactId);
