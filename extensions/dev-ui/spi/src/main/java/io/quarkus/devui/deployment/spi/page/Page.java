@@ -134,6 +134,13 @@ public class Page {
     }
 
     /**
+     * Here you provide the data that should be rendered in raw json format
+     */
+    public static RawDataPageBuilder rawDataPageBuilder(String name) {
+        return new RawDataPageBuilder(name);
+    }
+
+    /**
      * Here you provide the data that should be rendered in a table
      */
     public static TableDataPageBuilder tableDataPageBuilder(String name) {

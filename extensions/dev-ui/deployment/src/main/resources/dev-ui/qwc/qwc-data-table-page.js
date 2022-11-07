@@ -20,10 +20,6 @@ export class QwcDataTablePage extends LitElement {
         _cols: {attribute: false},
     };
 
-    constructor() {
-        super();
-    }
-
     connectedCallback() {
         super.connectedCallback();
         var extensionId = RouterController.currentExtensionId();
