@@ -4,25 +4,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class TableDataPageBuilder extends AbstractBuilder<TableDataPageBuilder> {
+public class TableDataPageBuilder extends BuildTimeDataPageBuilder<TableDataPageBuilder> {
     private static final String QWC_DATA_TABLE_PAGE_JS = "qwc-data-table-page.js";
-    private static final String BUILD_TIME_DATA_KEY = "buildTimeDataKey";
     private static final String COLS = "cols";
     private static final String COMMA = ",";
 
     protected TableDataPageBuilder(String title) {
-        super();
-        super.title = title;
+        super(title);
         super.componentLink = QWC_DATA_TABLE_PAGE_JS;
-        super.internalComponent = true;// As external page runs on "internal" namespace
-    }
-
-    public TableDataPageBuilder buildTimeDataKey(String key) {
-        if (key == null || key.isEmpty()) {
-            throw new RuntimeException("Invalid build time data key, can not be empty");
-        }
-        super.metadata.put(BUILD_TIME_DATA_KEY, key);
-        return this;
     }
 
     public TableDataPageBuilder showColumn(String path) {

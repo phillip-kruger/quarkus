@@ -13,25 +13,25 @@ import io.quarkus.devui.deployment.spi.*;
  */
 public final class PageBuildItem extends AbstractDevUIBuildItem {
 
-    private final List<Page> pages;
+    private final List<PageBuilder> pageBuilders;
     private final Map<String, Object> buildTimeData;
 
     public PageBuildItem(String extensionName) {
         super(extensionName);
-        this.pages = new ArrayList<>();
+        this.pageBuilders = new ArrayList<>();
         this.buildTimeData = new HashMap<>();
     }
 
-    public void addPage(Page page) {
-        this.pages.add(page);
+    public void addPage(PageBuilder page) {
+        this.pageBuilders.add(page);
     }
 
     public void addBuildTimeData(String fieldName, Object fieldData) {
         this.buildTimeData.put(fieldName, fieldData);
     }
 
-    public List<Page> getPages() {
-        return this.pages;
+    public List<PageBuilder> getPages() {
+        return this.pageBuilders;
     }
 
     public Map<String, Object> getBuildTimeData() {

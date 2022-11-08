@@ -3,7 +3,7 @@ package io.quarkus.devui.deployment.spi.page;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class AbstractBuilder<T> {
+public abstract class PageBuilder<T> {
     protected static final String EMPTY = "";
     protected static final String SPACE = " ";
     protected static final String DASH = "-";
@@ -21,6 +21,7 @@ public abstract class AbstractBuilder<T> {
     protected boolean embed = true; // default
     protected boolean internalComponent = false; // default
     protected String namespace = null;
+    protected Class preprocessor = null;
 
     @SuppressWarnings("unchecked")
     public T icon(String icon) {
@@ -43,6 +44,21 @@ public abstract class AbstractBuilder<T> {
     @SuppressWarnings("unchecked")
     public T metadata(String key, String value) {
         this.metadata.put(key, value);
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T namespace(String namespace) {
+        if (this.namespace == null) {
+            this.namespace = namespace;
+        }
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T extension(String extension) {
+        this.metadata.put("extensionName", extension);
+        this.metadata.put("extensionId", extension.toLowerCase().replaceAll(SPACE, DASH));
         return (T) this;
     }
 

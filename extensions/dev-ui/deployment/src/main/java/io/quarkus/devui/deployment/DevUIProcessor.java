@@ -1,6 +1,7 @@
 package io.quarkus.devui.deployment;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +35,8 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.devui.deployment.spi.buildtime.JsonRPCResponsesBuildItem;
 import io.quarkus.devui.deployment.spi.page.Page;
 import io.quarkus.devui.deployment.spi.page.PageBuildItem;
+import io.quarkus.devui.deployment.spi.page.PageBuilder;
+import io.quarkus.devui.deployment.spi.page.QuteDataPageBuilder;
 import io.quarkus.devui.deployment.spi.runtime.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.runtime.DevUIRecorder;
 import io.quarkus.devui.runtime.jsonrpc.DevUIJsonRPCProviderNamer;
@@ -45,6 +48,7 @@ import io.quarkus.gizmo.AnnotationCreator;
 import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.maven.dependency.GACT;
 import io.quarkus.maven.dependency.GACTV;
+import io.quarkus.qute.Qute;
 import io.quarkus.webjar.deployment.WebJarBuildItem;
 import io.quarkus.webjar.deployment.WebJarResultsBuildItem;
 import io.smallrye.common.classloader.ClassPathUtils;
@@ -185,14 +189,10 @@ public class DevUIProcessor {
                             inactiveExtensions.add(extension);
                         } else {
                             PageBuildItem pageBuildItem = pagesMap.get(nameKey);
-                            List<Page> pages = pageBuildItem.getPages();
+                            List<PageBuilder> pageBuilders = pageBuildItem.getPages();
 
-                            for (Page page : pages) {
-                                if (!page.hasNamespace()) {
-                                    page.setNamespace(extension.getPathName());
-                                }
-                                page.setExtension(extension.getName());
-
+                            for (PageBuilder pageBuilder : pageBuilders) {
+                                Page page = buildFinalPage(pageBuilder, extension);
                                 extension.addPage(page);
                             }
 
@@ -265,6 +265,39 @@ public class DevUIProcessor {
                     .addBeanClass(jsonRPCMethodProviderClass)
                     .build());
         }
+    }
+
+    private Page buildFinalPage(PageBuilder pageBuilder, Extension extension) {
+        pageBuilder.namespace(extension.getPathName());
+        pageBuilder.extension(extension.getName());
+
+        // TODO: Have a nive factory way to load this...
+        // Some preprocessing for certain builds
+        if (pageBuilder.getClass().equals(QuteDataPageBuilder.class)) {
+            try {
+                QuteDataPageBuilder quteDataPageBuilder = (QuteDataPageBuilder) pageBuilder;
+                Map<String, Object> data = quteDataPageBuilder.getData();
+                String templateLink = quteDataPageBuilder.getTemplateLink();
+                String templatePath = "/dev-ui/" + extension.getPathName() + "/" + templateLink;
+                pageBuilder.metadata("templatePath", templatePath);
+                ClassPathUtils.consumeAsPaths(templatePath, p -> {
+                    try {
+                        String template = Files.readString(p);
+
+                        String fragment = Qute.fmt(template, data);
+                        pageBuilder.metadata("htmlFragment", fragment);
+
+                    } catch (IOException ex) {
+                        throw new UncheckedIOException(ex);
+                    }
+                });
+
+            } catch (IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
+        }
+
+        return pageBuilder.build();
     }
 
     private GACT getGACT(String artifactKey) {

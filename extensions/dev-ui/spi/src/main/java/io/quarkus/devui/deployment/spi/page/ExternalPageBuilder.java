@@ -2,7 +2,7 @@ package io.quarkus.devui.deployment.spi.page;
 
 import io.quarkus.logging.Log;
 
-public class ExternalPageBuilder extends AbstractBuilder<ExternalPageBuilder> {
+public class ExternalPageBuilder extends PageBuilder<ExternalPageBuilder> {
     private static final String QWC_EXTERNAL_PAGE_JS = "qwc-external-page.js";
     private static final String EXTERNAL_URL = "externalUrl";
     private static final String MIME_TYPE = "mimeType";

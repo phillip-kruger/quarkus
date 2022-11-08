@@ -1,6 +1,6 @@
 package io.quarkus.devui.deployment.spi.page;
 
-public class WebComponentPageBuilder extends AbstractBuilder<WebComponentPageBuilder> {
+public class WebComponentPageBuilder extends PageBuilder<WebComponentPageBuilder> {
 
     protected WebComponentPageBuilder() {
         super();

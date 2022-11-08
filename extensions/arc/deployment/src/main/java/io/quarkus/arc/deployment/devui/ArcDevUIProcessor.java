@@ -28,8 +28,7 @@ public class ArcDevUIProcessor {
             pageBuildItem.addPage(Page.webComponentPageBuilder()
                     .icon("font-awesome-solid:egg")
                     .componentLink("qwc-arc-beans.js")
-                    .label(String.valueOf(beans.size()))
-                    .build());
+                    .label(String.valueOf(beans.size())));
 
             pageBuildItem.addBuildTimeData(BEANS, toDevBeanWithInterceptorInfo(beans, beanInfos));
         }
@@ -39,8 +38,7 @@ public class ArcDevUIProcessor {
             pageBuildItem.addPage(Page.webComponentPageBuilder()
                     .icon("font-awesome-solid:eye")
                     .componentLink("qwc-arc-observers.js")
-                    .label(String.valueOf(observers.size()))
-                    .build());
+                    .label(String.valueOf(observers.size())));
 
             pageBuildItem.addBuildTimeData(OBSERVERS, observers);
         }
@@ -50,8 +48,7 @@ public class ArcDevUIProcessor {
             pageBuildItem.addPage(Page.webComponentPageBuilder()
                     .icon("font-awesome-solid:traffic-light")
                     .componentLink("qwc-arc-interceptors.js")
-                    .label(String.valueOf(interceptors.size()))
-                    .build());
+                    .label(String.valueOf(interceptors.size())));
 
             pageBuildItem.addBuildTimeData(INTERCEPTORS, interceptors);
         }
@@ -61,29 +58,25 @@ public class ArcDevUIProcessor {
             pageBuildItem.addPage(Page.webComponentPageBuilder()
                     .icon("font-awesome-solid:traffic-light")
                     .componentLink("qwc-arc-decorators.js")
-                    .label(String.valueOf(decorators.size()))
-                    .build());
+                    .label(String.valueOf(decorators.size())));
 
             pageBuildItem.addBuildTimeData(DECORATORS, decorators);
         }
 
         pageBuildItem.addPage(Page.webComponentPageBuilder()
                 .icon("font-awesome-solid:fire")
-                .componentLink("qwc-arc-fired-events.js")
-                .build());
+                .componentLink("qwc-arc-fired-events.js"));
 
         pageBuildItem.addPage(Page.webComponentPageBuilder()
                 .icon("font-awesome-solid:diagram-project")
-                .componentLink("qwc-arc-invocation-trees.js")
-                .build());
+                .componentLink("qwc-arc-invocation-trees.js"));
 
         int removedComponents = beanInfos.getRemovedComponents();
         if (removedComponents > 0) {
             pageBuildItem.addPage(Page.webComponentPageBuilder()
                     .icon("font-awesome-solid:trash-can")
                     .componentLink("qwc-arc-removed-components.js")
-                    .label(String.valueOf(removedComponents))
-                    .build());
+                    .label(String.valueOf(removedComponents)));
 
             pageBuildItem.addBuildTimeData(REMOVED_BEANS, beanInfos.getRemovedBeans());
             pageBuildItem.addBuildTimeData(REMOVED_COMPONENTS, beanInfos.getRemovedComponents());

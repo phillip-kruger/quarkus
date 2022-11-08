@@ -18,17 +18,17 @@ public class OpenApiDevUIProcessor {
         pageBuildItem.addPage(Page.externalPageBuilder("Schema yaml")
                 .url(nonApplicationRootPathBuildItem.resolvePath("openapi"))
                 .isYamlContent()
-                .icon("font-awesome-solid:file-lines").build());
+                .icon("font-awesome-solid:file-lines"));
 
         pageBuildItem.addPage(Page.externalPageBuilder("Schema json")
                 .url(nonApplicationRootPathBuildItem.resolvePath("openapi") + "?format=json")
                 .isJsonContent()
-                .icon("font-awesome-solid:file-code").build());
+                .icon("font-awesome-solid:file-code"));
 
         pageBuildItem.addPage(Page.externalPageBuilder("Swagger UI")
                 .url(nonApplicationRootPathBuildItem.resolvePath("swagger-ui"))
                 .isHtmlContent()
-                .icon("font-awesome-solid:signs-post").build());
+                .icon("font-awesome-solid:signs-post"));
 
         return pageBuildItem;
     }

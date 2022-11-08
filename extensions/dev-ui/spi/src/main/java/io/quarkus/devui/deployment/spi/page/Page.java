@@ -18,8 +18,8 @@ public class Page {
     private final String componentLink; // This is a link to the component, excluding namespace
     private final Map<String, String> metadata; // Key value Metadata
 
-    private boolean embed = true; // default
-    private boolean internalComponent = false; // default. If this component is provided by dev-ui (usually provided by the extension)
+    private final boolean embed; // if the component is embeded in the page. true in all cases except maybe external pages
+    private final boolean internalComponent; // True f this component is provided by dev-ui (usually provided by the extension)
 
     private String namespace = null; // The namespace can be the extension path or, if internal, qwc
 
@@ -60,19 +60,6 @@ public class Page {
         }
         // TODO: Create a not found component to display here ?
         throw new RuntimeException("Could not find component reference");
-    }
-
-    public boolean hasNamespace() {
-        return this.namespace != null;
-    }
-
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
-    }
-
-    public void setExtension(String extension) {
-        this.metadata.put("extensionName", extension);
-        this.metadata.put("extensionId", extension.toLowerCase().replaceAll(SPACE, DASH));
     }
 
     public String getNamespace() {
@@ -138,6 +125,13 @@ public class Page {
      */
     public static RawDataPageBuilder rawDataPageBuilder(String name) {
         return new RawDataPageBuilder(name);
+    }
+
+    /**
+     * Here you can render the data with a qute template
+     */
+    public static QuteDataPageBuilder quteDataPageBuilder(String name) {
+        return new QuteDataPageBuilder(name);
     }
 
     /**
