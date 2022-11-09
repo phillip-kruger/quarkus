@@ -50,10 +50,6 @@ export class QwcExtensionLink extends LitElement {
         webcomponent: {type: String}, 
     };
 
-    constructor() {
-        super();
-    }
-
     render() {
         let badge;
 

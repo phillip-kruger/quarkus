@@ -75,6 +75,16 @@ export class QwcHeader extends LitElement {
         applicationVersion: {type: String},
     };
 
+    constructor() {
+        super();
+        this._title = "Extensions";
+        this._rightSideNav = "";
+        
+        window.addEventListener('vaadin-router-location-changed', (event) => {
+            this._updateHeader(event);
+        });
+    }
+
     render() {
         return html`
         <div class="top-bar">
@@ -90,16 +100,6 @@ export class QwcHeader extends LitElement {
         `;
     }
 
-    constructor() {
-        super();
-        this._title = "Extensions";
-        this._rightSideNav = "";
-        
-        window.addEventListener('vaadin-router-location-changed', (event) => {
-            this._updateHeader(event);
-        });
-    }
-    
     _updateHeader(event){
         var pageDetails = RouterController.parseLocationChangedEvent(event);
         
