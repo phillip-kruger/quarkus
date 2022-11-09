@@ -192,7 +192,8 @@ public class DevUIProcessor {
                             List<PageBuilder> pageBuilders = pageBuildItem.getPages();
 
                             for (PageBuilder pageBuilder : pageBuilders) {
-                                Page page = buildFinalPage(pageBuilder, extension);
+                                Map<String, Object> buildTimeData = pageBuildItem.getBuildTimeData();
+                                Page page = buildFinalPage(pageBuilder, extension, buildTimeData);
                                 extension.addPage(page);
                             }
 
@@ -267,36 +268,35 @@ public class DevUIProcessor {
         }
     }
 
-    private Page buildFinalPage(PageBuilder pageBuilder, Extension extension) {
+    private Page buildFinalPage(PageBuilder pageBuilder, Extension extension, Map<String, Object> buildTimeData) {
         pageBuilder.namespace(extension.getPathName());
         pageBuilder.extension(extension.getName());
 
-        // TODO: Have a nive factory way to load this...
+        // TODO: Have a nice factory way to load this...
         // Some preprocessing for certain builds
         if (pageBuilder.getClass().equals(QuteDataPageBuilder.class)) {
-            try {
-                QuteDataPageBuilder quteDataPageBuilder = (QuteDataPageBuilder) pageBuilder;
-                Map<String, Object> data = quteDataPageBuilder.getData();
-                String templateLink = quteDataPageBuilder.getTemplateLink();
-                String templatePath = "/dev-ui/" + extension.getPathName() + "/" + templateLink;
-                pageBuilder.metadata("templatePath", templatePath);
-                ClassPathUtils.consumeAsPaths(templatePath, p -> {
-                    try {
-                        String template = Files.readString(p);
-
-                        String fragment = Qute.fmt(template, data);
-                        pageBuilder.metadata("htmlFragment", fragment);
-
-                    } catch (IOException ex) {
-                        throw new UncheckedIOException(ex);
-                    }
-                });
-
-            } catch (IOException ex) {
-                throw new UncheckedIOException(ex);
-            }
+            return buildQutePage(pageBuilder, extension, buildTimeData);
         }
 
+        return pageBuilder.build();
+    }
+
+    private Page buildQutePage(PageBuilder pageBuilder, Extension extension, Map<String, Object> buildTimeData) {
+        try {
+            QuteDataPageBuilder quteDataPageBuilder = (QuteDataPageBuilder) pageBuilder;
+            String templatePath = quteDataPageBuilder.getTemplatePath();
+            ClassPathUtils.consumeAsPaths(templatePath, p -> {
+                try {
+                    String template = Files.readString(p);
+                    String fragment = Qute.fmt(template, buildTimeData);
+                    pageBuilder.metadata("htmlFragment", fragment);
+                } catch (IOException ex) {
+                    throw new UncheckedIOException(ex);
+                }
+            });
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
         return pageBuilder.build();
     }
 

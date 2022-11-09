@@ -35,7 +35,7 @@ export class QwcDataRawPage extends LitElement {
 
                 import(modulePath)
                 .then(obj => {
-                    this._buildTimeData = obj[this._buildTimeDataKey];
+                    this._buildTimeData = obj[this._buildTimeDataKey]; // TODO: Just use obj and allow multiple keys ?
                 });
             }
         }

@@ -29,7 +29,6 @@ export class QwcDataQutePage extends LitElement {
         }
     }
     
-    
     render() {
         return html`${unsafeHTML(this._htmlFragment)}`;
     }
