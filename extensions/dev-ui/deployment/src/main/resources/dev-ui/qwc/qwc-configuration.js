@@ -27,7 +27,7 @@ export class QwcConfiguration extends LitElement {
     this.jsonRpcController.request(QwcConfiguration.methodName);
   }
 
-  onJsonRpcResponse(result){
+  getAllConfigurationResponse(result){
     this._configurations = result;
   }
 

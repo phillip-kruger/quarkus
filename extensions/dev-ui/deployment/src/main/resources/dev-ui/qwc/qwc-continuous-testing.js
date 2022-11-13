@@ -27,7 +27,7 @@ export class QwcContinuousTesting extends LitElement {
     this.jsonRpcController.request(QwcContinuousTesting.methodName);
   }
 
-  onJsonRpcResponse(result){
+  getContinuousTestingResponse(result){
     this._tests = result;
   }
 

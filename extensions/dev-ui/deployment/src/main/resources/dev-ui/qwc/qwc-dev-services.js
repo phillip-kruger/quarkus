@@ -27,7 +27,7 @@ export class QwcDevServices extends LitElement {
     this.jsonRpcController.request(QwcDevServices.methodName);
   }
 
-  onJsonRpcResponse(result){
+  getDevServicesResponse(result){
     this._services = result;
   }
 

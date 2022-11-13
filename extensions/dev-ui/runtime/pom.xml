@@ -16,7 +16,7 @@
     
     <properties>
         <lit.version>2.4.0</lit.version>
-        <vaadin.version>23.2.7</vaadin.version>
+        <vaadin.version>23.2.8</vaadin.version>
         <vaadin-router.version>1.7.4</vaadin-router.version>
         <polymer.version>3.5.1</polymer.version>
     </properties>
@@ -78,6 +78,44 @@
             <version>${vaadin.version}</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>dialog</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>button</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>text-field</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>text-area</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>form-layout</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>progress-bar</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        
+        
 <!--        <dependency>
             <groupId>org.mvnpm.at.vaadin</groupId>
             <artifactId>tabsheet</artifactId>

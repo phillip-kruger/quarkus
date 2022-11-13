@@ -1,7 +1,6 @@
 import { LitElement, html, css} from 'lit';
 import { until } from 'lit/directives/until.js';
-
-import { JsonRpcController } from 'jsonrpc-controller';
+import { extensions } from 'internal-data';
 import { RouterController } from 'router-controller';
 import '@qwc/extension';
 import '@qwc/extension-link';
@@ -10,8 +9,6 @@ import '@qwc/extension-link';
  * This component create cards of all the extensions
  */
 export class QwcExtensions extends LitElement {
-    static methodName = "getExtensions";
-    jsonRpcController = new JsonRpcController(this);
     
     static styles = css`
         .hr {
@@ -27,23 +24,15 @@ export class QwcExtensions extends LitElement {
     `;
 
     static properties = {
-        _extensions: {state: false}
+        _extensions: {state: true},
     };
 
-    connectedCallback() {
-        super.connectedCallback();
-        this.jsonRpcController.request(QwcExtensions.methodName);
-    }
-
-    onJsonRpcResponse(result){
-        this._extensions = result;
+    constructor() {
+        super();
+        this._extensions = extensions;
     }
 
     render() {
-        return html`${until(this._renderJsonRpcResponse(), html`<span>Loading...</span>`)}`;
-    }
-
-    _renderJsonRpcResponse(){
         if(this._extensions){
             let active = this._extensions.active;
             let inactive = this._extensions.inactive;

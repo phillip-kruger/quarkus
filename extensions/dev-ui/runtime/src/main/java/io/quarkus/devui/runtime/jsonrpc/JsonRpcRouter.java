@@ -2,6 +2,8 @@ package io.quarkus.devui.runtime.jsonrpc;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -13,24 +15,68 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 
+import org.jboss.logging.Logger;
+
+import io.quarkus.arc.Arc;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 
 /**
  * Route JsonRPC message to the correct method
- * TODO: Cache the mapping ?
- * TODO: Add params
  */
 @ApplicationScoped
 public class JsonRpcRouter {
 
+    private static final Logger log = Logger.getLogger(JsonRpcRouter.class);
+
     @Inject
     BeanManager beanManager;
 
-    private Map<String, String> buildTimeResponses;
+    // Map json-rpc method to java
+    private Map<String, ReflectionInfo> jsonRpcToJava = new HashMap<>();
 
-    public void buildTimeData(Map<String, String> jsonResponses) {
-        this.buildTimeResponses = jsonResponses;
+    static class ReflectionInfo {
+        public Object instance;
+        public Method method;
+        public Map<String, Class> params;
+
+        public ReflectionInfo(Object instance, Method method, Map<String, Class> params) {
+            this.instance = instance;
+            this.method = method;
+            this.params = params;
+        }
+    }
+
+    public void setExtensionMethodsMap(Map<String, Map<JsonRpcMethodName, JsonRpcMethod>> extensionMethodsMap) {
+        for (Map.Entry<String, Map<JsonRpcMethodName, JsonRpcMethod>> extension : extensionMethodsMap.entrySet()) {
+            String extensionName = extension.getKey();
+            Map<JsonRpcMethodName, JsonRpcMethod> jsonRpcMethods = extension.getValue();
+            Map<JsonRpcMethodName, ReflectionInfo> javaMethods = new HashMap<>();
+            for (Map.Entry<JsonRpcMethodName, JsonRpcMethod> method : jsonRpcMethods.entrySet()) {
+                JsonRpcMethodName methodName = method.getKey();
+
+                JsonRpcMethod jsonRpcMethod = method.getValue();
+
+                @SuppressWarnings("unchecked")
+                Object providerInstance = Arc.container().select(jsonRpcMethod.getClazz()).get();
+
+                try {
+                    Method javaMethod = null;
+                    Map<String, Class> params = null;
+                    if (jsonRpcMethod.hasParams()) {
+                        params = jsonRpcMethod.getParams();
+                        javaMethod = providerInstance.getClass().getMethod(jsonRpcMethod.getMethodName(),
+                                params.values().toArray(new Class[] {}));
+                    } else {
+                        javaMethod = providerInstance.getClass().getMethod(jsonRpcMethod.getMethodName());
+                    }
+                    ReflectionInfo reflectionInfo = new ReflectionInfo(providerInstance, javaMethod, params);
+                    jsonRpcToJava.put(extensionName + DOT + methodName, reflectionInfo);
+                } catch (NoSuchMethodException | SecurityException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
     }
 
     public String route(String message) {
@@ -39,47 +85,83 @@ public class JsonRpcRouter {
         return Json.encode(jsonRpcResponse);
     }
 
+    @SuppressWarnings("unchecked")
     public JsonRpcResponse route(JsonRpcRequest jsonRpcRequest) {
-        System.out.println(">>>>>> jsonRpcRequest = " + jsonRpcRequest);
+        log.info(">>>>>> jsonRpcRequest = " + jsonRpcRequest);
 
-        if (isBuildTimeData(jsonRpcRequest.getMethod())) {
-            return routeBuildtime(jsonRpcRequest);
+        String jsonRpcMethodName = jsonRpcRequest.getMethod();
+
+        if (this.jsonRpcToJava.containsKey(jsonRpcMethodName)) {
+            ReflectionInfo reflectionInfo = this.jsonRpcToJava.get(jsonRpcMethodName);
+            try {
+                Object result = null;
+                if (jsonRpcRequest.hasParams()) {
+                    Object[] args = getArgsAsObjects(reflectionInfo.params, jsonRpcRequest);
+                    result = reflectionInfo.method.invoke(reflectionInfo.instance, args);
+                } else {
+                    result = reflectionInfo.method.invoke(reflectionInfo.instance);
+                }
+                return toJsonRpcResponse(jsonRpcRequest, result);
+            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+                throw new RuntimeException(ex);
+            }
+
         } else {
-            return routeRuntime(jsonRpcRequest);
+            // TODO: Delete below . (Move internal to BuildTimeData)
+            try {
+                String[] extensionMethod = jsonRpcMethodName.split("\\.");
+                String extension = extensionMethod[0];
+                String method = extensionMethod[1];
+
+                Object provider = findProvider(extension);
+                Method jsonRPCMethod = lookupMethod(provider.getClass(), method, List.of());
+                Object result = jsonRPCMethod.invoke(provider);
+                return toJsonRpcResponse(jsonRpcRequest, result);
+
+            } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | ClassNotFoundException
+                    | NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
-    private JsonRpcResponse routeBuildtime(JsonRpcRequest jsonRpcRequest) {
-        String responseJson = buildTimeResponses.get(jsonRpcRequest.getMethod());
-        Object result = Json.decodeValue(responseJson);
-        return toJsonRpcResponse(jsonRpcRequest, result);
-    }
+    private Object[] getArgsAsObjects(Map<String, Class> params, JsonRpcRequest jsonRpcRequest) {
 
-    private JsonRpcResponse routeRuntime(JsonRpcRequest jsonRpcRequest) {
-        try {
-            String[] extensionMethod = jsonRpcRequest.getMethod().split("\\.");
-            String extension = extensionMethod[0];
-            String method = extensionMethod[1];
-
-            Object provider = findProvider(extension, method);
-            Method jsonRPCMethod = lookupMethod(provider.getClass(), method, List.of());
-            Object result = jsonRPCMethod.invoke(provider);
-            return toJsonRpcResponse(jsonRpcRequest, result);
-        } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | ClassNotFoundException
-                | NoSuchMethodException e) {
-            throw new RuntimeException(e);
+        List<Object> objects = new ArrayList<>();
+        for (Map.Entry<String, Class> expectedParams : params.entrySet()) {
+            String paramName = expectedParams.getKey();
+            Class paramType = expectedParams.getValue();
+            // TODO: Might need json mapping here ?
+            Object param = jsonRpcRequest.getParam(paramName);
+            Object casted = paramType.cast(param);
+            objects.add(casted);
         }
+
+        return objects.toArray(new Object[] {});
     }
 
-    private boolean isBuildTimeData(String method) {
-        if (buildTimeResponses != null) {
-            return buildTimeResponses.containsKey(method);
-        }
-        return false;
-    }
+    //    private JsonRpcMethod getJsonRpcMethod(String extension, String method) {
+    //        if (extensionMethodsMap.containsKey(extension)) {
+    //            Map<JsonRpcMethodName, JsonRpcMethod> jsonRpcMethods = extensionMethodsMap.get(extension);
+    //            JsonRpcMethodName jsonRpcMethodName = new JsonRpcMethodName(method);
+    //
+    //            if (jsonRpcMethods.containsKey(jsonRpcMethodName)) {
+    //                return jsonRpcMethods.get(jsonRpcMethodName);
+    //            } else {
+    //                if (!extension.equalsIgnoreCase("internal")) {
+    //                    log.warn("Extension " + extension + " does not have a JsonRPC method called " + jsonRpcMethodName);
+    //                }
+    //            }
+    //        } else {
+    //            if (!extension.equalsIgnoreCase("internal")) {
+    //                log.warn(">>>>>> Extension " + extension + " does not have any JsonRPC methods");
+    //            }
+    //        }
+    //        return null;
+    //    }
 
     // TODO: Cache
-    private Object findProvider(String extension, String method) {
+    private Object findProvider(String extension) {
         String beanName = DevUIJsonRPCProviderNamer.createBeanName(extension);
         Set<Bean<?>> beans = beanManager.getBeans(beanName);
         if (beans != null && !beans.isEmpty() && beans.size() == 1) {
@@ -155,5 +237,6 @@ public class JsonRpcRouter {
     private static final String METHOD = "method";
     private static final String PARAMS = "params";
     private static final String ID = "id";
+    private static final String DOT = ".";
 
 }

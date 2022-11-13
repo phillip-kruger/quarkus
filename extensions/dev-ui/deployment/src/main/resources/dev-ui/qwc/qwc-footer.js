@@ -58,15 +58,7 @@ export class QwcFooter extends LitElement {
     this._tabItems = null;
   }
 
-  connectedCallback() {
-    super.connectedCallback();
-  }
-  
-  disconnectedCallback() {
-    super.disconnectedCallback();
-  }
-
-  onJsonRpcResponse(result){
+  getBottomDrawerItemsResponse(result){
     this._tabItems = result;
   }
 

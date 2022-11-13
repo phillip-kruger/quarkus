@@ -34,14 +34,24 @@ export class JsonRpcController {
       JsonRpcController.webSocket.onmessage = function (event) {
         var response = JSON.parse(event.data);
         if(JsonRpcController.messageQueue.has(response.id)){
-          var owner = JsonRpcController.messageQueue.get(response.id);
-          owner.onJsonRpcResponse(response.result);
-          JsonRpcController.messageQueue.delete(response.id);
+            var requestDetails = JsonRpcController.messageQueue.get(response.id);
+            var owner = requestDetails.owner;
+          
+            console.log("<---- name = " + requestDetails.name);
+            console.log("<---- method = " + requestDetails.method);
+            
+            var responseMethodName = requestDetails.method + "Response";
+            try {
+                owner[responseMethodName](response.result, response.id);
+            } catch (error) {
+                console.log(" ERROR  [" + responseMethodName + "] ! " + error);
+            }
+            JsonRpcController.messageQueue.delete(response.id);
         }          
       }
   
       JsonRpcController.webSocket.onerror = function (error) {
-          console.log("We go an error !!!!! [" + error + "]");
+          console.log("We got an error !!!!! [" + error + "]");
       }
     }
   }
@@ -59,8 +69,11 @@ export class JsonRpcController {
    */
   request(method, params = new Object()){
     var uid = JsonRpcController.messageCounter++;
-    JsonRpcController.messageQueue.set(uid, this.host);
-
+    JsonRpcController.messageQueue.set(uid, {
+        owner: this.host,
+        name: this.name,
+        method: method,
+    });
     var message = new Object();
     message.jsonrpc = "2.0";
     message.method  = this.name + "." + method;
@@ -73,5 +86,6 @@ export class JsonRpcController {
     } else {
       JsonRpcController.webSocket.send(jsonrpcpayload);
     }
+    return uid; // If you want to keep tract of this request
   }
 }

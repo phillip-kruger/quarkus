@@ -2,6 +2,7 @@ package io.quarkus.devui.deployment;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -10,49 +11,50 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Named;
+import javax.inject.Singleton;
 
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.IndexView;
+import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
-import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
-import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
+import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
-import io.quarkus.devui.deployment.spi.buildtime.JsonRPCResponsesBuildItem;
+import io.quarkus.deployment.builditem.AdditionalIndexedClassesBuildItem;
+import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.devui.deployment.spi.page.Page;
 import io.quarkus.devui.deployment.spi.page.PageBuildItem;
 import io.quarkus.devui.deployment.spi.page.PageBuilder;
 import io.quarkus.devui.deployment.spi.page.QuteDataPageBuilder;
 import io.quarkus.devui.deployment.spi.runtime.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.runtime.DevUIRecorder;
-import io.quarkus.devui.runtime.jsonrpc.DevUIJsonRPCProviderNamer;
+import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethod;
+import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethodName;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcRouter;
 import io.quarkus.devui.runtime.jsonrpc.handler.DevUIInternalJsonRPCMethodProvider;
 import io.quarkus.devui.runtime.service.extension.Codestart;
 import io.quarkus.devui.runtime.service.extension.Extension;
-import io.quarkus.gizmo.AnnotationCreator;
-import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.maven.dependency.GACT;
 import io.quarkus.maven.dependency.GACTV;
 import io.quarkus.qute.Qute;
 import io.quarkus.webjar.deployment.WebJarBuildItem;
 import io.quarkus.webjar.deployment.WebJarResultsBuildItem;
 import io.smallrye.common.classloader.ClassPathUtils;
-import io.vertx.core.json.Json;
 
 /**
  * Processor for Dev UI
@@ -68,11 +70,14 @@ public class DevUIProcessor {
     private static final String DASH = "-";
     private static final String DOUBLE_POINT = ":";
     private static final String DASH_DEPLOYMENT = "-deployment";
+    private static final String CONSTRUCTOR = "<init>";
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
 
     @BuildStep(onlyIf = IsDevelopment.class)
-    void additionalBean(BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer) {
+    void additionalBean(BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
+            BuildProducer<AdditionalIndexedClassesBuildItem> additionalIndexProducer,
+            List<JsonRPCProvidersBuildItem> jsonRPCProvidersBuildItems) {
         additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
                 .addBeanClass(JsonRpcRouter.class)
                 .setUnremovable().build());
@@ -80,26 +85,112 @@ public class DevUIProcessor {
         additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
                 .addBeanClass(DevUIInternalJsonRPCMethodProvider.class)
                 .setUnremovable().build());
+
+        // Make sure all JsonRPC Providers is in the index
+        for (JsonRPCProvidersBuildItem jsonRPCProvidersBuildItem : jsonRPCProvidersBuildItems) {
+
+            Class c = jsonRPCProvidersBuildItem.getJsonRPCMethodProviderClass();
+            additionalIndexProducer.produce(new AdditionalIndexedClassesBuildItem(c.getName()));
+        }
+    }
+
+    @BuildStep(onlyIf = IsDevelopment.class)
+    void findAllJsonRPCMethods(BuildProducer<JsonRPCMethodsBuildItem> jsonRPCMethodsProvider,
+            CombinedIndexBuildItem combinedIndexBuildItem,
+            List<JsonRPCProvidersBuildItem> jsonRPCProvidersBuildItems) {
+
+        IndexView index = combinedIndexBuildItem.getIndex();
+
+        Map<String, Map<JsonRpcMethodName, JsonRpcMethod>> extensionMethodsMap = new HashMap<>();
+
+        // Let's use the Jandex index to find all methods
+        for (JsonRPCProvidersBuildItem jsonRPCProvidersBuildItem : jsonRPCProvidersBuildItems) {
+
+            Class clazz = jsonRPCProvidersBuildItem.getJsonRPCMethodProviderClass();
+            String extension = jsonRPCProvidersBuildItem.getExtensionName();
+
+            Map<JsonRpcMethodName, JsonRpcMethod> jsonRpcMethods = null;
+            if (extensionMethodsMap.containsKey(extension)) {
+                jsonRpcMethods = extensionMethodsMap.get(extension);
+            } else {
+                jsonRpcMethods = new HashMap<>();
+            }
+
+            ClassInfo classInfo = index.getClassByName(DotName.createSimple(clazz.getName()));
+
+            List<MethodInfo> methods = classInfo.methods();
+
+            for (MethodInfo method : methods) {
+                if (!method.name().equals(CONSTRUCTOR)) { // Ignore constructor
+                    if (Modifier.isPublic(method.flags())) { // Only allow public methods
+
+                        JsonRpcMethodName jsonRpcMethodName = new JsonRpcMethodName(method.name());
+                        if (method.parametersCount() > 0) {
+                            Map<String, Class> params = new LinkedHashMap<>(); // Keep the order
+                            for (int i = 0; i < method.parametersCount(); i++) {
+                                Type parameterType = method.parameterType(i);
+                                Class parameterClass = toClass(parameterType);
+                                String parameterName = method.parameterName(i);
+                                params.put(parameterName, parameterClass);
+                            }
+                            JsonRpcMethod jsonRpcMethod = new JsonRpcMethod(clazz, method.name(), params);
+                            jsonRpcMethods.put(jsonRpcMethodName, jsonRpcMethod);
+                        } else {
+                            JsonRpcMethod jsonRpcMethod = new JsonRpcMethod(clazz, method.name(), null);
+                            jsonRpcMethods.put(jsonRpcMethodName, jsonRpcMethod);
+                        }
+                    }
+                }
+            }
+
+            if (!jsonRpcMethods.isEmpty()) {
+                extensionMethodsMap.put(extension, jsonRpcMethods);
+            }
+        }
+
+        if (!extensionMethodsMap.isEmpty()) {
+            jsonRPCMethodsProvider.produce(new JsonRPCMethodsBuildItem(extensionMethodsMap));
+        }
+    }
+
+    private Class toClass(Type type) {
+        try {
+            return tccl.loadClass(type.name().toString());
+        } catch (ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @BuildStep(onlyIf = IsDevelopment.class)
+    @Record(ExecutionTime.STATIC_INIT)
+    void scopeJsonRPCProviders(DevUIRecorder recorder,
+            List<JsonRPCProvidersBuildItem> jsonRPCProvidersBuildItems,
+            BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer) {
+
+        for (JsonRPCProvidersBuildItem jsonRPCProvidersBuildItem : jsonRPCProvidersBuildItems) {
+            Class c = jsonRPCProvidersBuildItem.getJsonRPCMethodProviderClass();
+            SyntheticBeanBuildItem sbbi = SyntheticBeanBuildItem.configure(c)
+                    .scope(Singleton.class)
+                    .runtimeValue(recorder.createJsonRpcProvider(c))
+                    .unremovable()
+                    .done();
+            syntheticBeanProducer.produce(sbbi);
+
+        }
     }
 
     @BuildStep(onlyIf = IsDevelopment.class)
     @Record(ExecutionTime.STATIC_INIT)
     void createJsonRpcRouter(DevUIRecorder recorder,
             BeanContainerBuildItem beanContainer,
-            List<JsonRPCResponsesBuildItem> jsonRPCResponsesBuildItems) {
+            JsonRPCMethodsBuildItem jsonRPCMethodsBuildItem) {
 
-        Map<String, String> methodWithJsonResponseMap = new HashMap<String, String>();
-        for (JsonRPCResponsesBuildItem jsonRPCResponsesBuildItem : jsonRPCResponsesBuildItems) {
+        Map<String, Map<JsonRpcMethodName, JsonRpcMethod>> extensionMethodsMap = jsonRPCMethodsBuildItem
+                .getExtensionMethodsMap();
 
-            String namespace = jsonRPCResponsesBuildItem.getExtensionName();
-            for (Map.Entry<String, Object> e : jsonRPCResponsesBuildItem.getMethodNameAndResponseData().entrySet()) {
-                String key = namespace + DOT + e.getKey();
-                String value = Json.encodePrettily(e.getValue());
-                methodWithJsonResponseMap.put(key, value);
-            }
+        // TODO: Can JsonRPCRouter be in development ?
+        recorder.createJsonRpcRouter(beanContainer.getValue(), extensionMethodsMap);
 
-        }
-        recorder.createJsonRpcRouter(beanContainer.getValue(), methodWithJsonResponseMap);
     }
 
     @BuildStep(onlyIf = IsDevelopment.class)
@@ -107,8 +198,7 @@ public class DevUIProcessor {
     void getAllExtensions(List<PageBuildItem> pageBuildItems,
             BuildProducer<ExtensionsBuildItem> extensionsProducer,
             BuildProducer<WebJarBuildItem> webJarBuildProducer,
-            BuildProducer<DevUIWebJarBuildItem> devUIWebJarProducer,
-            BuildProducer<JsonRPCResponsesBuildItem> devUIBuildtimeJsonRPCMethodProducer) {
+            BuildProducer<DevUIWebJarBuildItem> devUIWebJarProducer) {
 
         // First create the static resources for our own internal components
         webJarBuildProducer.produce(WebJarBuildItem.builder()
@@ -239,35 +329,6 @@ public class DevUIProcessor {
         }
     }
 
-    @BuildStep(onlyIf = IsDevelopment.class)
-    void jsonRPCRuntimeFacade(List<JsonRPCProvidersBuildItem> jsonRPCProvidersBuildItems,
-            BuildProducer<GeneratedBeanBuildItem> generatedBeanBuildItemBuildProducer,
-            BuildProducer<AdditionalBeanBuildItem> additionalBeans) throws NoSuchMethodException {
-
-        for (JsonRPCProvidersBuildItem provider : jsonRPCProvidersBuildItems) {
-
-            String extensionName = provider.getExtensionName();
-            Class jsonRPCMethodProviderClass = provider.getJsonRPCMethodProviderClass();
-            String beanName = DevUIJsonRPCProviderNamer.createBeanName(extensionName);
-            String fullClassName = "io.quarkus.devui.runtime.generated." + beanName;
-
-            // TODO: Validate the uniqueness of the method names
-
-            try (ClassCreator cc = ClassCreator.builder()
-                    .classOutput(new GeneratedBeanGizmoAdaptor(generatedBeanBuildItemBuildProducer)).className(fullClassName)
-                    .superClass(jsonRPCMethodProviderClass)
-                    .build()) {
-                cc.addAnnotation(ApplicationScoped.class.getName());
-                AnnotationCreator namedAnnotation = cc.addAnnotation(Named.class.getName());
-                namedAnnotation.add(VALUE, beanName);
-            }
-
-            additionalBeans.produce(AdditionalBeanBuildItem.builder()
-                    .addBeanClass(jsonRPCMethodProviderClass)
-                    .build());
-        }
-    }
-
     private Page buildFinalPage(PageBuilder pageBuilder, Extension extension, Map<String, Object> buildTimeData) {
         pageBuilder.namespace(extension.getPathName());
         pageBuilder.extension(extension.getName());
@@ -348,7 +409,6 @@ public class DevUIProcessor {
         }
     };
 
-    private static final String DOT = ".";
     private static final String NAME = "name";
     private static final String DESCRIPTION = "description";
     private static final String ARTIFACT = "artifact";

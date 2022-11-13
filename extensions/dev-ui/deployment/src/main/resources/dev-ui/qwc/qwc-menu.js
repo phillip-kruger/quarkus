@@ -114,7 +114,7 @@ export class QwcMenu extends LitElement {
         this._selectedPageLabel = pageDetails.title;
     }
 
-    onJsonRpcResponse(result){
+    getMenuItemsResponse(result){
         result.forEach(menuItem => {
             var pagename = menuItem.webcomponent;
             var defaultSelection = menuItem.defaultSelection;

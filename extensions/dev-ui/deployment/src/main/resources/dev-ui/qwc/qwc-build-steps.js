@@ -28,7 +28,7 @@ export class QwcBuildSteps extends LitElement {
     this.jsonRpcController.request(QwcBuildSteps.methodName);
   }
 
-  onJsonRpcResponse(result){
+  getBuildStepsResponse(result){
     this._steps = result;
   }
 

@@ -60,6 +60,24 @@ public class BuildTimeStaticContentProcessor {
     }
 
     /**
+     * Here we map all the pages (as defined by the extensions) build time data
+     *
+     * @param pageBuildItems
+     * @param buildTimeConstProducer
+     */
+    @BuildStep(onlyIf = IsDevelopment.class)
+    void mapPageBuildTimeData(List<PageBuildItem> pageBuildItems,
+            BuildProducer<BuildTimeConstBuildItem> buildTimeConstProducer) {
+
+        for (PageBuildItem pageBuildItem : pageBuildItems) {
+            if (pageBuildItem.hasBuildTimeData()) {
+                buildTimeConstProducer.produce(
+                        new BuildTimeConstBuildItem(pageBuildItem.getExtensionName(), pageBuildItem.getBuildTimeData()));
+            }
+        }
+    }
+
+    /**
      * Here we find all build time data and make then available via a const
      *
      * js components can import the const with "import {constName} from '{ext}-data';"
@@ -70,7 +88,7 @@ public class BuildTimeStaticContentProcessor {
      */
     @BuildStep(onlyIf = IsDevelopment.class)
     void createBuildTimeConstJsTemplate(
-            List<PageBuildItem> pageBuildItems,
+            List<BuildTimeConstBuildItem> buildTimeConstBuildItems,
             BuildProducer<QuteTemplateBuildItem> quteTemplateProducer,
             BuildProducer<InternalImportMapBuildItem> internalImportMapProducer) {
 
@@ -79,10 +97,10 @@ public class BuildTimeStaticContentProcessor {
 
         InternalImportMapBuildItem internalImportMapBuildItem = new InternalImportMapBuildItem();
 
-        for (PageBuildItem pageBuildItem : pageBuildItems) {
+        for (BuildTimeConstBuildItem buildTimeConstBuildItem : buildTimeConstBuildItems) {
             Map<String, Object> data = new HashMap<>();
-            if (pageBuildItem.hasBuildTimeData()) {
-                for (Map.Entry<String, Object> pageData : pageBuildItem.getBuildTimeData().entrySet()) {
+            if (buildTimeConstBuildItem.hasBuildTimeData()) {
+                for (Map.Entry<String, Object> pageData : buildTimeConstBuildItem.getBuildTimeData().entrySet()) {
                     try {
                         String key = pageData.getKey();
                         String value = objectMapper.writerWithDefaultPrettyPrinter()
@@ -96,7 +114,7 @@ public class BuildTimeStaticContentProcessor {
             if (!data.isEmpty()) {
                 Map<String, Object> qutedata = new HashMap<>();
                 qutedata.put("buildTimeData", data);
-                String ref = pageBuildItem.getExtensionPathName() + "-data";
+                String ref = buildTimeConstBuildItem.getExtensionPathName() + "-data";
                 String file = ref + ".js";
                 quteTemplateBuildItem.add("build-time-data.js", file, qutedata);
                 internalImportMapBuildItem.add(ref, "./" + file);
