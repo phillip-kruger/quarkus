@@ -1,21 +1,16 @@
 import { LitElement, html, css} from 'lit';
-import { until } from 'lit/directives/until.js';
-
-import { JsonRpcController } from 'jsonrpc-controller';
+import { menuItems } from 'internal-data';
 import { RouterController } from 'router-controller';
-
 import '@vaadin/icon';
 import '@qwc/quarkus-version';
 
 /**
  * This component represent the Dev UI left menu
- * It loads the menuitems from the the server and dynamicallt add the routes and import the relevant components
+ * It creates the menuItems during build and dynamically add the routes and import the relevant components
  */
 export class QwcMenu extends LitElement {
-    jsonRpcController = new JsonRpcController(this);
     
     static styles = css`
-
             .left {
                 height: 100%;
                 display: flex;
@@ -91,16 +86,23 @@ export class QwcMenu extends LitElement {
     
     constructor() {
         super();
+        this._menuItems = menuItems;
+        
+        this._menuItems.forEach(menuItem => {
+            var pagename = menuItem.webcomponent;
+            var defaultSelection = menuItem.defaultSelection;
+            var componentLink = './' + pagename + '.js';
+            import(componentLink);
+            RouterController.addMenuRoute(pagename, defaultSelection);
+        });
         
         window.addEventListener('vaadin-router-location-changed', (event) => {
             this._updateSelection(event);
         });
 
-        this.jsonRpcController.request("getMenuItems");
         const storedState = localStorage.getItem("qwc-menu-state");
         this._selectedPage = "qwc-extensions"; // default
         this._selectedPageLabel = "Extensions"; // default
-        this._menuItems = null;
         if(storedState && storedState === "small"){
             this._smaller();
         }else{
@@ -114,34 +116,7 @@ export class QwcMenu extends LitElement {
         this._selectedPageLabel = pageDetails.title;
     }
 
-    getMenuItemsResponse(result){
-        result.forEach(menuItem => {
-            var pagename = menuItem.webcomponent;
-            var defaultSelection = menuItem.defaultSelection;
-            var componentLink = './' + pagename + '.js';
-            import(componentLink);
-            RouterController.addMenuRoute(pagename, defaultSelection);
-        });
-
-        this._menuItems = result;
-    }
-
     render() {
-        return html`${until(this._renderJsonRpcResponse(), html`<span>Loading...</span>`)}`;
-    }
-
-    _componentIsInMenu(component){
-        
-        let isInMenu = false;
-        this._menuItems.forEach(menuItem => {
-            if(component === menuItem.webcomponent){
-                isInMenu = true;
-            }
-        });
-        return isInMenu;
-    }
-
-    _renderJsonRpcResponse(){
         if(this._menuItems){
             return html`
                 <div class="left">
@@ -190,6 +165,17 @@ export class QwcMenu extends LitElement {
                 <vaadin-icon class="menuSizeControl" icon="font-awesome-solid:${icon}" @click="${this._changeMenuSize}" data-action="${action}"></vaadin-icon>
             `;
         }
+    }
+
+    _componentIsInMenu(component){
+        
+        let isInMenu = false;
+        this._menuItems.forEach(menuItem => {
+            if(component === menuItem.webcomponent){
+                isInMenu = true;
+            }
+        });
+        return isInMenu;
     }
 
     _changeMenuSize(e){

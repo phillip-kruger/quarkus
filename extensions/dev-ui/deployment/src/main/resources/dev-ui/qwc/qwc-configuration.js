@@ -1,14 +1,10 @@
 import { LitElement, html, css} from 'lit';
-import { until } from 'lit/directives/until.js';
-import { JsonRpcController } from 'jsonrpc-controller';
+import { allConfiguration } from 'internal-data';
 
 /**
  * This component allows users to change the configuration
  */
 export class QwcConfiguration extends LitElement {
-  static methodName = "getAllConfiguration";
-  jsonRpcController = new JsonRpcController(this);
-
   static styles = css`
         .todo {
             font-size: small;
@@ -22,20 +18,12 @@ export class QwcConfiguration extends LitElement {
     _configurations: {state: true}
   };
   
-  connectedCallback() {
-    super.connectedCallback();
-    this.jsonRpcController.request(QwcConfiguration.methodName);
-  }
-
-  getAllConfigurationResponse(result){
-    this._configurations = result;
+  constructor() {
+    super();
+    this._configurations = allConfiguration;
   }
 
   render() {
-    return html`${until(this._renderJsonRpcResponse(), html`<span>Loading...</span>`)}`;
-  }
-
-  _renderJsonRpcResponse(){
     if(this._configurations){
       return html`<div class="todo">${this._configurations}</div>`;
     }

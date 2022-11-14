@@ -49,7 +49,8 @@ public class BuildTimeStaticContentProcessor {
         internalImportMapBuildItem.add("qwc/", "./qwc/");
         internalImportMapBuildItem.add("icon/", "./icon/");
         internalImportMapBuildItem.add("controller/", "./controller/");
-        internalImportMapBuildItem.add("jsonrpc-controller", "./controller/jsonrpc-controller.js");
+        internalImportMapBuildItem.add("jsonrpc-controller", "./controller/jsonrpc-controller.js"); // TODO: Remove this
+        internalImportMapBuildItem.add("jsonrpc", "./controller/jsonrpc.js");
         internalImportMapBuildItem.add("router-controller", "./controller/router-controller.js");
         internalImportMapBuildItem.add("notification-controller", "./controller/notification-controller.js");
         internalImportMapBuildItem.add("@qwc/quarkus-version", "./qwc/qwc-quarkus-version.js");

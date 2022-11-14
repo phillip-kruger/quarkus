@@ -1,7 +1,6 @@
 import { LitElement, html, css} from 'lit';
-import { until } from 'lit/directives/until.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-import { JsonRpcController } from 'jsonrpc-controller';
+import { bottomDrawerItems } from 'internal-data';
 
 import '@vaadin/tabs';
 import '@vaadin/tabs/vaadin-tab.js';
@@ -11,9 +10,6 @@ import '@vaadin/icon';
  * This component shows the Bottom Drawer
  */
 export class QwcFooter extends LitElement {
-  static methodName = "getBottomDrawerItems";
-  jsonRpcController = new JsonRpcController(this);
-
   static styles = css`
     .horizontal-flex {
       display: flex;
@@ -53,20 +49,10 @@ export class QwcFooter extends LitElement {
   
   constructor() {
     super();
-    this.jsonRpcController.request(QwcFooter.methodName);
-    this._content = "loading...";
-    this._tabItems = null;
-  }
-
-  getBottomDrawerItemsResponse(result){
-    this._tabItems = result;
+    this._tabItems = bottomDrawerItems;
   }
 
   render() {
-    return html`${until(this._renderJsonRpcResponse(), html`<span>Loading...</span>`)}`;
-  }
-
-  _renderJsonRpcResponse(){
     if(this._tabItems){
       if(this.show){
         return html`

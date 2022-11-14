@@ -46,7 +46,6 @@ import io.quarkus.devui.runtime.DevUIRecorder;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethod;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethodName;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcRouter;
-import io.quarkus.devui.runtime.jsonrpc.handler.DevUIInternalJsonRPCMethodProvider;
 import io.quarkus.devui.runtime.service.extension.Codestart;
 import io.quarkus.devui.runtime.service.extension.Extension;
 import io.quarkus.maven.dependency.GACT;
@@ -80,10 +79,6 @@ public class DevUIProcessor {
             List<JsonRPCProvidersBuildItem> jsonRPCProvidersBuildItems) {
         additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
                 .addBeanClass(JsonRpcRouter.class)
-                .setUnremovable().build());
-
-        additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
-                .addBeanClass(DevUIInternalJsonRPCMethodProvider.class)
                 .setUnremovable().build());
 
         // Make sure all JsonRPC Providers is in the index
@@ -426,7 +421,6 @@ public class DevUIProcessor {
     private static final String UNLISTED = "unlisted";
     private static final String CODESTART = "codestart";
     private static final String LANGUAGES = "languages";
-    private static final String VALUE = "value";
 
     private static final String YAML_FILE = "/META-INF/quarkus-extension.yaml";
 

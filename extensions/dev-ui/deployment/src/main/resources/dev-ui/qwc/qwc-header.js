@@ -6,7 +6,6 @@ import '@vaadin/tabs';
  * This component represent the Dev UI Header
  */
 export class QwcHeader extends LitElement {
-    
     static styles = css`
         .top-bar {
             height: 70px;

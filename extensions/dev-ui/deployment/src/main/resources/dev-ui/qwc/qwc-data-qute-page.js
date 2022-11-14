@@ -18,14 +18,6 @@ export class QwcDataQutePage extends LitElement {
         var metadata = RouterController.currentMetaData();
         if(metadata){
             this._htmlFragment = metadata.htmlFragment;
-            
-            // TODO: Allow js somehow
-            //let templatePath = metadata.templatePath;
-            
-            //console.log(">>> templatePath = " + templatePath);
-            //let jsPath = templatePath.replace(".html", ".js");
-            //console.log(">>> jsPath = " + jsPath);
-            //import(jsPath);
         }
     }
     

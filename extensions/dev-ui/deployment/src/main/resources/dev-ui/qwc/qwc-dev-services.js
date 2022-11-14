@@ -1,14 +1,10 @@
 import { LitElement, html, css} from 'lit';
-import { until } from 'lit/directives/until.js';
-import { JsonRpcController } from 'jsonrpc-controller';
+import { devServices } from 'internal-data';
 
 /**
  * This component shows the Dev Services Page
  */
 export class QwcDevServices extends LitElement {
-  static methodName = "getDevServices";
-  jsonRpcController = new JsonRpcController(this);
-
   static styles = css`
         .todo {
             font-size: small;
@@ -22,24 +18,15 @@ export class QwcDevServices extends LitElement {
     _services: {state: true}
   };
   
-  connectedCallback() {
-    super.connectedCallback();
-    this.jsonRpcController.request(QwcDevServices.methodName);
-  }
-
-  getDevServicesResponse(result){
-    this._services = result;
+  constructor() {
+    super();
+    this._services = devServices;
   }
 
   render() {
-    return html`${until(this._renderJsonRpcResponse(), html`<span>Loading...</span>`)}`;
-  }
-
-  _renderJsonRpcResponse(){
     if(this._services){
       return html`<div class="todo">${this._services}</div>`;
     }
   }
-
 }
 customElements.define('qwc-dev-services', QwcDevServices);
