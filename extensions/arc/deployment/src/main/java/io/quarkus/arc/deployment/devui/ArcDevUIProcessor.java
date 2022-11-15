@@ -8,10 +8,12 @@ import io.quarkus.arc.deployment.devconsole.DevBeanInfos;
 import io.quarkus.arc.deployment.devconsole.DevDecoratorInfo;
 import io.quarkus.arc.deployment.devconsole.DevInterceptorInfo;
 import io.quarkus.arc.deployment.devconsole.DevObserverInfo;
+import io.quarkus.arc.runtime.devui.ArcJsonRPCService;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.devui.deployment.spi.page.Page;
 import io.quarkus.devui.deployment.spi.page.PageBuildItem;
+import io.quarkus.devui.deployment.spi.runtime.JsonRPCProvidersBuildItem;
 
 public class ArcDevUIProcessor {
 
@@ -85,6 +87,11 @@ public class ArcDevUIProcessor {
         }
 
         return pageBuildItem;
+    }
+
+    @BuildStep(onlyIf = IsDevelopment.class)
+    JsonRPCProvidersBuildItem createJsonRPCService() {
+        return new JsonRPCProvidersBuildItem("ArC", ArcJsonRPCService.class);
     }
 
     private List<DevBeanWithInterceptorInfo> toDevBeanWithInterceptorInfo(List<DevBeanInfo> beans, DevBeanInfos devBeanInfos) {

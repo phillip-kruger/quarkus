@@ -1,6 +1,7 @@
 import { LitElement, html, css} from 'lit';
 import { RouterController } from 'router-controller';
 import '@vaadin/grid';
+import '@vaadin/grid/vaadin-grid-sort-column.js';
 
 /**
  * This component renders build time data in a table
@@ -52,7 +53,7 @@ export class QwcDataTablePage extends LitElement {
             const colTemplates = [];
 
             for (const col of this._cols) {
-                colTemplates.push(html`<vaadin-grid-column path="${col}" resizable></vaadin-grid-column>`);
+                colTemplates.push(html`<vaadin-grid-sort-column path="${col}" resizable></vaadin-grid-sort-column>`);
             }
 
             return html`<vaadin-grid .items="${this._buildTimeData}" class="datatable" theme="no-border">

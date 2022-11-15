@@ -4,16 +4,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
 
@@ -28,9 +22,6 @@ import io.vertx.core.json.JsonObject;
 public class JsonRpcRouter {
 
     private static final Logger log = Logger.getLogger(JsonRpcRouter.class);
-
-    @Inject
-    BeanManager beanManager;
 
     // Map json-rpc method to java
     private Map<String, ReflectionInfo> jsonRpcToJava = new HashMap<>();
@@ -51,10 +42,8 @@ public class JsonRpcRouter {
         for (Map.Entry<String, Map<JsonRpcMethodName, JsonRpcMethod>> extension : extensionMethodsMap.entrySet()) {
             String extensionName = extension.getKey();
             Map<JsonRpcMethodName, JsonRpcMethod> jsonRpcMethods = extension.getValue();
-            Map<JsonRpcMethodName, ReflectionInfo> javaMethods = new HashMap<>();
             for (Map.Entry<JsonRpcMethodName, JsonRpcMethod> method : jsonRpcMethods.entrySet()) {
                 JsonRpcMethodName methodName = method.getKey();
-
                 JsonRpcMethod jsonRpcMethod = method.getValue();
 
                 @SuppressWarnings("unchecked")
@@ -81,12 +70,12 @@ public class JsonRpcRouter {
 
     public String route(String message) {
         JsonRpcRequest jsonRpcRequest = toJsonRpcRequest(message);
-        JsonRpcResponse jsonRpcResponse = route(jsonRpcRequest);
+        JsonRpcMessage jsonRpcResponse = route(jsonRpcRequest);
         return Json.encode(jsonRpcResponse);
     }
 
     @SuppressWarnings("unchecked")
-    public JsonRpcResponse route(JsonRpcRequest jsonRpcRequest) {
+    public JsonRpcMessage route(JsonRpcRequest jsonRpcRequest) {
         log.info(">>>>>> jsonRpcRequest = " + jsonRpcRequest);
 
         String jsonRpcMethodName = jsonRpcRequest.getMethod();
@@ -101,119 +90,35 @@ public class JsonRpcRouter {
                 } else {
                     result = reflectionInfo.method.invoke(reflectionInfo.instance);
                 }
-                return toJsonRpcResponse(jsonRpcRequest, result);
+
+                log.info("<<<<<< result = " + result);
+
+                JsonRpcResponse jsonRpcResponse = toJsonRpcResponse(jsonRpcRequest, result);
+                log.info("<<<<<< jsonRpcResponse = " + jsonRpcResponse);
+                return jsonRpcResponse;
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
                 throw new RuntimeException(ex);
             }
-
-        } else {
-            // TODO: Delete below . (Move internal to BuildTimeData)
-            try {
-                String[] extensionMethod = jsonRpcMethodName.split("\\.");
-                String extension = extensionMethod[0];
-                String method = extensionMethod[1];
-
-                Object provider = findProvider(extension);
-                Method jsonRPCMethod = lookupMethod(provider.getClass(), method, List.of());
-                Object result = jsonRPCMethod.invoke(provider);
-                return toJsonRpcResponse(jsonRpcRequest, result);
-
-            } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException | ClassNotFoundException
-                    | NoSuchMethodException e) {
-                throw new RuntimeException(e);
-            }
         }
+
+        // Method not found
+        return JsonRpcErrorResponse.methodNotFound("Method [" + jsonRpcMethodName + "] not found");
+
     }
 
     private Object[] getArgsAsObjects(Map<String, Class> params, JsonRpcRequest jsonRpcRequest) {
-
         List<Object> objects = new ArrayList<>();
         for (Map.Entry<String, Class> expectedParams : params.entrySet()) {
             String paramName = expectedParams.getKey();
             Class paramType = expectedParams.getValue();
-            // TODO: Might need json mapping here ?
             Object param = jsonRpcRequest.getParam(paramName);
             Object casted = paramType.cast(param);
             objects.add(casted);
         }
-
-        return objects.toArray(new Object[] {});
+        return objects.toArray(Object[]::new);
     }
-
-    //    private JsonRpcMethod getJsonRpcMethod(String extension, String method) {
-    //        if (extensionMethodsMap.containsKey(extension)) {
-    //            Map<JsonRpcMethodName, JsonRpcMethod> jsonRpcMethods = extensionMethodsMap.get(extension);
-    //            JsonRpcMethodName jsonRpcMethodName = new JsonRpcMethodName(method);
-    //
-    //            if (jsonRpcMethods.containsKey(jsonRpcMethodName)) {
-    //                return jsonRpcMethods.get(jsonRpcMethodName);
-    //            } else {
-    //                if (!extension.equalsIgnoreCase("internal")) {
-    //                    log.warn("Extension " + extension + " does not have a JsonRPC method called " + jsonRpcMethodName);
-    //                }
-    //            }
-    //        } else {
-    //            if (!extension.equalsIgnoreCase("internal")) {
-    //                log.warn(">>>>>> Extension " + extension + " does not have any JsonRPC methods");
-    //            }
-    //        }
-    //        return null;
-    //    }
-
-    // TODO: Cache
-    private Object findProvider(String extension) {
-        String beanName = DevUIJsonRPCProviderNamer.createBeanName(extension);
-        Set<Bean<?>> beans = beanManager.getBeans(beanName);
-        if (beans != null && !beans.isEmpty() && beans.size() == 1) {
-            Bean bean = beans.iterator().next();
-            @SuppressWarnings("unchecked")
-            CreationalContext ctx = beanManager.createCreationalContext(bean);
-            return beanManager.getReference(bean, bean.getClass(), ctx);
-        } else {
-            throw new RuntimeException("Could not find bean " + beanName + " for extension " + extension);
-        }
-    }
-
-    // TODO: Cache
-    private Method lookupMethod(Class<?> providerClass, String methodName, List<String> parameterClasses)
-            throws ClassNotFoundException, NoSuchMethodException {
-        return providerClass.getMethod(methodName, getParameterClasses(parameterClasses));
-    }
-
-    private Class<?>[] getParameterClasses(List<String> parameterClasses) throws ClassNotFoundException {
-        if (parameterClasses != null && !parameterClasses.isEmpty()) {
-            List<Class<?>> cl = new LinkedList<>();
-            int cnt = 0;
-            for (String className : parameterClasses) {
-                Class<?> c = Class.forName(className, false, Thread.currentThread().getContextClassLoader());
-                cl.add(c);
-                cnt++;
-            }
-
-            return cl.toArray(new Class[] {});
-        }
-        return null;
-    }
-
-    // TODO: Cache
-    //    private List<Method> getJsonRPCMethods(Class jsonRPCMethodProviderClass) {
-    //        List<Method> jsonRPCMethods = new ArrayList<>();
-    //        Method[] methods = jsonRPCMethodProviderClass.getMethods();
-    //        for (Method method : methods) {
-    //            if (Modifier.isPublic(method.getModifiers())
-    //                    && !Modifier.isFinal(method.getModifiers())
-    //                    && !Modifier.isStatic(method.getModifiers())
-    //                    && !Modifier.isAbstract(method.getModifiers())
-    //                    && !method.getDeclaringClass().equals(Object.class)) {
-    //
-    //                jsonRPCMethods.add(method);
-    //            }
-    //        }
-    //        return jsonRPCMethods;
-    //    }
 
     private JsonRpcRequest toJsonRpcRequest(String message) {
-        // TODO: Handle parsing error ?
         JsonObject jsonObject = (JsonObject) Json.decodeValue(message);
         JsonRpcRequest jsonRpcRequest = new JsonRpcRequest();
         jsonRpcRequest.setJsonrpc(jsonObject.getString(JSONRPC, VERSION));

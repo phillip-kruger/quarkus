@@ -92,6 +92,25 @@
         </dependency>
         <dependency>
             <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>checkbox</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>details</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>vertical-layout</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.mvnpm.at.vaadin</groupId>
             <artifactId>text-field</artifactId>
             <version>${vaadin.version}</version>
             <scope>runtime</scope>

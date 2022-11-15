@@ -1,29 +1,112 @@
 import { LitElement, html, css} from 'lit';
+import { until } from 'lit/directives/until.js';
+import { JsonRpcController } from 'jsonrpc-controller';
+import '@vaadin/grid';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
+import '@vaadin/details';
+import '@vaadin/vertical-layout';
+import '@vaadin/button';
+import '@vaadin/checkbox';
 
 /**
  * This component shows the Arc Fired Events
  */
 export class QwcArcFiredEvents extends LitElement {
+    jsonRPC = new JsonRpcController(this, "ArC");
 
     static styles = css`
-        .todo {
-            font-size: small;
-            color: #4695EB;
-            padding-left: 10px;
-            background: white;
+        .menubar {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            padding-left: 5px;
+        }
+        .button {
+            background-color: transparent;
+            cursor: pointer;
+        }
+        .arctable {
             height: 100%;
+            padding-bottom: 10px;
+        }
+        .payload {
+            color: grey;
+            font-size: small;
         }`;
 
     static properties = {
-        _firedEvents: {attribute: false}
+        _firedEvents: {state: true}
     };
   
     connectedCallback() {
         super.connectedCallback();
+        this.jsonRPC.getLastEvents();
     }
 
     render() {
-        return html`<div class="todo">Loading fired events...</div>`;
+        return html`${until(this._renderFiredEvents(), html`<span>Loading ArC fired event...</span>`)}`;
+    }
+
+    _renderFiredEvents(){
+        if(this._firedEvents){
+            return html`<div class="menubar">
+                    <vaadin-button theme="small" @click=${this._refresh} class="button">
+                        <vaadin-icon icon="font-awesome-solid:rotate"></vaadin-icon> Refresh
+                    </vaadin-button> 
+                    <vaadin-button theme="small" @click=${this._clear} class="button">
+                        <vaadin-icon icon="font-awesome-solid:trash-can"></vaadin-icon> Clear
+                    </vaadin-button> 
+                    <vaadin-checkbox theme="small" label="Skip context lifecycle events" @click=${this._toggleContext}></vaadin-checkbox>
+                </div>
+                <vaadin-grid .items="${this._firedEvents}" class="arctable" theme="no-border">
+                    <vaadin-grid-column auto-width
+                        header="Timestamp"
+                        path="timestamp"
+                        resizable>
+                    </vaadin-grid-column>
+
+                    <vaadin-grid-column auto-width
+                        header="Event Type"
+                        ${columnBodyRenderer(this._payloadRenderer, [])}
+                        resizable>
+                    </vaadin-grid-column>
+
+                    <vaadin-grid-column auto-width
+                        header="Qualifiers"
+                        path="qualifiers"
+                        resizable>
+                    </vaadin-grid-column>
+
+                </vaadin-grid>`;
+        }
+    }
+    
+    _payloadRenderer(event) {
+        return html`
+            <vaadin-details>
+                <div slot="summary">${event.type}</div>
+
+                <vaadin-vertical-layout>
+                    <span><code class="payload">${event.payload}<code></span>
+                </vaadin-vertical-layout>
+            </vaadin-details>
+        `;
+    }
+    
+    _refresh(){
+        this.jsonRPC.getLastEvents();
+    }
+    
+    getLastEventsResponse(result){
+        this._firedEvents = result;
+    }
+    
+    _clear(){
+        this.jsonRPC.clearLastEvents();
+    }
+    
+    clearLastEventsResponse(result){
+        this._firedEvents = result;
     }
 }
 customElements.define('qwc-arc-fired-events', QwcArcFiredEvents);

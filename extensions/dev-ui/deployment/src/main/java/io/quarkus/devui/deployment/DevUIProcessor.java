@@ -250,7 +250,8 @@ public class DevUIProcessor {
                         extension.setBuiltWith((String) metaData.getOrDefault(BUILT_WITH, null));
                         extension.setConfigFilter((List<String>) metaData.getOrDefault(CONFIG, null));
                         extension.setExtensionDependencies((List<String>) metaData.getOrDefault(EXTENSION_DEPENDENCIES, null));
-                        extension.setUnlisted((boolean) metaData.getOrDefault(UNLISTED, false));
+                        String sboolean = String.valueOf(metaData.getOrDefault(UNLISTED, "false")); // Some yaml entries are strings :(
+                        extension.setUnlisted(Boolean.valueOf(sboolean));
 
                         if (metaData.containsKey(CAPABILITIES)) {
                             Map<String, Object> capabilities = (Map<String, Object>) metaData.get(CAPABILITIES);

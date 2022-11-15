@@ -35,11 +35,11 @@ import io.quarkus.arc.processor.ObserverInfo;
 import io.quarkus.arc.runtime.ArcContainerSupplier;
 import io.quarkus.arc.runtime.ArcRecorder;
 import io.quarkus.arc.runtime.BeanLookupSupplier;
-import io.quarkus.arc.runtime.devconsole.EventsMonitor;
 import io.quarkus.arc.runtime.devconsole.InvocationInterceptor;
 import io.quarkus.arc.runtime.devconsole.InvocationTree;
 import io.quarkus.arc.runtime.devconsole.InvocationsMonitor;
 import io.quarkus.arc.runtime.devconsole.Monitored;
+import io.quarkus.arc.runtime.devmode.EventsMonitor;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -79,6 +79,7 @@ public class ArcDevConsoleProcessor {
         runtimeInfos.produce(
                 new DevConsoleRuntimeTemplateInfoBuildItem("eventsMonitor",
                         new BeanLookupSupplier(EventsMonitor.class), this.getClass(), curateOutcomeBuildItem));
+
         beans.produce(AdditionalBeanBuildItem.unremovableOf(EventsMonitor.class));
         // Invocations
         beans.produce(AdditionalBeanBuildItem.builder().setUnremovable()
@@ -164,7 +165,12 @@ public class ArcDevConsoleProcessor {
         }
 
         beanInfos.sort();
-        templates.produce(new DevConsoleTemplateInfoBuildItem("devBeanInfos", beanInfos));
+
+        DevConsoleTemplateInfoBuildItem devConsoleTemplateInfoBuildItem = new DevConsoleTemplateInfoBuildItem("devBeanInfos",
+                beanInfos);
+
+        templates.produce(devConsoleTemplateInfoBuildItem);
+
         arcBeanInfoProducer.produce(new ArcBeanInfoBuildItem(beanInfos));
 
         routes.produce(new DevConsoleRouteBuildItem("toggleBeanDescription", "POST", new Handler<RoutingContext>() {
