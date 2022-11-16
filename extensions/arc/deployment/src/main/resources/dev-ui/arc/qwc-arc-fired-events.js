@@ -1,6 +1,6 @@
 import { LitElement, html, css} from 'lit';
 import { until } from 'lit/directives/until.js';
-import { JsonRpcController } from 'jsonrpc-controller';
+import { JsonRpc } from 'jsonrpc';
 import '@vaadin/grid';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/details';
@@ -12,7 +12,7 @@ import '@vaadin/checkbox';
  * This component shows the Arc Fired Events
  */
 export class QwcArcFiredEvents extends LitElement {
-    jsonRPC = new JsonRpcController(this, "ArC");
+    jsonRpc = new JsonRpc("ArC");
 
     static styles = css`
         .menubar {
@@ -40,7 +40,7 @@ export class QwcArcFiredEvents extends LitElement {
   
     connectedCallback() {
         super.connectedCallback();
-        this.jsonRPC.getLastEvents();
+        this._refresh();
     }
 
     render() {
@@ -94,19 +94,15 @@ export class QwcArcFiredEvents extends LitElement {
     }
     
     _refresh(){
-        this.jsonRPC.getLastEvents();
-    }
-    
-    getLastEventsResponse(result){
-        this._firedEvents = result;
+        this.jsonRpc.getLastEvents().then(events => {
+            this._firedEvents = events.result;
+        });
     }
     
     _clear(){
-        this.jsonRPC.clearLastEvents();
-    }
-    
-    clearLastEventsResponse(result){
-        this._firedEvents = result;
+        this.jsonRpc.clearLastEvents().then(events => {
+            this._firedEvents = events.result;
+        });
     }
 }
 customElements.define('qwc-arc-fired-events', QwcArcFiredEvents);

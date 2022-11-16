@@ -1,6 +1,6 @@
 import { LitElement, html, css} from 'lit';
 import { until } from 'lit/directives/until.js';
-import { JsonRpcController } from 'jsonrpc-controller';
+import { JsonRpc } from 'jsonrpc';
 import '@vaadin/icon';
 import '@vaadin/button';
 import '@vaadin/grid';
@@ -11,7 +11,7 @@ import { columnBodyRenderer } from '@vaadin/grid/lit.js';
  * This component shows the current caches and allow clearing of cache
  */
 export class QwcCacheCaches extends LitElement {
-    jsonRPC = new JsonRpcController(this, "Cache");
+    jsonRpc = new JsonRpc("Cache");
     
     static styles = css`
         .button {
@@ -29,13 +29,11 @@ export class QwcCacheCaches extends LitElement {
     
     connectedCallback() {
         super.connectedCallback();
-        this.jsonRPC.getCacheInfos();
-    }
-    
-    getCacheInfosResponse(result){
-        this._caches = new Map(); // map cache by name
-        result.forEach(c => {
-            this._caches.set(c.name, c);
+        this.jsonRpc.getCacheInfos().then(caches => {
+            this._caches = new Map(); // map cache by name
+            caches.result.forEach(c => {
+                this._caches.set(c.name, c);
+            });
         });
     }
     
@@ -79,25 +77,21 @@ export class QwcCacheCaches extends LitElement {
     }
     
     _refresh(cache){
-        this.jsonRPC.getCacheInfo(
-                { 
-                    name: cache.name,
-                });
+        let params = {
+            name: cache.name,
+        };
+        this.jsonRpc.getCacheInfo(params).then(cache => {
+            this._updateCache(cache.result);
+        });
     }
     
     _clear(cache){
-        this.jsonRPC.clearCache(
-                { 
-                    name: cache.name,
-                });
-    }
-    
-    getCacheInfoResponse(result){
-        this._updateCache(result);
-    }
-    
-    clearCacheResponse(result){
-        this._updateCache(result);
+        let params = {
+            name: cache.name,
+        };
+        this.jsonRpc.clearCache(params).then(cache => {
+            this._updateCache(cache.result);
+        });    
     }
     
     _updateCache(cache){

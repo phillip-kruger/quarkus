@@ -1,6 +1,6 @@
 import { LitElement, html, css} from 'lit';
 import { until } from 'lit/directives/until.js';
-import { JsonRpcController } from 'jsonrpc-controller';
+import { JsonRpc } from 'jsonrpc';
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-tree-column.js';
 import '@vaadin/button';
@@ -10,7 +10,7 @@ import '@vaadin/checkbox';
  * This component shows the Arc Invocation Trees
  */
 export class QwcArcInvocationTrees extends LitElement {
-  jsonRPC = new JsonRpcController(this, "ArC");
+  jsonRpc = new JsonRpc("ArC");
   
   static styles = css`
         .menubar {
@@ -34,7 +34,7 @@ export class QwcArcInvocationTrees extends LitElement {
   
     connectedCallback() {
         super.connectedCallback();
-        this.jsonRPC.getLastInvocations();
+        this._refresh();
     }
   
     render() {
@@ -64,19 +64,15 @@ export class QwcArcInvocationTrees extends LitElement {
     }
     
     _refresh(){
-        this.jsonRPC.getLastInvocations();
-    }
-    
-    getLastInvocationsResponse(result){
-        this._invocations = result;
+        this.jsonRpc.getLastInvocations().then(invocations => {
+            this._invocations = invocations.result;
+        });
     }
     
     _clear(){
-        this.jsonRPC.clearLastInvocations();
-    }
-    
-    clearLastInvocationsResponse(result){
-        this._invocations = result;
+        this.jsonRpc.clearLastInvocations().then(invocations => {
+            this._invocations = invocations.result;
+        });
     }
 }
 customElements.define('qwc-arc-invocation-trees', QwcArcInvocationTrees);
