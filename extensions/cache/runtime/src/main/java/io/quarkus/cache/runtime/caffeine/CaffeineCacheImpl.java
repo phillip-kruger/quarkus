@@ -106,6 +106,7 @@ public class CaffeineCacheImpl extends AbstractCache implements CaffeineCache {
             return unwrapCacheValueOrThrowable(existingCacheValue)
                     .thenApply(new Function<>() {
                         @Override
+                        @SuppressWarnings("unchecked")
                         public V apply(Object value) {
                             try {
                                 return (V) value;
@@ -219,6 +220,7 @@ public class CaffeineCacheImpl extends AbstractCache implements CaffeineCache {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <V> void put(Object key, CompletableFuture<V> valueFuture) {
         cache.put(key, (CompletableFuture<Object>) valueFuture);
     }

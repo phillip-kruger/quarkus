@@ -90,9 +90,6 @@ public class JsonRpcRouter {
                 } else {
                     result = reflectionInfo.method.invoke(reflectionInfo.instance);
                 }
-
-                log.info("<<<<<< result = " + result);
-
                 JsonRpcResponse jsonRpcResponse = toJsonRpcResponse(jsonRpcRequest, result);
                 log.info("<<<<<< jsonRpcResponse = " + jsonRpcResponse);
                 return jsonRpcResponse;
