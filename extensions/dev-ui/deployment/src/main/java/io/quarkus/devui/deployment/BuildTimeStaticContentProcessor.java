@@ -48,6 +48,7 @@ public class BuildTimeStaticContentProcessor {
         // TODO: Test by adding this to an importMap.json ?
         internalImportMapBuildItem.add("qwc/", "./qwc/");
         internalImportMapBuildItem.add("icon/", "./icon/");
+        internalImportMapBuildItem.add("font/", "./font/");
         internalImportMapBuildItem.add("controller/", "./controller/");
         internalImportMapBuildItem.add("jsonrpc", "./controller/jsonrpc.js");
         internalImportMapBuildItem.add("router-controller", "./controller/router-controller.js");
