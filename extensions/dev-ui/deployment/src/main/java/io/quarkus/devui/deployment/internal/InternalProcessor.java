@@ -44,7 +44,10 @@ public class InternalProcessor {
 
         // Bottom Drawer
         // TODO: Get this from PageBuildItem
-        List<BottomDrawerItem> bottomDrawerItems = List.of(new BottomDrawerItem("qwc-log"));
+        List<BottomDrawerItem> bottomDrawerItems = List.of(
+                new BottomDrawerItem("qwc-jsonrpc-messages"),
+                new BottomDrawerItem("qwc-server-log"));
+
         internalBuildTimeData.addBuildTimeData("bottomDrawerItems", bottomDrawerItems);
 
         // TODO: Implement below

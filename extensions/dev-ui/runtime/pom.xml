@@ -98,6 +98,20 @@
         </dependency>
         <dependency>
             <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>scroller</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>split-layout</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        
+        
+        <dependency>
+            <groupId>org.mvnpm.at.vaadin</groupId>
             <artifactId>details</artifactId>
             <version>${vaadin.version}</version>
             <scope>runtime</scope>

@@ -1,84 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="shortcut icon" type="image/png" href="./favicon.ico"></link>
 
-    <link rel="shortcut icon" type="image/png" href="./favicon.ico"></link>
+        <link rel="stylesheet" href="./font/red-hat-font.min.css"></link>
 
-    <link rel="stylesheet" href="./font/red-hat-font.min.css"></link>
+        <script type="importmap">
+            {importmap}
+        </script>
 
-    <script type="importmap">
-        {importmap}
-    </script>
-    
-    <script type="module" src="icon/font-awesome.js"></script>
-    <script type="module" src="qwc/qwc-header.js"></script>
-    <script type="module" src="qwc/qwc-menu.js"></script>
-    <script type="module" src="qwc/qwc-notification.js"></script>
-    <script type="module" src="qwc/qwc-footer.js"></script>
+        <script type="module" src="icon/font-awesome.js"></script>
+        
+        <script type="module" src="qwc/qwc-header.js"></script>
+        <script type="module" src="qwc/qwc-menu.js"></script>
+        <script type="module" src="qwc/qwc-main.js"></script>
+        <script type="module" src="qwc/qwc-footer.js"></script>
 
-    <title>Dev UI | {applicationName} {applicationVersion}</title>
+        <title>Dev UI | {applicationName} {applicationVersion}</title>
 
-    <style>
-      html, body {
-        margin: 0;
-        width:100vw;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        overflow: hidden;
-        font-family: 'Red Hat Text', sans-serif;
-        line-height: 1.6;
-        -webkit-font-smoothing: antialiased;
-      }
-      main {
-        width:100vw;
-        height: 100%;
-        display: flex;
-        flex-direction: row;
-        justify-content: flex-start;
-      }
-      qwc-page {
-        width: 100%;
-        height: 100%;
-        overflow-y: scroll;
-        overflow-x: hidden;
-      }
+        <style>
+            html, body {
+                margin: 0;
+                width:100vw;
+                height: 100vh;
+            }
 
-      footer {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        width: 100%;
-      }
-      
-      .dragger {
-        width: 100%;
-        height: 2px;
-        cursor: row-resize;
-        background: rgba(28,110,164,0.1);
-      }
-    </style>
-  </head>
+            main {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: stretch;
+                flex-direction: column;
+                justify-content: space-between;
+            }
 
-  <body>
-    <header>
-      <qwc-header applicationName="{applicationName}" applicationVersion="{applicationVersion}"></qwc-header>
-    </header>
+            /*Contains the menu and pages*/
+            .middle {
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                display: flex;
+                flex-direction: row;
+                justify-content: flex-start;
+                align-items: stretch;
+            }
 
-    <main>
-      <qwc-menu version="{quarkusVersion}"></qwc-menu>
-      <qwc-page></qwc-page>
-      <qwc-notification></qwc-notification>
-    </main>
+            /*Contains the page and footer*/
+            qwc-main {
+                width:100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
 
-    <footer>
-      <div class="dragger"></div>
-      <qwc-footer height="30" show="false"></qwc-footer>
-    </footer>
-  </body>
+        </style>
+    </head>
+
+    <body>
+        <main>
+            <div class="header">
+                <qwc-header applicationName="{applicationName}" applicationVersion="{applicationVersion}"></qwc-header>
+            </div>
+            <div class="middle">
+                
+                <qwc-menu version="{quarkusVersion}"></qwc-menu>
+
+                <qwc-main>
+                    <div id="page" slot="page"></div>
+                    <qwc-footer slot="footer"></qwc-footer>
+                </qwc-main>
+                
+            </div>
+        </main>
+    </body>
 
 </html>

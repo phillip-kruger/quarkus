@@ -1,9 +1,9 @@
 import { LitElement, html, css} from 'lit';
 
 /**
- * This component represent the Dev UI Log
+ * This component represent the Server Log
  */
-export class QwcLog extends LitElement {
+export class QwcServerLog extends LitElement {
     static styles = css`
         .todo {
             font-size: small;
@@ -20,4 +20,4 @@ export class QwcLog extends LitElement {
 
 }
 
-customElements.define('qwc-log', QwcLog);
+customElements.define('qwc-server-log', QwcServerLog);

@@ -1,7 +1,7 @@
 import { Router } from '@vaadin/router';
 
 export class RouterController {
-    static router = new Router(document.querySelector('qwc-page'));
+    static router = new Router(document.querySelector('#page'));
     static pathContext = new Map();
 
     /**

@@ -11,15 +11,15 @@ import '@qwc/extension-link';
 export class QwcExtensions extends LitElement {
     
     static styles = css`
-        .hr {
-            border-bottom: 1px solid rgba(28,110,164,0.1);
+        .page {
+            padding-right: 5px;
+            padding-left: 5px;
+            padding-bottom: 5px;
         }
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 1rem;
-            padding-left: 5px;
-            width: 99%;
         }
     `;
 

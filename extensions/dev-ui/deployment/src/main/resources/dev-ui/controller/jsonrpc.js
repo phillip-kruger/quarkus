@@ -1,3 +1,33 @@
+
+class ConnectionState {
+    static Disconnected = new ConnectionState("disconnected");
+    static Connecting = new ConnectionState("connecting");
+    static Connected = new ConnectionState("connected");
+    static Paused = new ConnectionState("paused");
+
+    constructor(state) {
+      this.state = state;
+    }
+
+    toString(){
+        return this.state;
+    }
+}
+
+class MessageDirection {
+    static Up = new MessageDirection("up");
+    static Down = new MessageDirection("down");
+    static Stationary = new MessageDirection("stationary");
+    
+    constructor(direction) {
+      this.direction = direction;
+    }
+
+    toString(){
+        return this.direction;
+    }
+}
+
 /**
  * This class allow a proxy to the JsonRPC messages. 
  * Callers will call the json-rpc method they want to call (even though the method does not exist on this class) and the proxy will translate that to
@@ -8,46 +38,22 @@ export class JsonRpc {
     static initQueue = []; // If message came in and we do not have a connection yet, we queue here
     static messageCounter = 0;
     static webSocket;
-
+    static serverUri;
+    
     _extensionName;
-
+    
     constructor(extensionName) {
         this._extensionName = extensionName;
-
         if (!JsonRpc.webSocket) {
-            var serverUri;
             if (window.location.protocol === "https:") {
-                serverUri = "wss:";
+                JsonRpc.serverUri = "wss:";
             } else {
-                serverUri = "ws:";
+                JsonRpc.serverUri = "ws:";
             }
-
             var currentPath = window.location.pathname;
             currentPath = currentPath.substring(0, currentPath.indexOf('/dev')) + "/dev-ui";
-            serverUri += "//" + window.location.host + currentPath + "/json-rpc-ws";
-
-            JsonRpc.webSocket = new WebSocket(serverUri);
-
-            JsonRpc.webSocket.onopen = function (event) {
-                while (JsonRpc.initQueue.length > 0) {
-                    JsonRpc.webSocket.send(JsonRpc.initQueue.pop())
-                }
-            };
-
-            JsonRpc.webSocket.onmessage = function (event) {
-                var response = JSON.parse(event.data);
-                if (JsonRpc.promiseQueue.has(response.id)) {
-                    var promise = JsonRpc.promiseQueue.get(response.id);
-                    promise.resolve_ex(response);
-                    JsonRpc.promiseQueue.delete(response.id);
-                }
-            }
-
-            JsonRpc.webSocket.onerror = function (error) {
-                var promise = JsonRpc.promiseQueue.get(response.id);
-                promise.reject_ex(error); // TODO: create Json-RPC error ?
-                JsonRpc.promiseQueue.delete(response.id);
-            }
+            JsonRpc.serverUri += "//" + window.location.host + currentPath + "/json-rpc-ws";
+            JsonRpc.connect();
         }
 
         return new Proxy(this, {
@@ -82,6 +88,7 @@ export class JsonRpc {
                             JsonRpc.initQueue.push(jsonrpcpayload)
                         } else {
                             JsonRpc.webSocket.send(jsonrpcpayload);
+                            JsonRpc.dispatchMessageLogEntry(MessageDirection.Up, jsonrpcpayload);
                         }
 
                         return promise;
@@ -92,7 +99,7 @@ export class JsonRpc {
             }
         })
     }
-
+    
     _createPromise() {
 
         var _resolve, _reject;
@@ -111,5 +118,63 @@ export class JsonRpc {
         };
     
         return promise;
+    }
+    
+    static connect() {
+        JsonRpc.dispatchStateChange(ConnectionState.Connecting);
+        JsonRpc.dispatchMessageLogEntry(MessageDirection.Stationary, "Connecting to " + JsonRpc.serverUri);
+        JsonRpc.webSocket = new WebSocket(JsonRpc.serverUri);
+
+        JsonRpc.webSocket.onopen = function (event) {
+            JsonRpc.dispatchStateChange(ConnectionState.Connected);
+            JsonRpc.dispatchMessageLogEntry(MessageDirection.Stationary, "Connected to " + JsonRpc.serverUri);
+            while (JsonRpc.initQueue.length > 0) {
+                JsonRpc.webSocket.send(JsonRpc.initQueue.pop())
+            }
+        };
+
+        JsonRpc.webSocket.onmessage = function (event) {
+            var response = JSON.parse(event.data);
+            if (JsonRpc.promiseQueue.has(response.id)) {
+                var promise = JsonRpc.promiseQueue.get(response.id);
+                promise.resolve_ex(response);
+                JsonRpc.promiseQueue.delete(response.id);
+                var jsonrpcpayload = JSON.stringify(response);
+                JsonRpc.dispatchMessageLogEntry(MessageDirection.Down, jsonrpcpayload);
+            }
+        }
+
+        JsonRpc.webSocket.onclose = function(event) {
+            JsonRpc.dispatchStateChange(ConnectionState.Disconnected);
+            JsonRpc.dispatchMessageLogEntry(MessageDirection.Stationary, "Closed connection to " + JsonRpc.serverUri);
+            setTimeout(function() {
+                JsonRpc.connect();
+            }, 1000);
+        };
+
+        JsonRpc.webSocket.onerror = function (error) {
+            JsonRpc.dispatchMessageLogEntry(MessageDirection.Stationary, "Error from " + JsonRpc.serverUri + " [" + error + "]");
+            JsonRpc.webSocket.close();
+        }
+    }
+    
+    static dispatchMessageLogEntry(direction, message){
+        var logEntry = new Object();
+        logEntry.id = Math.floor(Math.random() * 999999);
+        let now = new Date();
+        logEntry.date = now.toDateString();
+        logEntry.time = now.toLocaleTimeString('en-US');
+        logEntry.direction = direction.toString();
+        logEntry.message = message;
+        console.log("Dispatching: " + JSON.stringify(logEntry));
+        
+        const event = new CustomEvent('jsonRPCLogEntryEvent', { detail: logEntry });
+        document.dispatchEvent(event);
+    }
+    
+    static dispatchStateChange(connectionState){
+        console.log("Dispatching: " + JSON.stringify(connectionState));
+        const event = new CustomEvent('jsonRPCStateChangeEvent', { detail: connectionState });
+        document.dispatchEvent(event);
     }
 }

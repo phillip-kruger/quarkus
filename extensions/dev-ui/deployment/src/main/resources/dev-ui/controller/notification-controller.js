@@ -9,14 +9,6 @@ export class NotificationController {
     });
   }
 
-  hostConnected() {
-    
-  }
-
-  hostDisconnected() {
-    
-  }
-
   showInfoMessage(message, title = "", autoclose = true){
     this.showMessage("info", message, title);
   }
