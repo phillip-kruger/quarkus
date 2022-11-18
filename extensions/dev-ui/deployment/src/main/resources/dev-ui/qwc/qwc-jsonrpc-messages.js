@@ -1,13 +1,12 @@
 import { LitElement, html, css} from 'lit';
 import {repeat} from 'lit/directives/repeat.js';
-import { JsonRpc } from 'jsonrpc';
+
 import '@vaadin/scroller';
 
 /**
  * This component represent the Dev UI Json RPC Message log
  */
 export class QwcJsonrpcMessages extends LitElement {
-    jsonRpc = new JsonRpc("Internal");
     
     static styles = css`
         vaadin-scroller {

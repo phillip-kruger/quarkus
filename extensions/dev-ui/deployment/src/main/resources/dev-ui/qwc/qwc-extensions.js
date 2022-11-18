@@ -2,8 +2,8 @@ import { LitElement, html, css} from 'lit';
 import { until } from 'lit/directives/until.js';
 import { extensions } from 'internal-data';
 import { RouterController } from 'router-controller';
-import '@qwc/extension';
-import '@qwc/extension-link';
+import 'qwc/qwc-extension.js';
+import 'qwc/qwc-extension-link.js';
 
 /**
  * This component create cards of all the extensions

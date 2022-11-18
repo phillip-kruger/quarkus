@@ -39,6 +39,7 @@ export class JsonRpc {
     static messageCounter = 0;
     static webSocket;
     static serverUri;
+    static connectionState;
     
     _extensionName;
     
@@ -166,15 +167,13 @@ export class JsonRpc {
         logEntry.time = now.toLocaleTimeString('en-US');
         logEntry.direction = direction.toString();
         logEntry.message = message;
-        console.log("Dispatching: " + JSON.stringify(logEntry));
-        
         const event = new CustomEvent('jsonRPCLogEntryEvent', { detail: logEntry });
         document.dispatchEvent(event);
     }
     
     static dispatchStateChange(connectionState){
-        console.log("Dispatching: " + JSON.stringify(connectionState));
-        const event = new CustomEvent('jsonRPCStateChangeEvent', { detail: connectionState });
+        JsonRpc.connectionState = connectionState.toString();
+        const event = new CustomEvent('jsonRPCStateChangeEvent', { detail: connectionState.toString() });
         document.dispatchEvent(event);
     }
 }
