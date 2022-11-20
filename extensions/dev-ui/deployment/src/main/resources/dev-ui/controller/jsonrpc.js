@@ -89,7 +89,7 @@ export class JsonRpc {
                             JsonRpc.initQueue.push(jsonrpcpayload)
                         } else {
                             JsonRpc.webSocket.send(jsonrpcpayload);
-                            JsonRpc.dispatchMessageLogEntry(MessageDirection.Up, jsonrpcpayload);
+                            JsonRpc.dispatchMessageLogEntry(ConnectionState.Connected, MessageDirection.Up, jsonrpcpayload);
                         }
 
                         return promise;
@@ -123,12 +123,12 @@ export class JsonRpc {
     
     static connect() {
         JsonRpc.dispatchStateChange(ConnectionState.Connecting);
-        JsonRpc.dispatchMessageLogEntry(MessageDirection.Stationary, "Connecting to " + JsonRpc.serverUri);
+        JsonRpc.dispatchMessageLogEntry(ConnectionState.Connecting, MessageDirection.Stationary, "Connecting to " + JsonRpc.serverUri);
         JsonRpc.webSocket = new WebSocket(JsonRpc.serverUri);
 
         JsonRpc.webSocket.onopen = function (event) {
             JsonRpc.dispatchStateChange(ConnectionState.Connected);
-            JsonRpc.dispatchMessageLogEntry(MessageDirection.Stationary, "Connected to " + JsonRpc.serverUri);
+            JsonRpc.dispatchMessageLogEntry(ConnectionState.Connected, MessageDirection.Stationary, "Connected to " + JsonRpc.serverUri);
             while (JsonRpc.initQueue.length > 0) {
                 JsonRpc.webSocket.send(JsonRpc.initQueue.pop())
             }
@@ -141,31 +141,32 @@ export class JsonRpc {
                 promise.resolve_ex(response);
                 JsonRpc.promiseQueue.delete(response.id);
                 var jsonrpcpayload = JSON.stringify(response);
-                JsonRpc.dispatchMessageLogEntry(MessageDirection.Down, jsonrpcpayload);
+                JsonRpc.dispatchMessageLogEntry(ConnectionState.Connected, MessageDirection.Down, jsonrpcpayload);
             }
         }
 
         JsonRpc.webSocket.onclose = function(event) {
             JsonRpc.dispatchStateChange(ConnectionState.Disconnected);
-            JsonRpc.dispatchMessageLogEntry(MessageDirection.Stationary, "Closed connection to " + JsonRpc.serverUri);
+            JsonRpc.dispatchMessageLogEntry(ConnectionState.Disconnected, MessageDirection.Stationary, "Closed connection to " + JsonRpc.serverUri);
             setTimeout(function() {
                 JsonRpc.connect();
             }, 1000);
         };
 
         JsonRpc.webSocket.onerror = function (error) {
-            JsonRpc.dispatchMessageLogEntry(MessageDirection.Stationary, "Error from " + JsonRpc.serverUri + " [" + error + "]");
+            JsonRpc.dispatchMessageLogEntry(ConnectionState.Disconnected, MessageDirection.Stationary, "Error from " + JsonRpc.serverUri + " [" + error + "]");
             JsonRpc.webSocket.close();
         }
     }
     
-    static dispatchMessageLogEntry(direction, message){
+    static dispatchMessageLogEntry(connectionState, direction, message){
         var logEntry = new Object();
         logEntry.id = Math.floor(Math.random() * 999999);
         let now = new Date();
         logEntry.date = now.toDateString();
         logEntry.time = now.toLocaleTimeString('en-US');
         logEntry.direction = direction.toString();
+        logEntry.connectionState = connectionState.toString();
         logEntry.message = message;
         const event = new CustomEvent('jsonRPCLogEntryEvent', { detail: logEntry });
         document.dispatchEvent(event);

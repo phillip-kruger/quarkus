@@ -15,6 +15,7 @@ export class QwcExtension extends LitElement {
           justify-content: space-between;
           border: 1px solid rgba(58,126,199,0.2);
           border-radius: 4px;
+          width: 300px;
         }
 
         .card-header {
@@ -50,7 +51,7 @@ export class QwcExtension extends LitElement {
           display: flex;
           flex-direction: row;
           justify-content: space-between;
-          
+          visibility:hidden;
         }
 
         .active:hover {
@@ -58,11 +59,23 @@ export class QwcExtension extends LitElement {
         }
 
         .active .card-header{
-          color: #4695EB;
+          color: #54789F;
+        }
+        
+        .active:hover .card-footer, .active:hover .guide {
+            visibility:visible;
         }
 
         .inactive .card-header{
           color: grey;
+        }
+    
+        .inactive:hover .card-footer, .inactive:hover .guide {
+            visibility:visible;
+        }
+    
+        .guide{
+            visibility:hidden;
         }
 
         .icon {
@@ -103,7 +116,7 @@ export class QwcExtension extends LitElement {
     return html`<div class="card-header">
       <h4>${this.name}</h4>
         ${this.guide?
-          html`<vaadin-icon class="icon" icon="font-awesome-solid:book" @click="${this._guide}" title="Go to the ${this.name} guide"></vaadin-icon>`:
+          html`<vaadin-icon class="icon guide" icon="font-awesome-solid:book" @click="${this._guide}" title="Go to the ${this.name} guide"></vaadin-icon>`:
           html``
         }
       </div>

@@ -9,7 +9,7 @@ export class QwcServerLog extends LitElement {
             font-size: small;
             color: #4695EB;
             padding-left: 10px;
-            background: white;
+            background: #2C2C2C;
             height: 100%;
         }
     `;

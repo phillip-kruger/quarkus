@@ -22,6 +22,12 @@ export class QwcMenu extends LitElement {
             .bottom {
                 display: flex;
                 justify-content: space-between;
+                align-items: center;
+                height: 46px;
+                background: rgb(44, 44, 44);
+                height: 38px;
+                border-radius: 15px 0px 0px;
+                margin-left: 5px;
             }
 
             .menu {
@@ -53,7 +59,7 @@ export class QwcMenu extends LitElement {
                 gap: 10px;
                 cursor: pointer;
                 border-left: 5px solid transparent;
-                color: #4695EB;
+                color: #54789F;
                 height:30px;
                 text-decoration: none;
             }
@@ -61,7 +67,7 @@ export class QwcMenu extends LitElement {
             .item:hover{
                 border-left: 5px solid #ff004a;
                 color: #ff004a;
-			    background-color: #f8fafc;
+                background-color: #f8fafc;
             }
 
             .item-text:hover{

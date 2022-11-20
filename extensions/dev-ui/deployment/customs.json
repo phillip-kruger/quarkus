@@ -1,7 +1,9 @@
 {
     "elements": {
         "qwc-header": {},
+        "qwc-server-log": {},
         "qwc-menu": {},
+        "qwc-jsonrpc-messages": {},
         "qwc-footer": {},
         "qwc-main": {}
     },

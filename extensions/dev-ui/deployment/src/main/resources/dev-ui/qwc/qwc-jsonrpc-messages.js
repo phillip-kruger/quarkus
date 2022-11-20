@@ -1,7 +1,6 @@
 import { LitElement, html, css} from 'lit';
 import {repeat} from 'lit/directives/repeat.js';
 
-import '@vaadin/scroller';
 
 /**
  * This component represent the Dev UI Json RPC Message log
@@ -9,28 +8,37 @@ import '@vaadin/scroller';
 export class QwcJsonrpcMessages extends LitElement {
     
     static styles = css`
-        vaadin-scroller {
-            height: 100%;
-            width: 100%;
-            background: #2C2C2C;
-        }
         .log {
             background: #2C2C2C;
-            padding-left: 10px;
-            height: 100%;
             width: 100%;
             display: flex;
             flex-direction:column;
+            padding-bottom: 90px;
         }
-        .icon {
-            color: green;
+        .disconnected {
+            color:#F84139;
         }
+        .connecting {
+            color:#4085da;
+        }
+        .connected {
+            color:#3BA143;
+        }
+    
+        .disconnected-message {
+            color:#B32828;
+        }
+        .connecting-message {
+            color:#3f7f9b;
+        }
+        .connected-message {
+            color:#ABBD78;
+        }
+    
         .timestamp {
-            color: #94BFEE;
+            color: #C0C0C0;
         }
-        .message {
-            color: #7CB4AA;
-        }
+        
     `;
 
     static properties = {
@@ -69,7 +77,6 @@ export class QwcJsonrpcMessages extends LitElement {
     render() {
         
         return html`
-            <vaadin-scroller>
                 <code class="log">
                 ${repeat(
                     this._messages,
@@ -77,32 +84,32 @@ export class QwcJsonrpcMessages extends LitElement {
                     (message, index) => html`
                     <div class="logEntry">
                         ${this._renderTimestamp(message.time)}
-                        ${this._renderDirection(message.direction)}
-                        ${this._renderMessage(message.message)}
+                        ${this._renderDirection(message.connectionState, message.direction)}
+                        ${this._renderMessage(message.connectionState, message.message)}
                     </class>
                   `
                   )}
-                </code>
-        </vaadin-scroller>`;
+                </code>`;
         
     }
 
-    _renderDirection(direction){
-        let icon = "circle";
+    _renderDirection(connectionState, direction){
+        let icon = "minus";
         if(direction === "up"){
             icon = "chevron-right";
         }else if(direction === "down"){
             icon = "chevron-left";
         }
-        return html`<vaadin-icon class="icon" icon="font-awesome-solid:${icon}"></vaadin-icon>`;
+        
+        return html`<vaadin-icon class="${connectionState}" icon="font-awesome-solid:${icon}"></vaadin-icon>`;
     }
 
     _renderTimestamp(time){
         return html`<span class="timestamp">${time}</span>`;
     }
     
-    _renderMessage(message){
-        return html`<span class="message">${message}</span>`;
+    _renderMessage(connectionState, message){
+        return html`<span class="${connectionState}-message">${message}</span>`;
     }
 }
 

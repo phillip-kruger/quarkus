@@ -11,15 +11,13 @@ import 'qwc/qwc-extension-link.js';
 export class QwcExtensions extends LitElement {
     
     static styles = css`
-        .page {
-            padding-right: 5px;
-            padding-left: 5px;
-            padding-bottom: 5px;
-        }
         .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding-bottom: 20px;
+            padding-left: 5px;
+            padding-right: 10px;
         }
     `;
 
@@ -46,8 +44,7 @@ export class QwcExtensions extends LitElement {
                 });
       });
 
-      return html`<div class="page">
-          <div class="grid">
+      return html`<div class="grid">
             ${active.map(extension => 
               html`
                 <qwc-extension 
@@ -101,8 +98,7 @@ export class QwcExtensions extends LitElement {
                     extensionDependencies="${extension.extensionDependencies}">
                 </qwc-extension>        
             `)}
-          </div>
-        </div>`;
+          </div>`;
     }
   }
 
