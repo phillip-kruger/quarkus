@@ -20,7 +20,7 @@ public class Extension {
     private String status;
     private List<String> configFilter;
     private List<String> categories;
-    private boolean unlisted = false;
+    private String unlisted;
     private String builtWith;
     private List<String> providesCapabilities;
     private List<String> extensionDependencies;
@@ -115,11 +115,11 @@ public class Extension {
         this.categories = categories;
     }
 
-    public boolean isUnlisted() {
+    public String getUnlisted() {
         return unlisted;
     }
 
-    public void setUnlisted(boolean unlisted) {
+    public void setUnlisted(String unlisted) {
         this.unlisted = unlisted;
     }
 

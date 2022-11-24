@@ -98,6 +98,9 @@ public class DevUIProcessor {
                     urlAndPath.put(c.getFileName(), tempFile.toString());
                 }
                 Handler<RoutingContext> buildTimeStaticHandler = recorder.buildTimeStaticHandler(basepath, urlAndPath);
+
+                System.err.println(">>>>>>>>>>>>>>> static content = [" + basepath + "]");
+
                 routeProducer.produce(
                         nonApplicationRootPathBuildItem.routeBuilder().route(basepath + SLASH_ALL)
                                 .handler(buildTimeStaticHandler)
@@ -114,11 +117,19 @@ public class DevUIProcessor {
         // For the Vaadin router (So that bookmarks/url refreshes work)
         for (DevUIRoutesBuildItem devUIRoutesBuildItem : devUIRoutesBuildItems) {
             String route = devUIRoutesBuildItem.getPath();
-
+            System.err.println(">>>>>>>>>>>>>>> vaadin route [" + route + "]");
             basepath = nonApplicationRootPathBuildItem.resolvePath(route);
-            Handler<RoutingContext> routerhandler = recorder.routerHandler(basepath);
+            Handler<RoutingContext> routerhandler = recorder.vaadinRouterHandler(basepath);
             routeProducer.produce(
                     nonApplicationRootPathBuildItem.routeBuilder().route(route + SLASH_ALL).handler(routerhandler).build());
         }
+
+        System.err.println(">>>>>>>>>>>>>>> mvnpm [" + "_static" + "]");
+        // Static mvnpm jars
+        routeProducer.produce(RouteBuildItem.builder()
+                .route("/_static" + SLASH_ALL)
+                .handler(recorder.mvnpmHandler())
+                .build());
+
     }
 }

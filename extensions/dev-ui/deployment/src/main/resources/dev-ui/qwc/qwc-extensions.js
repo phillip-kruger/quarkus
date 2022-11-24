@@ -28,6 +28,15 @@ export class QwcExtensions extends LitElement {
     constructor() {
         super();
         this._extensions = extensions;
+        window.addEventListener('vaadin-router-location-changed', (event) => {
+            var pageDetails = RouterController.parseLocationChangedEvent(event);
+            console.log("||||| component = " + pageDetails.component);
+            console.log("||||| path = " + pageDetails.path);
+            console.log("||||| name = " + pageDetails.name);
+            console.log("||||| title = " + pageDetails.title);
+            console.log("||||| submenu = " + pageDetails.subMenu);
+            
+        });
     }
 
     render() {
@@ -42,11 +51,17 @@ export class QwcExtensions extends LitElement {
                         RouterController.addExtensionRoute(page);
                     }
                 });
-      });
+        });
 
-      return html`<div class="grid">
-            ${active.map(extension => 
-              html`
+        return html`<div class="grid">
+            ${active.map(extension => this._renderActive(extension))}            
+            ${inactive.map(extension => this._renderInactive(extension))}
+          </div>`;
+        }
+    }
+    
+    _renderActive(extension){
+        return html`
                 <qwc-extension 
                     class="active"
                     name="${extension.name}" 
@@ -78,8 +93,12 @@ export class QwcExtensions extends LitElement {
 
                 </qwc-extension>
 
-            `)}
-            ${inactive.map(extension => html`
+            `;
+    }
+
+    _renderInactive(extension){
+        if(extension.unlisted === "false"){
+            return html`
                 <qwc-extension
                     class="inactive"
                     name="${extension.name}" 
@@ -97,10 +116,9 @@ export class QwcExtensions extends LitElement {
                     providesCapabilities="${extension.providesCapabilities}"
                     extensionDependencies="${extension.extensionDependencies}">
                 </qwc-extension>        
-            `)}
-          </div>`;
+            `;
+        }
     }
-  }
 
 }
 customElements.define('qwc-extensions', QwcExtensions);

@@ -6,14 +6,14 @@ import io.vertx.ext.web.RoutingContext;
 /**
  * Handler to enable Vaadin router.
  */
-public class DevUIRouterHandler implements Handler<RoutingContext> {
+public class VaadinRouterHandler implements Handler<RoutingContext> {
     private String basePath;
 
-    public DevUIRouterHandler() {
+    public VaadinRouterHandler() {
 
     }
 
-    public DevUIRouterHandler(String basePath) {
+    public VaadinRouterHandler(String basePath) {
         this.basePath = basePath;
     }
 

@@ -1,13 +1,13 @@
 package io.quarkus.devui.runtime.jsonrpc;
 
 public class JsonRpcResponse extends JsonRpcMessage {
-    private Object result;
+    private DevUIResponse result;
 
-    public Object getResult() {
+    public DevUIResponse getResult() {
         return result;
     }
 
-    public void setResult(Object result) {
+    public void setResult(DevUIResponse result) {
         this.result = result;
     }
 

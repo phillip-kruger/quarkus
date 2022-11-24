@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-import javax.inject.Singleton;
-
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
@@ -29,7 +27,6 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
-import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -86,6 +83,10 @@ public class DevUIProcessor {
 
             Class c = jsonRPCProvidersBuildItem.getJsonRPCMethodProviderClass();
             additionalIndexProducer.produce(new AdditionalIndexedClassesBuildItem(c.getName()));
+
+            additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
+                    .addBeanClass(c)
+                    .setUnremovable().build());
         }
     }
 
@@ -118,21 +119,22 @@ public class DevUIProcessor {
             for (MethodInfo method : methods) {
                 if (!method.name().equals(CONSTRUCTOR)) { // Ignore constructor
                     if (Modifier.isPublic(method.flags())) { // Only allow public methods
-
-                        JsonRpcMethodName jsonRpcMethodName = new JsonRpcMethodName(method.name());
-                        if (method.parametersCount() > 0) {
-                            Map<String, Class> params = new LinkedHashMap<>(); // Keep the order
-                            for (int i = 0; i < method.parametersCount(); i++) {
-                                Type parameterType = method.parameterType(i);
-                                Class parameterClass = toClass(parameterType);
-                                String parameterName = method.parameterName(i);
-                                params.put(parameterName, parameterClass);
+                        if (method.returnType().kind() != Type.Kind.VOID) { // Only allow method with response
+                            JsonRpcMethodName jsonRpcMethodName = new JsonRpcMethodName(method.name());
+                            if (method.parametersCount() > 0) {
+                                Map<String, Class> params = new LinkedHashMap<>(); // Keep the order
+                                for (int i = 0; i < method.parametersCount(); i++) {
+                                    Type parameterType = method.parameterType(i);
+                                    Class parameterClass = toClass(parameterType);
+                                    String parameterName = method.parameterName(i);
+                                    params.put(parameterName, parameterClass);
+                                }
+                                JsonRpcMethod jsonRpcMethod = new JsonRpcMethod(clazz, method.name(), params);
+                                jsonRpcMethods.put(jsonRpcMethodName, jsonRpcMethod);
+                            } else {
+                                JsonRpcMethod jsonRpcMethod = new JsonRpcMethod(clazz, method.name(), null);
+                                jsonRpcMethods.put(jsonRpcMethodName, jsonRpcMethod);
                             }
-                            JsonRpcMethod jsonRpcMethod = new JsonRpcMethod(clazz, method.name(), params);
-                            jsonRpcMethods.put(jsonRpcMethodName, jsonRpcMethod);
-                        } else {
-                            JsonRpcMethod jsonRpcMethod = new JsonRpcMethod(clazz, method.name(), null);
-                            jsonRpcMethods.put(jsonRpcMethodName, jsonRpcMethod);
                         }
                     }
                 }
@@ -158,24 +160,6 @@ public class DevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     @Record(ExecutionTime.STATIC_INIT)
-    void scopeJsonRPCProviders(DevUIRecorder recorder,
-            List<JsonRPCProvidersBuildItem> jsonRPCProvidersBuildItems,
-            BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer) {
-
-        for (JsonRPCProvidersBuildItem jsonRPCProvidersBuildItem : jsonRPCProvidersBuildItems) {
-            Class c = jsonRPCProvidersBuildItem.getJsonRPCMethodProviderClass();
-            SyntheticBeanBuildItem sbbi = SyntheticBeanBuildItem.configure(c)
-                    .scope(Singleton.class)
-                    .runtimeValue(recorder.createJsonRpcProvider(c))
-                    .unremovable()
-                    .done();
-            syntheticBeanProducer.produce(sbbi);
-
-        }
-    }
-
-    @BuildStep(onlyIf = IsDevelopment.class)
-    @Record(ExecutionTime.STATIC_INIT)
     void createJsonRpcRouter(DevUIRecorder recorder,
             BeanContainerBuildItem beanContainer,
             JsonRPCMethodsBuildItem jsonRPCMethodsBuildItem) {
@@ -183,7 +167,6 @@ public class DevUIProcessor {
         Map<String, Map<JsonRpcMethodName, JsonRpcMethod>> extensionMethodsMap = jsonRPCMethodsBuildItem
                 .getExtensionMethodsMap();
 
-        // TODO: Can JsonRPCRouter be in development ?
         recorder.createJsonRpcRouter(beanContainer.getValue(), extensionMethodsMap);
 
     }
@@ -250,8 +233,7 @@ public class DevUIProcessor {
                         extension.setBuiltWith((String) metaData.getOrDefault(BUILT_WITH, null));
                         extension.setConfigFilter((List<String>) metaData.getOrDefault(CONFIG, null));
                         extension.setExtensionDependencies((List<String>) metaData.getOrDefault(EXTENSION_DEPENDENCIES, null));
-                        String sboolean = String.valueOf(metaData.getOrDefault(UNLISTED, "false")); // Some yaml entries are strings :(
-                        extension.setUnlisted(Boolean.valueOf(sboolean));
+                        extension.setUnlisted(String.valueOf(metaData.getOrDefault(UNLISTED, false)));
 
                         if (metaData.containsKey(CAPABILITIES)) {
                             Map<String, Object> capabilities = (Map<String, Object>) metaData.get(CAPABILITIES);

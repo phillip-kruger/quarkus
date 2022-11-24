@@ -6,12 +6,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
 
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.subscription.Cancellable;
+import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 
@@ -21,23 +25,41 @@ import io.vertx.core.json.JsonObject;
 @ApplicationScoped
 public class JsonRpcRouter {
 
+    private final Map<Integer, Cancellable> subscriptions = new ConcurrentHashMap<>();
     private static final Logger log = Logger.getLogger(JsonRpcRouter.class);
 
     // Map json-rpc method to java
     private Map<String, ReflectionInfo> jsonRpcToJava = new HashMap<>();
 
-    static class ReflectionInfo {
+    // List containing all subscription methods
+    private List<String> knownSubscriptions = new ArrayList<>();
+
+    private ServerWebSocket socket;
+
+    private static class ReflectionInfo {
+        public Class bean;
         public Object instance;
         public Method method;
         public Map<String, Class> params;
 
-        public ReflectionInfo(Object instance, Method method, Map<String, Class> params) {
+        public ReflectionInfo(Class bean, Object instance, Method method, Map<String, Class> params) {
+            this.bean = bean;
             this.instance = instance;
             this.method = method;
             this.params = params;
         }
+
+        public boolean isSubscription() {
+            Class<?> returnType = this.method.getReturnType();
+            return returnType.getName().equals(Multi.class.getName());
+        }
     }
 
+    /**
+     * This gets called on build to build into of the classes we are going to call in runtime
+     *
+     * @param extensionMethodsMap
+     */
     public void setExtensionMethodsMap(Map<String, Map<JsonRpcMethodName, JsonRpcMethod>> extensionMethodsMap) {
         for (Map.Entry<String, Map<JsonRpcMethodName, JsonRpcMethod>> extension : extensionMethodsMap.entrySet()) {
             String extensionName = extension.getKey();
@@ -59,8 +81,15 @@ public class JsonRpcRouter {
                     } else {
                         javaMethod = providerInstance.getClass().getMethod(jsonRpcMethod.getMethodName());
                     }
-                    ReflectionInfo reflectionInfo = new ReflectionInfo(providerInstance, javaMethod, params);
-                    jsonRpcToJava.put(extensionName + DOT + methodName, reflectionInfo);
+                    ReflectionInfo reflectionInfo = new ReflectionInfo(jsonRpcMethod.getClazz(), providerInstance, javaMethod,
+                            params);
+                    String jsonRpcMethodName = extensionName + DOT + methodName;
+                    jsonRpcToJava.put(jsonRpcMethodName, reflectionInfo);
+
+                    if (reflectionInfo.isSubscription()) {
+                        knownSubscriptions.add(jsonRpcMethodName);
+                    }
+
                 } catch (NoSuchMethodException | SecurityException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -68,29 +97,84 @@ public class JsonRpcRouter {
         }
     }
 
-    public String route(String message) {
+    public void setSocket(ServerWebSocket socket) {
+        this.socket = socket;
+
+        this.socket.closeHandler((e) -> {
+            this.onStop();
+        });
+
+        this.socket.textMessageHandler((e) -> {
+            this.onMessage(e);
+        });
+
+        this.socket.exceptionHandler((e) -> {
+            this.onError(e);
+        });
+
+        this.onStart();
+
+    }
+
+    private String route(String message) {
         JsonRpcRequest jsonRpcRequest = toJsonRpcRequest(message);
         JsonRpcMessage jsonRpcResponse = route(jsonRpcRequest);
         return Json.encode(jsonRpcResponse);
     }
 
     @SuppressWarnings("unchecked")
-    public JsonRpcMessage route(JsonRpcRequest jsonRpcRequest) {
+    private JsonRpcMessage route(JsonRpcRequest jsonRpcRequest) {
         log.info(">>>>>> jsonRpcRequest = " + jsonRpcRequest);
 
         String jsonRpcMethodName = jsonRpcRequest.getMethod();
 
-        if (this.jsonRpcToJava.containsKey(jsonRpcMethodName)) {
+        // First check some internal methods
+        if (jsonRpcMethodName.equalsIgnoreCase("unsubscribe")) {
+            JsonRpcResponse jsonRpcResponse = toJsonRpcResponse(MessageType.Void, jsonRpcRequest.getId(), null);
+
+            if (this.subscriptions.containsKey(jsonRpcRequest.id)) {
+                Cancellable cancellable = this.subscriptions.remove(jsonRpcRequest.id);
+                cancellable.cancel();
+            }
+            return jsonRpcResponse;
+
+        } else if (this.jsonRpcToJava.containsKey(jsonRpcMethodName)) { // Route to extension
             ReflectionInfo reflectionInfo = this.jsonRpcToJava.get(jsonRpcMethodName);
+            Object providerInstance = Arc.container().select(reflectionInfo.bean).get();
             try {
                 Object result = null;
                 if (jsonRpcRequest.hasParams()) {
                     Object[] args = getArgsAsObjects(reflectionInfo.params, jsonRpcRequest);
-                    result = reflectionInfo.method.invoke(reflectionInfo.instance, args);
+                    result = reflectionInfo.method.invoke(providerInstance, args);
                 } else {
-                    result = reflectionInfo.method.invoke(reflectionInfo.instance);
+                    result = reflectionInfo.method.invoke(providerInstance);
                 }
-                JsonRpcResponse jsonRpcResponse = toJsonRpcResponse(jsonRpcRequest, result);
+
+                Class<?> returnType = reflectionInfo.method.getReturnType();
+
+                // Here wrap in our own object that contain some more metadata
+                JsonRpcResponse jsonRpcResponse;
+                if (reflectionInfo.isSubscription()) {
+                    // Subscription
+                    Multi<?> subscription = (Multi) result;
+
+                    Cancellable cancellable = subscription.subscribe().with((t) -> {
+                        log.info(">>>>>> t = " + t);
+                        String serverMessage = Json
+                                .encode(toJsonRpcResponse(MessageType.SubscriptionMessage, jsonRpcRequest.getId(), t));
+                        socket.writeTextMessage(serverMessage);
+                    });
+
+                    this.subscriptions.put(jsonRpcRequest.id, cancellable);
+
+                    jsonRpcResponse = toJsonRpcResponse(MessageType.Void, jsonRpcRequest.getId(), null);
+
+                } else {
+                    // Normal response
+
+                    jsonRpcResponse = toJsonRpcResponse(MessageType.Response, jsonRpcRequest.getId(), result);
+                }
+
                 log.info("<<<<<< jsonRpcResponse = " + jsonRpcResponse);
                 return jsonRpcResponse;
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
@@ -101,6 +185,26 @@ public class JsonRpcRouter {
         // Method not found
         return JsonRpcErrorResponse.methodNotFound("Method [" + jsonRpcMethodName + "] not found");
 
+    }
+
+    private void onMessage(String message) {
+        this.socket.writeTextMessage(route(message));
+    }
+
+    private void onStop() {
+        // ?
+    }
+
+    private void onStart() {
+        // On init we send the known subscription
+        JsonRpcResponse jsonRpcResponse = toJsonRpcResponse(MessageType.Init, -1, this.knownSubscriptions);
+        String initMessage = Json.encode(jsonRpcResponse);
+        this.socket.writeTextMessage(initMessage);
+    }
+
+    private void onError(Throwable t) {
+        // ?
+        t.printStackTrace();
     }
 
     private Object[] getArgsAsObjects(Map<String, Class> params, JsonRpcRequest jsonRpcRequest) {
@@ -126,11 +230,13 @@ public class JsonRpcRouter {
         return jsonRpcRequest;
     }
 
-    private <T> JsonRpcResponse toJsonRpcResponse(JsonRpcRequest message, T t) {
+    private <T> JsonRpcResponse toJsonRpcResponse(MessageType type, int id, T t) {
+        DevUIResponse devUIResponse = new DevUIResponse(t, type);
+
         JsonRpcResponse jsonRpcResponse = new JsonRpcResponse();
-        jsonRpcResponse.setId(message.getId());
-        jsonRpcResponse.setJsonrpc(message.getJsonrpc());
-        jsonRpcResponse.setResult(t);
+        jsonRpcResponse.setId(id);
+        jsonRpcResponse.setJsonrpc(VERSION);
+        jsonRpcResponse.setResult(devUIResponse);
         return jsonRpcResponse;
     }
 

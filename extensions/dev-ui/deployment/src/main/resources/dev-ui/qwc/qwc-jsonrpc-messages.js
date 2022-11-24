@@ -15,23 +15,13 @@ export class QwcJsonrpcMessages extends LitElement {
             flex-direction:column;
             padding-bottom: 90px;
         }
-        .disconnected {
-            color:#F84139;
-        }
-        .connecting {
-            color:#4085da;
-        }
-        .connected {
-            color:#3BA143;
-        }
-    
-        .disconnected-message {
+        .error {
             color:#B32828;
         }
-        .connecting-message {
-            color:#3f7f9b;
+        .warning {
+            color:#ff9900;
         }
-        .connected-message {
+        .info {
             color:#ABBD78;
         }
     
@@ -84,8 +74,8 @@ export class QwcJsonrpcMessages extends LitElement {
                     (message, index) => html`
                     <div class="logEntry">
                         ${this._renderTimestamp(message.time)}
-                        ${this._renderDirection(message.connectionState, message.direction)}
-                        ${this._renderMessage(message.connectionState, message.message)}
+                        ${this._renderDirection(message.level, message.direction)}
+                        ${this._renderMessage(message.level, message.message)}
                     </class>
                   `
                   )}
@@ -93,7 +83,7 @@ export class QwcJsonrpcMessages extends LitElement {
         
     }
 
-    _renderDirection(connectionState, direction){
+    _renderDirection(level, direction){
         let icon = "minus";
         if(direction === "up"){
             icon = "chevron-right";
@@ -101,15 +91,15 @@ export class QwcJsonrpcMessages extends LitElement {
             icon = "chevron-left";
         }
         
-        return html`<vaadin-icon class="${connectionState}" icon="font-awesome-solid:${icon}"></vaadin-icon>`;
+        return html`<vaadin-icon class="${level}" icon="font-awesome-solid:${icon}"></vaadin-icon>`;
     }
 
     _renderTimestamp(time){
         return html`<span class="timestamp">${time}</span>`;
     }
     
-    _renderMessage(connectionState, message){
-        return html`<span class="${connectionState}-message">${message}</span>`;
+    _renderMessage(level, message){
+        return html`<span class="${level}">${message}</span>`;
     }
 }
 

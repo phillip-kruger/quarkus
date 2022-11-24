@@ -18,7 +18,8 @@
         <lit.version>2.4.0</lit.version>
         <vaadin.version>23.2.8</vaadin.version>
         <vaadin-router.version>1.7.4</vaadin-router.version>
-        <polymer.version>3.5.1</polymer.version>
+        <rxjs.version>7.5.7</rxjs.version>
+        <wc-codemirror.version>2.1.0</wc-codemirror.version>
     </properties>
     
     <dependencies>
@@ -108,8 +109,6 @@
             <version>${vaadin.version}</version>
             <scope>runtime</scope>
         </dependency>
-        
-        
         <dependency>
             <groupId>org.mvnpm.at.vaadin</groupId>
             <artifactId>details</artifactId>
@@ -122,7 +121,6 @@
             <version>${vaadin.version}</version>
             <scope>runtime</scope>
         </dependency>
-        
         <dependency>
             <groupId>org.mvnpm.at.vaadin</groupId>
             <artifactId>text-field</artifactId>
@@ -147,8 +145,6 @@
             <version>${vaadin.version}</version>
             <scope>runtime</scope>
         </dependency>
-        
-        
 <!--        <dependency>
             <groupId>org.mvnpm.at.vaadin</groupId>
             <artifactId>tabsheet</artifactId>
@@ -198,7 +194,14 @@
         <dependency>
             <groupId>org.mvnpm.at.vanillawc</groupId>
             <artifactId>wc-codemirror</artifactId>
-            <version>2.1.0</version>
+            <version>${wc-codemirror.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <!--RxJs: for subscriptions--> 
+        <dependency>
+            <groupId>org.mvnpm</groupId>
+            <artifactId>rxjs</artifactId>
+            <version>${rxjs.version}</version>
             <scope>runtime</scope>
         </dependency>
     </dependencies>
