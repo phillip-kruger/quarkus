@@ -2,15 +2,14 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-
-        <link rel="shortcut icon" type="image/png" href="./favicon.ico"></link>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="shortcut icon" type="image/png" href="./favicon.ico">
 
         <script type="importmap">
             {importmap}
         </script>
 
-        <link rel="stylesheet" href="font/red-hat-font.min.css"></link>    
+        <link rel="stylesheet" href="font/red-hat-font.min.css">
         <script type="module" src="icon/font-awesome.js"></script>
 
         <script type="module" src="qwc/qwc-header.js"></script>
@@ -23,86 +22,55 @@
         <title>Dev UI | {applicationName} {applicationVersion}</title>
 
         <style>
-            html, body {
+            body {
                 margin: 0;
                 width:100vw;
                 height: 100vh;
                 font-family: 'Red Hat Text', sans-serif;
-            }
-
-            main {
-                width: 100%;
-                height: 100%;
+                overflow: hidden;
                 display: flex;
-                align-items: stretch;
                 flex-direction: column;
                 justify-content: space-between;
             }
 
+
             /*Contains the menu and pages*/
             .middle {
-                width: 100%;
-                height: 100%;
                 overflow: hidden;
                 display: flex;
                 flex-direction: row;
                 justify-content: flex-start;
-                align-items: stretch;
+                flex:1;
             }
-
-            /*Contains the page and footer*/
-            .content {
-                width:100%;
-                height: 100%;
-                display: flex;
-                align-items: stretch;
-                flex-direction: column;
-                justify-content: space-between;
-                overflow: hidden;
-            }
-            
-            .page {
-                width: 100%;
-                height: 100%;
+  
+            #page {              
                 overflow-y: scroll;
                 overflow-x: hidden;
+                flex: 1;
+                padding-bottom: 10px;
             }
             
-            #page {
-                width: 100%;
-                height: 100%;
-            }
-            
-            .footer {
-                width: 100%;
+            qwc-footer {
                 overflow: hidden;
-            }   
-            
+                min-height: 38px;
+            }
         </style>
     </head>
 
     <body>
-        <main>
-            <div class="header">
-                <qwc-header applicationName="{applicationName}" applicationVersion="{applicationVersion}"></qwc-header>
-            </div>
-            <div class="middle">
-                
-                <qwc-menu version="{quarkusVersion}"></qwc-menu>
-
-                <div class="content">
-                    <div class="page">
-                        <div id="page"></div>
-                    </div>
-                    <div class="footer">
-                        <qwc-footer>
-                            <qwc-jsonrpc-messages title="Client Log"></qwc-jsonrpc-messages>
-                            <qwc-server-log title="Server Log" hidden></qwc-server-log>
-                        </qwc-footer>
-                    </div>
-                </div>
-            </div>
-        </main>
+            
+        <qwc-header applicationName="{applicationName}" applicationVersion="{applicationVersion}"></qwc-header>
+            
+        <div class="middle">
+            <qwc-menu version="{quarkusVersion}"></qwc-menu>
+            <div id="page"></div>
+        </div>
+            
+        <qwc-footer>
+            <qwc-server-log slot="log" title="Server"></qwc-server-log>
+            <qwc-jsonrpc-messages slot="log" title="Json RPC" hidden></qwc-jsonrpc-messages>
+        </qwc-footer>
+            
     </body>
 
 </html>

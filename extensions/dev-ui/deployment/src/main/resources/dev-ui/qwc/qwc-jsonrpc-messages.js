@@ -11,9 +11,10 @@ export class QwcJsonrpcMessages extends LitElement {
         .log {
             background: #2C2C2C;
             width: 100%;
+            height: 100%;
+            max-height: 100%;
             display: flex;
             flex-direction:column;
-            padding-bottom: 90px;
         }
         .error {
             color:#B32828;
@@ -24,11 +25,9 @@ export class QwcJsonrpcMessages extends LitElement {
         .info {
             color:#ABBD78;
         }
-    
         .timestamp {
             color: #C0C0C0;
         }
-        
     `;
 
     static properties = {
@@ -42,7 +41,6 @@ export class QwcJsonrpcMessages extends LitElement {
     
     connectedCallback() {
         super.connectedCallback();
-        console.log("Adding event listeners");
         
         document.addEventListener('jsonRPCLogEntryEvent', (e) => { 
             this._messages = [
@@ -52,14 +50,10 @@ export class QwcJsonrpcMessages extends LitElement {
             
         }, false);
         
-        document.addEventListener('jsonRPCStateChangeEvent', (e) => {
-            console.log(">>> " + e.detail);
-        }, false);
     }
     
     disconnectedCallback() {
         super.disconnectedCallback();
-        console.log("Removing event listeners");
         document.removeEventListener('jsonRPCLogEntryEvent', this._handleLogEntryEvent);
         document.removeEventListener('jsonRPCStateChangeEvent', this._handleStateChangeEvent);
     }

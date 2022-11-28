@@ -13,8 +13,14 @@ import io.quarkus.arc.runtime.devconsole.InvocationsMonitor;
 import io.quarkus.arc.runtime.devmode.EventInfo;
 import io.quarkus.arc.runtime.devmode.EventsMonitor;
 import io.quarkus.arc.runtime.devmode.InvocationInfo;
+import io.smallrye.mutiny.Multi;
 
 public class ArcJsonRPCService {
+
+    public Multi<EventInfo> streamEvents() {
+        EventsMonitor eventsMonitor = Arc.container().instance(EventsMonitor.class).get();
+        return eventsMonitor.streamEvents();
+    }
 
     public List<EventInfo> getLastEvents() {
         EventsMonitor eventsMonitor = Arc.container().instance(EventsMonitor.class).get();

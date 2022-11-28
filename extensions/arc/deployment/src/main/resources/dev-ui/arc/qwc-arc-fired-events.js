@@ -35,14 +35,23 @@ export class QwcArcFiredEvents extends LitElement {
         }`;
 
     static properties = {
-        _firedEvents: {state: true}
+        _firedEvents: {state: true},
+        _observer: {state:false},
     };
   
     connectedCallback() {
         super.connectedCallback();
         this._refresh();
+        this._observer = this.jsonRpc.streamEvents().onNext(jsonRpcResponse => {
+            this._addToEvents(jsonRpcResponse.result);
+        });
     }
 
+    disconnectedCallback() {
+        this._observer.cancel();
+        super.disconnectedCallback();
+    }
+        
     render() {
         return html`${until(this._renderFiredEvents(), html`<span>Loading ArC fired event...</span>`)}`;
     }
@@ -103,6 +112,13 @@ export class QwcArcFiredEvents extends LitElement {
         this.jsonRpc.clearLastEvents().then(events => {
             this._firedEvents = events.result;
         });
+    }
+    
+    _addToEvents(event){
+        this._firedEvents = [
+            ...this._firedEvents,
+            event,
+        ];
     }
 }
 customElements.define('qwc-arc-fired-events', QwcArcFiredEvents);

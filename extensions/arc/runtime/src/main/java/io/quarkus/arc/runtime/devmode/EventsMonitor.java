@@ -17,6 +17,9 @@ import javax.enterprise.inject.Default;
 import javax.enterprise.inject.spi.EventMetadata;
 import javax.inject.Singleton;
 
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
+
 @Singleton
 public class EventsMonitor {
 
@@ -24,6 +27,7 @@ public class EventsMonitor {
 
     private volatile boolean skipContextEvents = true;
     private final List<EventInfo> events = Collections.synchronizedList(new ArrayList<EventInfo>(DEFAULT_LIMIT));
+    private final BroadcastProcessor<EventInfo> eventsStream = BroadcastProcessor.create();
 
     void notify(@Observes Object payload, EventMetadata eventMetadata) {
         if (skipContextEvents && isContextEvent(eventMetadata)) {
@@ -37,11 +41,17 @@ public class EventsMonitor {
                 }
             }
         }
-        events.add(toEventInfo(payload, eventMetadata));
+        EventInfo eventInfo = toEventInfo(payload, eventMetadata);
+        eventsStream.onNext(eventInfo);
+        events.add(eventInfo);
     }
 
     public void clear() {
         events.clear();
+    }
+
+    public Multi<EventInfo> streamEvents() {
+        return eventsStream;
     }
 
     public List<EventInfo> getLastEvents() {

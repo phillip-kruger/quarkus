@@ -3,7 +3,6 @@ import { menuItems } from 'internal-data';
 import { RouterController } from 'router-controller';
 import '@vaadin/icon';
 import 'qwc/qwc-quarkus-version.js';
-import 'qwc/qwc-ws-status.js';
 
 /**
  * This component represent the Dev UI left menu
@@ -17,17 +16,6 @@ export class QwcMenu extends LitElement {
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
-            }
-
-            .bottom {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                height: 46px;
-                background: rgb(44, 44, 44);
-                height: 38px;
-                border-radius: 15px 0px 0px;
-                margin-left: 5px;
             }
 
             .menu {
@@ -81,9 +69,9 @@ export class QwcMenu extends LitElement {
             }
 
             qwc-quarkus-version {
-                padding-bottom: 5px;
+                padding-bottom: 10px;
+                padding-left: 15px;
                 width: 100%;
-                text-align: center;
             }
         `;
 
@@ -140,16 +128,9 @@ export class QwcMenu extends LitElement {
                         ${this._renderIcon("chevron-right", "larger")}
                     </div>
                     
-                    ${this._renderBottom()}
+                    ${this._renderVersion()}
                 </div>`;
         }
-    }
-
-    _renderBottom(){
-        return html`<div class="bottom">
-            <qwc-ws-status></qwc-ws-status>
-            ${this._renderVersion()}
-        </div>`;
     }
 
     _renderVersion(){

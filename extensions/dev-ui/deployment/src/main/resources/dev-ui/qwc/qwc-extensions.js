@@ -15,7 +15,6 @@ export class QwcExtensions extends LitElement {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
-            padding-bottom: 20px;
             padding-left: 5px;
             padding-right: 10px;
         }
