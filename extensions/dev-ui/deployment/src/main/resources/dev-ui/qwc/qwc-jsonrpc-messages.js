@@ -30,7 +30,12 @@ export class QwcJsonrpcMessages extends LitElement {
         .timestamp {
             color: #C0C0C0;
         }
-    
+        .line {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            border-top: 1px dashed #54789F;
+            color: transparent;
+        }
         `;
 
     static properties = {
@@ -46,8 +51,11 @@ export class QwcJsonrpcMessages extends LitElement {
         this._zoom = parseFloat(1.0);
         this._increment = parseFloat(0.05);
         this._followLog = true;
+        this._jsonRPCLogEntryEvent = (event) => this._addLogEntry(event.detail);
         this.logControl
-                .addItem("Zoom out", "font-awesome-solid:magnifying-glass-minus", "grey", (e) => {
+                .addToggle("On/off switch", true, (e) => {
+                    this._toggleOnOffClicked(e);
+                }).addItem("Zoom out", "font-awesome-solid:magnifying-glass-minus", "grey", (e) => {
                     this._zoomOut();
                 }).addItem("Zoom in", "font-awesome-solid:magnifying-glass-plus", "grey", (e) => {
                     this._zoomIn();
@@ -60,16 +68,12 @@ export class QwcJsonrpcMessages extends LitElement {
     
     connectedCallback() {
         super.connectedCallback();
-        
-        document.addEventListener('jsonRPCLogEntryEvent', (e) => { 
-            this._addLogEntry(e.detail);
-        }, false);
+        this._toggleOnOff(true);
     }
     
     disconnectedCallback() {
         super.disconnectedCallback();
-        document.removeEventListener('jsonRPCLogEntryEvent', this._handleLogEntryEvent);
-        document.removeEventListener('jsonRPCStateChangeEvent', this._handleStateChangeEvent);
+        this._toggleOnOff(false);
     }
     
     render() {
@@ -80,14 +84,24 @@ export class QwcJsonrpcMessages extends LitElement {
                     (message) => message.id,
                     (message, index) => html`
                     <div class="logEntry">
-                        ${this._renderTimestamp(message.time)}
-                        ${this._renderDirection(message.level, message.direction)}
-                        ${this._renderMessage(message.level, message.message)}
+                        ${this._renderLogEntry(message)}
                     </class>
                   `
                   )}
                 </code>`;
         
+    }
+
+    _renderLogEntry(message){
+        if(message.isLine){
+            return html`<hr class="line"/>`;
+        }else{
+            return html`
+                ${this._renderTimestamp(message.time)}
+                ${this._renderDirection(message.level, message.direction)}
+                ${this._renderMessage(message.level, message.message)}
+            `;
+        }
     }
 
     _renderDirection(level, direction){
@@ -107,6 +121,28 @@ export class QwcJsonrpcMessages extends LitElement {
     
     _renderMessage(level, message){
         return html`<span class="${level}">${message}</span>`;
+    }
+    
+    _toggleOnOffClicked(e){
+        this._toggleOnOff(e);
+        // Add line on stop
+        if(!e){
+            var stopEntry = new Object();
+            stopEntry.id = Math.floor(Math.random() * 999999);
+            stopEntry.isLine = true;
+            this._addLogEntry(stopEntry);
+        }
+    }
+    
+    _toggleOnOff(e){
+        
+        if(e){
+            console.log("log streaming is on !");
+            document.addEventListener('jsonRPCLogEntryEvent', this._jsonRPCLogEntryEvent, false);
+        }else{
+            console.log("log streaming is off !");
+            document.removeEventListener('jsonRPCLogEntryEvent', this._jsonRPCLogEntryEvent, false);
+        }
     }
     
     _toggleFollowLog(e){
