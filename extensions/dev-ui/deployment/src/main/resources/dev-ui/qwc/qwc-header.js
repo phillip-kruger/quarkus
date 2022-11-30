@@ -77,6 +77,9 @@ export class QwcHeader extends LitElement {
             cursor: pointer;
             color: #d0d02f;
         }
+        vaadin-icon {
+            vertical-align: unset;
+        }
         `;
 
     static properties = {

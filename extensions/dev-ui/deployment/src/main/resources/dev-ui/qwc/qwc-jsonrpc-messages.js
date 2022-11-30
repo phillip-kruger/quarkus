@@ -1,11 +1,13 @@
 import { LitElement, html, css} from 'lit';
 import {repeat} from 'lit/directives/repeat.js';
-
+import {LogController} from 'log-controller';
 
 /**
  * This component represent the Dev UI Json RPC Message log
  */
 export class QwcJsonrpcMessages extends LitElement {
+    
+    logControl = new LogController(this, "json rpc");
     
     static styles = css`
         .log {
@@ -28,28 +30,40 @@ export class QwcJsonrpcMessages extends LitElement {
         .timestamp {
             color: #C0C0C0;
         }
-    `;
+    
+        `;
 
     static properties = {
         _messages: {state:true},
+        _zoom: {state:true},
+        _increment: {state: false},
+        _followLog: {state: false}
     };
     
     constructor() {
         super();
         this._messages = [];
+        this._zoom = parseFloat(1.0);
+        this._increment = parseFloat(0.05);
+        this._followLog = true;
+        this.logControl
+                .addItem("Zoom out", "font-awesome-solid:magnifying-glass-minus", "grey", (e) => {
+                    this._zoomOut();
+                }).addItem("Zoom in", "font-awesome-solid:magnifying-glass-plus", "grey", (e) => {
+                    this._zoomIn();
+                }).addItem("Clear", "font-awesome-solid:trash-can", "#FF004A", (e) => {
+                    this._clearLog();
+                }).addFollow("Follow log", true , (e) => {
+                    this._toggleFollowLog(e);
+                });
     }
     
     connectedCallback() {
         super.connectedCallback();
         
         document.addEventListener('jsonRPCLogEntryEvent', (e) => { 
-            this._messages = [
-                ...this._messages,
-                e.detail,
-            ];
-            
+            this._addLogEntry(e.detail);
         }, false);
-        
     }
     
     disconnectedCallback() {
@@ -60,8 +74,7 @@ export class QwcJsonrpcMessages extends LitElement {
     
     render() {
         
-        return html`
-                <code class="log">
+        return html`<code class="log" style="font-size: ${this._zoom}em;">
                 ${repeat(
                     this._messages,
                     (message) => message.id,
@@ -94,6 +107,48 @@ export class QwcJsonrpcMessages extends LitElement {
     
     _renderMessage(level, message){
         return html`<span class="${level}">${message}</span>`;
+    }
+    
+    _toggleFollowLog(e){
+        this._followLog = e;
+        this._scrollToBottom();   
+    }
+    
+    _addLogEntry(entry){
+        this._messages = [
+            ...this._messages,
+            entry
+        ];
+        
+        this._scrollToBottom();   
+    }
+    
+    async _scrollToBottom(){
+        if(this._followLog){
+            await this.updateComplete;
+            
+            const last = Array.from(
+                this.shadowRoot.querySelectorAll('.logEntry')
+            ).pop();
+            
+            last.scrollIntoView({
+                 behavior: "smooth",
+                 block: "end"
+            });
+        }
+    }
+    
+    
+    _clearLog(){
+        this._messages = [];
+    }
+    
+    _zoomOut(){
+        this._zoom = parseFloat(parseFloat(this._zoom) - parseFloat(this._increment)).toFixed(2);
+    }
+    
+    _zoomIn(){
+        this._zoom = parseFloat(parseFloat(this._zoom) + parseFloat(this._increment)).toFixed(2);
     }
 }
 

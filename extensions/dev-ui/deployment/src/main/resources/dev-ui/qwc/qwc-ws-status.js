@@ -9,7 +9,7 @@ export class QwcWsStatus extends LitElement {
     
     static styles = css`
         :host {
-            padding-right: 10px;
+            padding-left: 10px;
         }
     `;
 
