@@ -1,5 +1,5 @@
 import { LitElement, html, css} from 'lit';
-import { allConfiguration } from 'internal-data';
+import { allConfiguration } from 'devui-data';
 
 /**
  * This component allows users to change the configuration

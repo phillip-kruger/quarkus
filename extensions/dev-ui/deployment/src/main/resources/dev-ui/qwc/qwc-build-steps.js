@@ -1,5 +1,5 @@
 import { LitElement, html, css} from 'lit';
-import { buildSteps } from 'internal-data';
+import { buildSteps } from 'devui-data';
 
 /**
  * This component shows the Build Steps Page

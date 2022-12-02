@@ -4,7 +4,7 @@ import javax.enterprise.inject.spi.CDI;
 
 import org.jboss.logging.Logger;
 
-import io.quarkus.devui.runtime.jsonrpc.JsonRpcRouter;
+import io.quarkus.devui.runtime.comms.JsonRpcRouter;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.http.ServerWebSocket;

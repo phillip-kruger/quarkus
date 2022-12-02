@@ -9,7 +9,6 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.devui.deployment.BuildTimeConstBuildItem;
 import io.quarkus.devui.deployment.ExtensionsBuildItem;
 import io.quarkus.devui.deployment.spi.page.PageBuildItem;
-import io.quarkus.devui.runtime.jsonrpc.handler.BottomDrawerItem;
 import io.quarkus.devui.runtime.jsonrpc.handler.MenuItem;
 import io.quarkus.devui.runtime.service.extension.Extension;
 import io.quarkus.devui.runtime.service.extension.ExtensionGroup;
@@ -28,7 +27,7 @@ public class InternalProcessor {
                 ExtensionGroup.active, extensionsBuildItem.getActiveExtensions(),
                 ExtensionGroup.inactive, extensionsBuildItem.getInactiveExtensions());
 
-        BuildTimeConstBuildItem internalBuildTimeData = new BuildTimeConstBuildItem(PageBuildItem.INTERNAL);
+        BuildTimeConstBuildItem internalBuildTimeData = new BuildTimeConstBuildItem(PageBuildItem.DEV_UI);
 
         internalBuildTimeData.addBuildTimeData("extensions", response);
 
@@ -41,14 +40,6 @@ public class InternalProcessor {
                 new MenuItem("qwc-build-steps", "hammer"));
 
         internalBuildTimeData.addBuildTimeData("menuItems", menuItems);
-
-        // Bottom Drawer
-        // TODO: Get this from PageBuildItem
-        List<BottomDrawerItem> bottomDrawerItems = List.of(
-                new BottomDrawerItem("qwc-jsonrpc-messages"),
-                new BottomDrawerItem("qwc-server-log"));
-
-        internalBuildTimeData.addBuildTimeData("bottomDrawerItems", bottomDrawerItems);
 
         // TODO: Implement below
         internalBuildTimeData.addBuildTimeData("allConfiguration", "Loading Configuration");

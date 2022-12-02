@@ -1,4 +1,4 @@
-package io.quarkus.devui.runtime.jsonrpc;
+package io.quarkus.devui.runtime.comms;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -10,9 +10,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import org.jboss.logging.Logger;
-
 import io.quarkus.arc.Arc;
+import io.quarkus.devui.runtime.jsonrpc.DevUIResponse;
+import io.quarkus.devui.runtime.jsonrpc.JsonRpcErrorResponse;
+import io.quarkus.devui.runtime.jsonrpc.JsonRpcMessage;
+import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethod;
+import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethodName;
+import io.quarkus.devui.runtime.jsonrpc.JsonRpcRequest;
+import io.quarkus.devui.runtime.jsonrpc.JsonRpcResponse;
+import io.quarkus.devui.runtime.jsonrpc.MessageType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.Cancellable;
 import io.vertx.core.http.ServerWebSocket;
@@ -26,41 +32,18 @@ import io.vertx.core.json.JsonObject;
 public class JsonRpcRouter {
 
     private final Map<Integer, Cancellable> subscriptions = new ConcurrentHashMap<>();
-    private static final Logger log = Logger.getLogger(JsonRpcRouter.class);
 
     // Map json-rpc method to java
     private Map<String, ReflectionInfo> jsonRpcToJava = new HashMap<>();
 
-    // List containing all subscription methods
-    private List<String> knownSubscriptions = new ArrayList<>();
-
     private ServerWebSocket socket;
-
-    private static class ReflectionInfo {
-        public Class bean;
-        public Object instance;
-        public Method method;
-        public Map<String, Class> params;
-
-        public ReflectionInfo(Class bean, Object instance, Method method, Map<String, Class> params) {
-            this.bean = bean;
-            this.instance = instance;
-            this.method = method;
-            this.params = params;
-        }
-
-        public boolean isSubscription() {
-            Class<?> returnType = this.method.getReturnType();
-            return returnType.getName().equals(Multi.class.getName());
-        }
-    }
 
     /**
      * This gets called on build to build into of the classes we are going to call in runtime
      *
      * @param extensionMethodsMap
      */
-    public void setExtensionMethodsMap(Map<String, Map<JsonRpcMethodName, JsonRpcMethod>> extensionMethodsMap) {
+    public void populateJsonRPCMethods(Map<String, Map<JsonRpcMethodName, JsonRpcMethod>> extensionMethodsMap) {
         for (Map.Entry<String, Map<JsonRpcMethodName, JsonRpcMethod>> extension : extensionMethodsMap.entrySet()) {
             String extensionName = extension.getKey();
             Map<JsonRpcMethodName, JsonRpcMethod> jsonRpcMethods = extension.getValue();
@@ -85,11 +68,6 @@ public class JsonRpcRouter {
                             params);
                     String jsonRpcMethodName = extensionName + DOT + methodName;
                     jsonRpcToJava.put(jsonRpcMethodName, reflectionInfo);
-
-                    if (reflectionInfo.isSubscription()) {
-                        knownSubscriptions.add(jsonRpcMethodName);
-                    }
-
                 } catch (NoSuchMethodException | SecurityException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -124,7 +102,6 @@ public class JsonRpcRouter {
 
     @SuppressWarnings("unchecked")
     private JsonRpcMessage route(JsonRpcRequest jsonRpcRequest) {
-        log.info(">>>>>> jsonRpcRequest = " + jsonRpcRequest);
 
         String jsonRpcMethodName = jsonRpcRequest.getMethod();
 
@@ -132,8 +109,8 @@ public class JsonRpcRouter {
         if (jsonRpcMethodName.equalsIgnoreCase("unsubscribe")) {
             JsonRpcResponse jsonRpcResponse = toJsonRpcResponse(MessageType.Void, jsonRpcRequest.getId(), null);
 
-            if (this.subscriptions.containsKey(jsonRpcRequest.id)) {
-                Cancellable cancellable = this.subscriptions.remove(jsonRpcRequest.id);
+            if (this.subscriptions.containsKey(jsonRpcRequest.getId())) {
+                Cancellable cancellable = this.subscriptions.remove(jsonRpcRequest.getId());
                 cancellable.cancel();
             }
             return jsonRpcResponse;
@@ -142,15 +119,13 @@ public class JsonRpcRouter {
             ReflectionInfo reflectionInfo = this.jsonRpcToJava.get(jsonRpcMethodName);
             Object providerInstance = Arc.container().select(reflectionInfo.bean).get();
             try {
-                Object result = null;
+                Object result;
                 if (jsonRpcRequest.hasParams()) {
                     Object[] args = getArgsAsObjects(reflectionInfo.params, jsonRpcRequest);
                     result = reflectionInfo.method.invoke(providerInstance, args);
                 } else {
                     result = reflectionInfo.method.invoke(providerInstance);
                 }
-
-                Class<?> returnType = reflectionInfo.method.getReturnType();
 
                 // Here wrap in our own object that contain some more metadata
                 JsonRpcResponse jsonRpcResponse;
@@ -159,13 +134,12 @@ public class JsonRpcRouter {
                     Multi<?> subscription = (Multi) result;
 
                     Cancellable cancellable = subscription.subscribe().with((t) -> {
-                        log.info(">>>>>> t = " + t);
                         String serverMessage = Json
                                 .encode(toJsonRpcResponse(MessageType.SubscriptionMessage, jsonRpcRequest.getId(), t));
                         socket.writeTextMessage(serverMessage);
                     });
 
-                    this.subscriptions.put(jsonRpcRequest.id, cancellable);
+                    this.subscriptions.put(jsonRpcRequest.getId(), cancellable);
 
                     jsonRpcResponse = toJsonRpcResponse(MessageType.Void, jsonRpcRequest.getId(), null);
 
@@ -175,7 +149,6 @@ public class JsonRpcRouter {
                     jsonRpcResponse = toJsonRpcResponse(MessageType.Response, jsonRpcRequest.getId(), result);
                 }
 
-                log.info("<<<<<< jsonRpcResponse = " + jsonRpcResponse);
                 return jsonRpcResponse;
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
                 throw new RuntimeException(ex);
@@ -196,10 +169,7 @@ public class JsonRpcRouter {
     }
 
     private void onStart() {
-        // On init we send the known subscription
-        JsonRpcResponse jsonRpcResponse = toJsonRpcResponse(MessageType.Init, -1, this.knownSubscriptions);
-        String initMessage = Json.encode(jsonRpcResponse);
-        this.socket.writeTextMessage(initMessage);
+        // ?
     }
 
     private void onError(Throwable t) {

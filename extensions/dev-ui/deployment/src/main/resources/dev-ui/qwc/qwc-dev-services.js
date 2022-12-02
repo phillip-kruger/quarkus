@@ -1,5 +1,5 @@
 import { LitElement, html, css} from 'lit';
-import { devServices } from 'internal-data';
+import { devServices } from 'devui-data';
 
 /**
  * This component shows the Dev Services Page

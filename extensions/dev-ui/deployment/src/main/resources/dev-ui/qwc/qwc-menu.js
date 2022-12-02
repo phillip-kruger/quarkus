@@ -1,5 +1,5 @@
 import { LitElement, html, css} from 'lit';
-import { menuItems } from 'internal-data';
+import { menuItems } from 'devui-data';
 import { RouterController } from 'router-controller';
 import '@vaadin/icon';
 import 'qwc/qwc-quarkus-version.js';

@@ -53,10 +53,6 @@ export class LogController {
     
     _createItem(icon, title, color) {
         var style = `font-size: x-small;cursor: pointer;color: ${color};`;
-        
-        // style = style + `animation: rotation 3s infinite linear;`;
-        
-        
         const item = document.createElement('vaadin-context-menu-item');
         const vaadinicon = document.createElement('vaadin-icon');
         item.setAttribute('aria-label', `${title}`);

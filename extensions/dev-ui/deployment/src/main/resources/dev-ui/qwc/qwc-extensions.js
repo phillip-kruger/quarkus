@@ -1,6 +1,6 @@
 import { LitElement, html, css} from 'lit';
 import { until } from 'lit/directives/until.js';
-import { extensions } from 'internal-data';
+import { extensions } from 'devui-data';
 import { RouterController } from 'router-controller';
 import 'qwc/qwc-extension.js';
 import 'qwc/qwc-extension-link.js';
@@ -29,12 +29,6 @@ export class QwcExtensions extends LitElement {
         this._extensions = extensions;
         window.addEventListener('vaadin-router-location-changed', (event) => {
             var pageDetails = RouterController.parseLocationChangedEvent(event);
-            console.log("||||| component = " + pageDetails.component);
-            console.log("||||| path = " + pageDetails.path);
-            console.log("||||| name = " + pageDetails.name);
-            console.log("||||| title = " + pageDetails.title);
-            console.log("||||| submenu = " + pageDetails.subMenu);
-            
         });
     }
 

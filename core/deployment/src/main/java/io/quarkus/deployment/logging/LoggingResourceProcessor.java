@@ -61,8 +61,8 @@ import io.quarkus.deployment.builditem.LogFileFormatBuildItem;
 import io.quarkus.deployment.builditem.LogHandlerBuildItem;
 import io.quarkus.deployment.builditem.NamedLogHandlersBuildItem;
 import io.quarkus.deployment.builditem.RunTimeConfigurationDefaultBuildItem;
+import io.quarkus.deployment.builditem.StreamingLogHandlerBuildItem;
 import io.quarkus.deployment.builditem.SystemPropertyBuildItem;
-import io.quarkus.deployment.builditem.WebSocketLogHandlerBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageSystemPropertyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
@@ -180,7 +180,7 @@ public final class LoggingResourceProcessor {
     LoggingSetupBuildItem setupLoggingRuntimeInit(RecorderContext context, LoggingSetupRecorder recorder, LogConfig log,
             LogBuildTimeConfig buildLog,
             LogCategoryMinLevelDefaultsBuildItem categoryMinLevelDefaults,
-            Optional<WebSocketLogHandlerBuildItem> logStreamHandlerBuildItem,
+            Optional<StreamingLogHandlerBuildItem> logStreamHandlerBuildItem,
             List<LogHandlerBuildItem> handlerBuildItems,
             List<NamedLogHandlersBuildItem> namedHandlerBuildItems,
             List<LogConsoleFormatBuildItem> consoleFormatItems,

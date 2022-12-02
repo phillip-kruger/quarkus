@@ -11,7 +11,7 @@ import io.quarkus.runtime.RuntimeValue;
 /**
  * A build item for adding the dev stream log
  */
-public final class WebSocketLogHandlerBuildItem extends SimpleBuildItem {
+public final class StreamingLogHandlerBuildItem extends SimpleBuildItem {
     private final RuntimeValue<Optional<Handler>> handlerValue;
 
     /**
@@ -19,7 +19,7 @@ public final class WebSocketLogHandlerBuildItem extends SimpleBuildItem {
      *
      * @param handlerValue the handler value to add to the run time configuration
      */
-    public WebSocketLogHandlerBuildItem(final RuntimeValue<Optional<Handler>> handlerValue) {
+    public StreamingLogHandlerBuildItem(final RuntimeValue<Optional<Handler>> handlerValue) {
         this.handlerValue = Assert.checkNotNullParam("handlerValue", handlerValue);
     }
 

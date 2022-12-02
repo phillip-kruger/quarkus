@@ -43,11 +43,12 @@ export class QwcFooter extends LitElement {
         }
     
         .footerContent {
-            overflow-y: scroll;
             padding-left: 5px;
             padding-right: 5px;
             margin-bottom: 5px;
             margin-top: 5px;
+            overflow: hidden scroll;
+            overflow-wrap: break-word;
         }
         
         .footerHeader {

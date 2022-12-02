@@ -1,3 +1,6 @@
+import { jsonRPCSubscriptions } from 'devui-jsonrpc-data';
+import { jsonRPCMethods } from 'devui-jsonrpc-data';
+
 class ConnectionState {
     static Disconnected = new ConnectionState("disconnected");
     static Connecting = new ConnectionState("connecting");
@@ -42,7 +45,6 @@ class MessageDirection {
 }
 
 class MessageType {
-    static Init = new MessageType("Init");
     static Response = new MessageType("Response");
     static Void = new MessageType("Void");
     static SubscriptionMessage = new MessageType("SubscriptionMessage");
@@ -75,6 +77,10 @@ class Observer {
         JsonRpc.observerQueue.delete(this.id);
         JsonRpc.cancelSubscription(this.id);
     }
+    
+    toString() {
+        return "Observer for + " + this.id;
+    }
 }
 
 /**
@@ -86,7 +92,6 @@ export class JsonRpc {
     static promiseQueue = new Map(); // Keep track of promise waiting for a response
     static observerQueue = new Map(); // Keep track of subscriptions waiting for a responses
     static initQueue = []; // If message came in and we do not have a connection yet, we queue here
-    static knownSubscription = []; // List of known subscription we receive on init, so we know when to return a Subject (vs a Promise) in the Proxy
     static messageCounter = 0;
     static webSocket;
     static serverUri;
@@ -134,13 +139,13 @@ export class JsonRpc {
 
                         var jsonrpcpayload = JSON.stringify(message);
 
-                        if (JsonRpc.knownSubscription.includes(method)) {
+                        if (jsonRPCSubscriptions.includes(method)) {
                             // Observer
                             var observer = new Observer(uid);
                             JsonRpc.observerQueue.set(uid, observer);
                             JsonRpc.sendJsonRPCMessage(jsonrpcpayload);
                             return observer;
-                        } else {
+                        } else if(jsonRPCMethods.includes(method)){
                             // Promise
                             var _resolve, _reject;
                             var promise = new Promise((resolve, reject) => {
@@ -156,6 +161,10 @@ export class JsonRpc {
                             JsonRpc.promiseQueue.set(uid, promise);
                             JsonRpc.sendJsonRPCMessage(jsonrpcpayload);
                             return promise;
+                        } else {
+                            // TODO: Send error ?
+                            console.log("method not found " + method);
+                            return Reflect.get(target, prop);
                         }
                     }
                 } else {
@@ -203,11 +212,7 @@ export class JsonRpc {
             var devUiResponse = response.result;
             var messageType = devUiResponse.messageType;
 
-            if (messageType === MessageType.Init.toString()) { // Init message
-                JsonRpc.knownSubscription = devUiResponse.object;
-                var jsonrpcpayload = JSON.stringify(JsonRpc.knownSubscription);
-                JsonRpc.dispatchMessageLogEntry(ConnectionState.Connected, Level.Info, MessageDirection.Down, "Connection initialised. Avaliable subscriptions: " + jsonrpcpayload);
-            } else if (messageType === MessageType.Void.toString()) { // Void response, typically used on initial subscription
+            if (messageType === MessageType.Void.toString()) { // Void response, typically used on initial subscription
                 // Do nothing
             } else if (messageType === MessageType.Response.toString()) { // Normal Request-Response
                 if (JsonRpc.promiseQueue.has(response.id)) {

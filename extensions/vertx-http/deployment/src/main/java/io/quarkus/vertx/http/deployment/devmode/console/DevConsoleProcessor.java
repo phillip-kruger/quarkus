@@ -49,7 +49,6 @@ import io.quarkus.deployment.builditem.ConfigDescriptionBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
-import io.quarkus.deployment.builditem.WebSocketLogHandlerBuildItem;
 import io.quarkus.deployment.console.ConsoleCommand;
 import io.quarkus.deployment.console.ConsoleStateManager;
 import io.quarkus.deployment.dev.devservices.DevServiceDescriptionBuildItem;
@@ -320,11 +319,12 @@ public class DevConsoleProcessor {
     @BuildStep(onlyIf = IsDevelopment.class)
     @Record(ExecutionTime.STATIC_INIT)
     public void handler(BuildProducer<HistoryHandlerBuildItem> historyProducer,
-            BuildProducer<WebSocketLogHandlerBuildItem> webSocketLogHandlerBuildItem,
+            //BuildProducer<StreamingLogHandlerBuildItem> streamingLogHandlerBuildItem,
             LogStreamRecorder recorder, DevUIConfig devUiConfig) {
         RuntimeValue<Optional<WebSocketLogHandler>> handler = recorder.logHandler(devUiConfig.historySize);
 
-        webSocketLogHandlerBuildItem.produce(new WebSocketLogHandlerBuildItem((RuntimeValue) handler));
+        // TODO: Change to use the new Mutiny ?
+        //streamingLogHandlerBuildItem.produce(new StreamingLogHandlerBuildItem((RuntimeValue) handler));
         historyProducer.produce(new HistoryHandlerBuildItem(handler));
     }
 

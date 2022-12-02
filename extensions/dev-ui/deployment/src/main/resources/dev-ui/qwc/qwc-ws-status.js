@@ -5,7 +5,7 @@ import { JsonRpc } from 'jsonrpc';
  * This component shows the status of the Web socket connection
  */
 export class QwcWsStatus extends LitElement {
-    jsonRpc = new JsonRpc("Internal");
+    jsonRpc = new JsonRpc("DevUI");
     
     static styles = css`
         :host {

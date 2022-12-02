@@ -1,5 +1,5 @@
 import { LitElement, html, css} from 'lit';
-import { continuousTesting } from 'internal-data';
+import { continuousTesting } from 'devui-data';
 
 /**
  * This component shows the Continuous Testing Page

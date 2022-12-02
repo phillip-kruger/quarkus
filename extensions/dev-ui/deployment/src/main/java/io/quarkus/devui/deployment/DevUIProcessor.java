@@ -40,9 +40,9 @@ import io.quarkus.devui.deployment.spi.page.PageBuilder;
 import io.quarkus.devui.deployment.spi.page.QuteDataPageBuilder;
 import io.quarkus.devui.deployment.spi.runtime.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.runtime.DevUIRecorder;
+import io.quarkus.devui.runtime.comms.JsonRpcRouter;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethod;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethodName;
-import io.quarkus.devui.runtime.jsonrpc.JsonRpcRouter;
 import io.quarkus.devui.runtime.service.extension.Codestart;
 import io.quarkus.devui.runtime.service.extension.Extension;
 import io.quarkus.maven.dependency.GACT;
@@ -51,6 +51,7 @@ import io.quarkus.qute.Qute;
 import io.quarkus.webjar.deployment.WebJarBuildItem;
 import io.quarkus.webjar.deployment.WebJarResultsBuildItem;
 import io.smallrye.common.classloader.ClassPathUtils;
+import io.smallrye.mutiny.Multi;
 
 /**
  * Processor for Dev UI
@@ -92,12 +93,16 @@ public class DevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     void findAllJsonRPCMethods(BuildProducer<JsonRPCMethodsBuildItem> jsonRPCMethodsProvider,
+            BuildProducer<BuildTimeConstBuildItem> buildTimeConstProducer,
             CombinedIndexBuildItem combinedIndexBuildItem,
             List<JsonRPCProvidersBuildItem> jsonRPCProvidersBuildItems) {
 
         IndexView index = combinedIndexBuildItem.getIndex();
 
-        Map<String, Map<JsonRpcMethodName, JsonRpcMethod>> extensionMethodsMap = new HashMap<>();
+        Map<String, Map<JsonRpcMethodName, JsonRpcMethod>> extensionMethodsMap = new HashMap<>(); // All methods so that we can build the reflection
+
+        List<String> requestResponseMethods = new ArrayList<>(); // All requestResponse methods for validation on the client side
+        List<String> subscriptionMethods = new ArrayList<>(); // All subscription methods for validation on the client side
 
         // Let's use the Jandex index to find all methods
         for (JsonRPCProvidersBuildItem jsonRPCProvidersBuildItem : jsonRPCProvidersBuildItems) {
@@ -120,6 +125,15 @@ public class DevUIProcessor {
                 if (!method.name().equals(CONSTRUCTOR)) { // Ignore constructor
                     if (Modifier.isPublic(method.flags())) { // Only allow public methods
                         if (method.returnType().kind() != Type.Kind.VOID) { // Only allow method with response
+
+                            // Create list of available methods for the Javascript side.
+                            if (method.returnType().name().equals(DotName.createSimple(Multi.class.getName()))) {
+                                subscriptionMethods.add(extension + "." + method.name());
+                            } else {
+                                requestResponseMethods.add(extension + "." + method.name());
+                            }
+
+                            // Also create the map to pass to the runtime for the relection calls
                             JsonRpcMethodName jsonRpcMethodName = new JsonRpcMethodName(method.name());
                             if (method.parametersCount() > 0) {
                                 Map<String, Class> params = new LinkedHashMap<>(); // Keep the order
@@ -148,6 +162,18 @@ public class DevUIProcessor {
         if (!extensionMethodsMap.isEmpty()) {
             jsonRPCMethodsProvider.produce(new JsonRPCMethodsBuildItem(extensionMethodsMap));
         }
+
+        BuildTimeConstBuildItem methodInfo = new BuildTimeConstBuildItem("devui-jsonrpc");
+
+        if (!subscriptionMethods.isEmpty()) {
+            methodInfo.addBuildTimeData("jsonRPCSubscriptions", subscriptionMethods);
+        }
+        if (!requestResponseMethods.isEmpty()) {
+            methodInfo.addBuildTimeData("jsonRPCMethods", requestResponseMethods);
+        }
+
+        buildTimeConstProducer.produce(methodInfo);
+
     }
 
     private Class toClass(Type type) {
@@ -168,7 +194,6 @@ public class DevUIProcessor {
                 .getExtensionMethodsMap();
 
         recorder.createJsonRpcRouter(beanContainer.getValue(), extensionMethodsMap);
-
     }
 
     @BuildStep(onlyIf = IsDevelopment.class)

@@ -1,6 +1,6 @@
 import { LitElement, html, css} from 'lit';
-import {repeat} from 'lit/directives/repeat.js';
-import {LogController} from 'log-controller';
+import { repeat } from 'lit/directives/repeat.js';
+import { LogController } from 'log-controller';
 
 /**
  * This component represent the Dev UI Json RPC Message log
@@ -17,6 +17,7 @@ export class QwcJsonrpcMessages extends LitElement {
             max-height: 100%;
             display: flex;
             flex-direction:column;
+            color: white;
         }
         .error {
             color:#B32828;
@@ -47,11 +48,6 @@ export class QwcJsonrpcMessages extends LitElement {
     
     constructor() {
         super();
-        this._messages = [];
-        this._zoom = parseFloat(1.0);
-        this._increment = parseFloat(0.05);
-        this._followLog = true;
-        this._jsonRPCLogEntryEvent = (event) => this._addLogEntry(event.detail);
         this.logControl
                 .addToggle("On/off switch", true, (e) => {
                     this._toggleOnOffClicked(e);
@@ -64,6 +60,13 @@ export class QwcJsonrpcMessages extends LitElement {
                 }).addFollow("Follow log", true , (e) => {
                     this._toggleFollowLog(e);
                 });
+                
+        this._messages = [];
+        this._zoom = parseFloat(1.0);
+        this._increment = parseFloat(0.05);
+        this._followLog = true;
+        this._jsonRPCLogEntryEvent = (event) => this._addLogEntry(event.detail);
+        
     }
     
     connectedCallback() {
@@ -135,12 +138,9 @@ export class QwcJsonrpcMessages extends LitElement {
     }
     
     _toggleOnOff(e){
-        
         if(e){
-            console.log("log streaming is on !");
             document.addEventListener('jsonRPCLogEntryEvent', this._jsonRPCLogEntryEvent, false);
         }else{
-            console.log("log streaming is off !");
             document.removeEventListener('jsonRPCLogEntryEvent', this._jsonRPCLogEntryEvent, false);
         }
     }

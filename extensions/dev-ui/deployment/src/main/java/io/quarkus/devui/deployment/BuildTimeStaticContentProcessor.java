@@ -92,7 +92,7 @@ public class BuildTimeStaticContentProcessor {
             BuildProducer<InternalImportMapBuildItem> internalImportMapProducer) {
 
         QuteTemplateBuildItem quteTemplateBuildItem = new QuteTemplateBuildItem(
-                QuteTemplateBuildItem.INTERNAL);
+                QuteTemplateBuildItem.DEV_UI);
 
         InternalImportMapBuildItem internalImportMapBuildItem = new InternalImportMapBuildItem();
 
@@ -134,7 +134,7 @@ public class BuildTimeStaticContentProcessor {
     @BuildStep(onlyIf = IsDevelopment.class)
     QuteTemplateBuildItem createIndexHtmlTemplate(List<InternalImportMapBuildItem> internalImportMapBuildItems) {
         QuteTemplateBuildItem quteTemplateBuildItem = new QuteTemplateBuildItem(
-                QuteTemplateBuildItem.INTERNAL);
+                QuteTemplateBuildItem.DEV_UI);
 
         for (InternalImportMapBuildItem importMapBuildItem : internalImportMapBuildItems) {
             Map<String, String> importMap = importMapBuildItem.getImportMap();
@@ -142,6 +142,8 @@ public class BuildTimeStaticContentProcessor {
         }
 
         String importmap = Aggregator.aggregateAsJson();
+
+        // TODO: Move version and name to build time data
 
         Map<String, Object> data = Map.of(
                 "importmap", importmap,
@@ -188,7 +190,7 @@ public class BuildTimeStaticContentProcessor {
                     }
                 }
                 buildTimeContentProducer.produce(new StaticContentBuildItem(
-                        StaticContentBuildItem.INTERNAL, contentPerExtension)); // TODO: This should not be internal ?
+                        StaticContentBuildItem.DEV_UI, contentPerExtension)); // TODO: This should not be internal ?
             } else {
                 // TODO: Also handle case for extensions
             }

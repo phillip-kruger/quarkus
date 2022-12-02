@@ -24,8 +24,8 @@ public abstract class AbstractDevUIBuildItem extends MultiBuildItem {
     }
 
     public boolean isInternal() {
-        return this.extensionName == INTERNAL;
+        return this.extensionName == DEV_UI;
     }
 
-    public static final String INTERNAL = "Internal";
+    public static final String DEV_UI = "DevUI";
 }
