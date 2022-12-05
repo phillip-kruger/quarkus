@@ -15,7 +15,7 @@
     <description>Dev UI</description>
     
     <properties>
-        <lit.version>2.4.0</lit.version>
+        <lit.version>2.4.1</lit.version>
         <vaadin.version>23.2.10</vaadin.version>
         <vaadin-router.version>1.7.4</vaadin-router.version>
         <wc-codemirror.version>2.1.0</wc-codemirror.version>
@@ -80,6 +80,12 @@
         </dependency>
         <dependency>
             <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>list-box</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mvnpm.at.vaadin</groupId>
             <artifactId>dialog</artifactId>
             <version>${vaadin.version}</version>
             <scope>runtime</scope>
@@ -96,6 +102,13 @@
             <version>${vaadin.version}</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>org.mvnpm.at.vaadin</groupId>
+            <artifactId>checkbox-group</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        
         <dependency>
             <groupId>org.mvnpm.at.vaadin</groupId>
             <artifactId>menu-bar</artifactId>

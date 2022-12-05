@@ -3,6 +3,10 @@ import { repeat } from 'lit/directives/repeat.js';
 import { LogController } from 'log-controller';
 import { JsonRpc } from 'jsonrpc';
 import '@vaadin/icon';
+import '@vaadin/dialog';
+import '@vaadin/checkbox';
+import '@vaadin/checkbox-group';
+import { dialogHeaderRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 
 /**
  * This component represent the Server Log
@@ -13,7 +17,7 @@ import '@vaadin/icon';
 export class QwcServerLog extends LitElement {
     
     logControl = new LogController(this, "server");
-    jsonRpc = new JsonRpc("DevUI");
+    jsonRpc = new JsonRpc("DevUI", false);
     
     static styles = css`
         .log {
@@ -79,6 +83,14 @@ export class QwcServerLog extends LitElement {
         .text-thread{
             color: #72BB3E;
         }
+    
+        .columnsDialog{
+            
+        }
+        
+        .levelsDialog{
+            
+        }
     `;
 
     static properties = {
@@ -87,27 +99,9 @@ export class QwcServerLog extends LitElement {
         _increment: {state: false},
         _followLog: {state: false},
         _observer: {state:false},
-        
-        _shouldRenderLevelIcon: {state:true},
-        _shouldRenderSequenceNumber: {state:true},
-        _shouldRenderHostName: {state:true},
-        _shouldRenderDate: {state:true},
-        _shouldRenderTime: {state:true},
-        _shouldRenderLevel: {state:true},
-        _shouldRenderLoggerNameShort: {state:true},
-        _shouldRenderLoggerName: {state:true},
-        _shouldRenderLoggerClassName: {state:true},
-        _shouldRenderSourceClassNameFull: {state:true},
-        _shouldRenderSourceClassNameFullShort: {state:true},
-        _shouldRenderSourceClassName: {state:true},
-        _shouldRenderSourceMethodName: {state:true},
-        _shouldRenderSourceFileName: {state:true},
-        _shouldRenderSourceLineNumber: {state:true},
-        _shouldRenderProcessId: {state:true},
-        _shouldRenderProcessName: {state:true},
-        _shouldRenderThreadId: {state:true},
-        _shouldRenderThreadName: {state:true},
-        _shouldRenderMessage: {state:true}
+        _levelsDialogOpened: {state: true},
+        _columnsDialogOpened: {state: true},
+        _selectedColumns: {state: true},
     };
 
     constructor() {
@@ -115,6 +109,10 @@ export class QwcServerLog extends LitElement {
         this.logControl
                 .addToggle("On/off switch", true, (e) => {
                     this._toggleOnOffClicked(e);
+                }).addItem("Log levels", "font-awesome-solid:layer-group", "grey", (e) => {
+                    this._logLevels();
+                }).addItem("Columns", "font-awesome-solid:table-columns", "grey", (e) => {
+                    this._columns();
                 }).addItem("Zoom out", "font-awesome-solid:magnifying-glass-minus", "grey", (e) => {
                     this._zoomOut();
                 }).addItem("Zoom in", "font-awesome-solid:magnifying-glass-plus", "grey", (e) => {
@@ -129,27 +127,9 @@ export class QwcServerLog extends LitElement {
         this._zoom = parseFloat(1.0);
         this._increment = parseFloat(0.05);
         this._followLog = true;
-        
-        this._shouldRenderLevelIcon = true;
-        this._shouldRenderSequenceNumber = false;
-        this._shouldRenderHostName = false;
-        this._shouldRenderDate = true;
-        this._shouldRenderTime = true;
-        this._shouldRenderLevel = true;
-        this._shouldRenderLoggerNameShort = false;
-        this._shouldRenderLoggerName = false;
-        this._shouldRenderLoggerClassName = false;
-        this._shouldRenderSourceClassNameFull = false;
-        this._shouldRenderSourceClassNameFullShort = true;
-        this._shouldRenderSourceClassName = false;
-        this._shouldRenderSourceMethodName = false;
-        this._shouldRenderSourceFileName = false;
-        this._shouldRenderSourceLineNumber = false;
-        this._shouldRenderProcessId = false;
-        this._shouldRenderProcessName = false;
-        this._shouldRenderThreadId = false;
-        this._shouldRenderThreadName = true;
-        this._shouldRenderMessage = true;
+        this._levelsDialogOpened = false;
+        this._columnsDialogOpened = false;
+        this._selectedColumns = ['0','3','4','5','10','18','19'];
     }
 
     connectedCallback() {
@@ -164,7 +144,34 @@ export class QwcServerLog extends LitElement {
 
     render() {
         
-        return html`<code class="log" style="font-size: ${this._zoom}em;">
+        return html`
+                <vaadin-dialog class="levelsDialog"
+                    header-title="Log levels"
+                    .opened="${this._levelsDialogOpened}"
+                    @opened-changed="${(e) => (this._levelsDialogOpened = e.detail.value)}"
+                    ${dialogHeaderRenderer(() => html`
+                        <vaadin-button theme="tertiary" @click="${() => (this._levelsDialogOpened = false)}">
+                            <vaadin-icon icon="font-awesome-solid:xmark"></vaadin-icon>
+                        </vaadin-button>
+                    `,
+                    []
+                    )}
+                    ${dialogRenderer(() => this._renderLevelsDialog(), "levels")}
+                ></vaadin-dialog>
+                <vaadin-dialog class="columnsDialog"
+                    header-title="Columns"
+                    .opened="${this._columnsDialogOpened}"
+                    @opened-changed="${(e) => (this._columnsDialogOpened = e.detail.value)}"
+                    ${dialogHeaderRenderer(() => html`
+                        <vaadin-button theme="tertiary" @click="${() => (this._columnsDialogOpened = false)}">
+                            <vaadin-icon icon="font-awesome-solid:xmark"></vaadin-icon>
+                        </vaadin-button>
+                    `,
+                    []
+                    )}
+                    ${dialogRenderer(() => this._renderColumnsDialog(), "columns")}
+                ></vaadin-dialog>
+                <code class="log" style="font-size: ${this._zoom}em;">
                 ${repeat(
                     this._messages,
                     (message) => message.sequenceNumber,
@@ -224,8 +231,7 @@ export class QwcServerLog extends LitElement {
     }
     
     _renderLevelIcon(level){
-        if(this._shouldRenderLevelIcon){
-            
+        if(this._selectedColumns.includes('0')){
             if (level === "warn"){
                 return html`<vaadin-icon icon="font-awesome-solid:circle-exclamation" class="text-warn"></vaadin-icon>`;
             }else if (level === "error"){
@@ -241,115 +247,115 @@ export class QwcServerLog extends LitElement {
     }
     
     _renderSequenceNumber(sequenceNumber){
-        if(this._shouldRenderSequenceNumber){
+        if(this._selectedColumns.includes('1')){
             return html`<span title='Sequence number' class="badge badge-info">${sequenceNumber}</span>`;
         }
     }
     
     _renderHostName(hostName){
-        if(this._shouldRenderHostName){
+        if(this._selectedColumns.includes('2')){
             return html`<span title='Host name'>${hostName}</span>`;
         }
     }
     
     _renderDate(timestamp){
-        if(this._shouldRenderDate){
+        if(this._selectedColumns.includes('3')){
             return html`<span title='Date'>${timestamp.slice(0, 10)}</span>`;
         }
     }
     
     _renderTime(timestamp){
-        if(this._shouldRenderTime){
+        if(this._selectedColumns.includes('4')){
             return html`<span title='Time'>${timestamp.slice(11, 23).replace(".", ",")}</span>`;
         }
     }
     
     _renderLevel(level, leveldisplay){
-        if(this._shouldRenderLevel){
+        if(this._selectedColumns.includes('5')){
             return html`<span title='Level' class='text-${level}'>${leveldisplay}</span>`;
         }
     }
     
     _renderLoggerNameShort(loggerNameShort){
-        if(this._shouldRenderLoggerNameShort){
+        if(this._selectedColumns.includes('6')){
             return html`<span title='Logger name (short)' class='text-logger'>[${loggerNameShort}]</span>`;
         }
     }
     
     _renderLoggerName(loggerName){
-        if(this._shouldRenderLoggerName){
+        if(this._selectedColumns.includes('7')){
             return html`<span title='Logger name' class='text-logger'>[${loggerName}]</span>`;
         }
     }
     
     _renderLoggerClassName(loggerClassName){
-        if(this._shouldRenderLoggerClassName){
+        if(this._selectedColumns.includes('8')){
             return html`<span title='Logger class name' class='text-logger'>[${loggerClassName}]</span>`;
         }
     }
     
     _renderSourceClassNameFull(sourceClassNameFull){
-        if(this._shouldRenderSourceClassNameFull){
+        if(this._selectedColumns.includes('9')){
             return html`<span title='Source full class name' class='text-source'>[${sourceClassNameFull}]</span>`;
         }
     }
     
     _renderSourceClassNameFullShort(sourceClassNameFullShort){
-        if(this._shouldRenderSourceClassNameFullShort){
+        if(this._selectedColumns.includes('10')){
             return html`<span title='Source full class name (short)' class='text-source'>[${sourceClassNameFullShort}]</span>`;
         }
     }
     
     _renderSourceClassName(sourceClassName){
-        if(this._shouldRenderSourceClassName){
+        if(this._selectedColumns.includes('11')){
             return html`<span title='Source class name' class='text-source'>[${sourceClassName}]</span>`;
         }
     }
     
     _renderSourceMethodName(sourceMethodName){
-        if(this._shouldRenderSourceMethodName){
+        if(this._selectedColumns.includes('12')){
             return html`<span title='Source method name' class='text-source'>${sourceMethodName}</span>`;
         }
     }
     
     _renderSourceFileName(sourceFileName){
-        if(this._shouldRenderSourceFileName){
+        if(this._selectedColumns.includes('13')){
             return html`<span title='Source file name' class='text-file'>${sourceFileName}</span>`;
         }
     }
     
     _renderSourceLineNumber(sourceLineNumber){
-        if(this._shouldRenderSourceLineNumber){
+        if(this._selectedColumns.includes('14')){
             return html`<span title='Source line number' class='text-source'>(line:${sourceLineNumber})</span>`;
         }
     }
     
     _renderProcessId(processId){
-        if(this._shouldRenderProcessId){
+        if(this._selectedColumns.includes('15')){
             return html`<span title='Process Id' class='text-process'>(${processId})</span>`;
         }
     }
     
     _renderProcessName(processName){
-        if(this._shouldRenderProcessName){
+        if(this._selectedColumns.includes('16')){
             return html`<span title='Process name' class='text-process'>(${processName})</span>`;
         }
     }
     
     _renderThreadId(threadId){
-        if(this._shouldRenderThreadId){
+        if(this._selectedColumns.includes('17')){
             return html`<span title='Thread Id' class='text-thread'>(${threadId})</span>`;
         }
     }
     
     _renderThreadName(threadName){
-        if(this._shouldRenderThreadName){
+        if(this._selectedColumns.includes('18')){
             return html`<span title='Thread name' class='text-thread'>(${threadName})</span>`;
         }
     }
     
     _renderMessage(level, message){
-        if(this._shouldRenderMessage){
+        if(this._selectedColumns.includes('19')){
             // Make links clickable
             if(message.includes("http://")){
                 message = this._makeLink(message, "http://");
@@ -378,6 +384,41 @@ export class QwcServerLog extends LitElement {
         }
     }
     
+    _renderLevelsDialog(){
+        return html`
+            Hello levels
+        `;
+    }
+    
+    _renderColumnsDialog(){
+        return html`<vaadin-checkbox-group
+                        .value="${this._selectedColumns}"
+                        @value-changed="${(e) => (this._selectedColumns = e.detail.value)}"
+                        theme="vertical"
+                    >
+                        <vaadin-checkbox value="0" label="Level icon"></vaadin-checkbox>
+                        <vaadin-checkbox value="1" label=Sequence number"></vaadin-checkbox>
+                        <vaadin-checkbox value="2" label="Host name"></vaadin-checkbox>
+                        <vaadin-checkbox value="3" label="Date"></vaadin-checkbox>
+                        <vaadin-checkbox value="4" label="Time"></vaadin-checkbox>
+                        <vaadin-checkbox value="5" label="Level"></vaadin-checkbox>
+                        <vaadin-checkbox value="6" label="Logger name (short)"></vaadin-checkbox>
+                        <vaadin-checkbox value="7" label="Logger name"></vaadin-checkbox>
+                        <vaadin-checkbox value="8" label="Logger class name"></vaadin-checkbox>
+                        <vaadin-checkbox value="9" label="Source full class name"></vaadin-checkbox>
+                        <vaadin-checkbox value="10" label="Source full class name (short)"></vaadin-checkbox>
+                        <vaadin-checkbox value="11" label="Source class name"></vaadin-checkbox>
+                        <vaadin-checkbox value="12" label="Source method name"></vaadin-checkbox>
+                        <vaadin-checkbox value="13" label="Source file name"></vaadin-checkbox>
+                        <vaadin-checkbox value="14" label="Source line number"></vaadin-checkbox>
+                        <vaadin-checkbox value="15" label="Process id"></vaadin-checkbox>
+                        <vaadin-checkbox value="16" label="Process name"></vaadin-checkbox>
+                        <vaadin-checkbox value="17" label="Thread id"></vaadin-checkbox>
+                        <vaadin-checkbox value="18" label="Thread name"></vaadin-checkbox>
+                        <vaadin-checkbox value="19" label="Message"></vaadin-checkbox>
+                    </vaadin-checkbox-group>`;
+    }
+    
     _makeLink(message, protocol){
         var url = message.substring(message.indexOf(protocol));
         if(url.includes(" ")){
@@ -387,7 +428,6 @@ export class QwcServerLog extends LitElement {
 
         return message.replace(url, link);    
     }
-    
     
     _toggleOnOffClicked(e){
         this._toggleOnOff(e);
@@ -441,7 +481,6 @@ export class QwcServerLog extends LitElement {
         }
     }
     
-    
     _clearLog(){
         this._messages = [];
     }
@@ -454,6 +493,13 @@ export class QwcServerLog extends LitElement {
         this._zoom = parseFloat(parseFloat(this._zoom) + parseFloat(this._increment)).toFixed(2);
     }
     
+    _logLevels(){
+        this._levelsDialogOpened = true;
+    }
+    
+    _columns(){
+        this._columnsDialogOpened = true;
+    }
 }
 
 customElements.define('qwc-server-log', QwcServerLog);

@@ -1,5 +1,5 @@
 import { LitElement, html, css} from 'lit';
-import {LogController} from 'log-controller';
+import { LogController } from 'log-controller';
 
 import '@vaadin/tabs';
 import '@vaadin/icon';
@@ -240,6 +240,8 @@ export class QwcFooter extends LitElement {
     _programmaticallySelectedChanged(index){
         var footerTabs = this.shadowRoot.getElementById('footerTabs');
         footerTabs.selected = index;
+        let selected = Array.from(this._slots.keys())[index];
+        this._controlButtons = LogController.getItemsForTab(selected);
     }
 
     _selectedChanged(e) {
@@ -247,12 +249,8 @@ export class QwcFooter extends LitElement {
         if(this._isOpeningOrClosing){
             // Ignore the selection change on open/close
             this._isOpeningOrClosing = false;
-            
-            if(this._selectedTabIndex > 0){
-                this._programmaticallySelectedChanged(this._selectedTabIndex);
-            }
+            this._programmaticallySelectedChanged(this._selectedTabIndex);
         }else{
-        
             let selected = Array.from(this._slots.keys())[index];
             if(selected){
                 this._selectedTabIndex = index;
@@ -269,16 +267,6 @@ export class QwcFooter extends LitElement {
             }
         }
     }
-    
-//    _scrollToBottom(){
-//        if (this._followLog) {
-//            const scrollingLog = this.shadowRoot.getElementById("footerContent");
-//            scrollingLog.scrollIntoView({
-//                 behavior: "smooth",
-//                 block: "end",
-//            });
-//        }
-//    }
     
     _controlButtonClicked(e){
         LogController.fireCallback(e);
