@@ -1,5 +1,6 @@
 import { LitElement, html, css} from 'lit';
 import { RouterController } from 'router-controller';
+import { themes } from 'devui-data';
 import '@vaadin/tabs';
 
 /**
@@ -41,7 +42,6 @@ export class QwcHeader extends LitElement {
             display: flex;
             align-items:center;
             font-size: xx-large;
-            color: #20446B;
         }
 
         .logo-reload-click:hover {
@@ -52,7 +52,6 @@ export class QwcHeader extends LitElement {
             display: flex;
             align-items:center;
             font-size: x-large;
-            color: #6d7279;
             padding-left: 100px;
         }
         .submenu {
@@ -68,7 +67,6 @@ export class QwcHeader extends LitElement {
     
         .app-info {
             font-size: small;
-            color: #6d7279;
             padding-right: 10px;
         }
     
@@ -87,6 +85,7 @@ export class QwcHeader extends LitElement {
         _rightSideNav: {state: true},
         _dayNightIcon: {state: true},
         _logoFill3: {state: true},
+        _themes: {state: true},
         applicationName: {type: String},
         applicationVersion: {type: String},
     };
@@ -95,8 +94,8 @@ export class QwcHeader extends LitElement {
         super();
         this._title = "Extensions";
         this._rightSideNav = "";
-        this._dayNightIcon = "sun";
-        this._logoFill3 = "#091313";
+        this._themes = themes;
+        this._setTheme("light"); // TODO: get from storage / os
         window.addEventListener('vaadin-router-location-changed', (event) => {
             this._updateHeader(event);
         });
@@ -117,20 +116,43 @@ export class QwcHeader extends LitElement {
                 <span class="dayNightIcon" @click="${this._dayNightToggle}">
                     <vaadin-icon icon="font-awesome-solid:${this._dayNightIcon}"></vaadin-icon>
                 </span>
-        
             </div>
         </div>
         `;
     }
 
     _dayNightToggle(event){
-        console.log("TODO: Toggle day Night");
         if(this._dayNightIcon === "sun"){
+            this._setTheme("dark");
+        }else{
+            this._setTheme("light");
+        }
+    }I
+
+    _setTheme(theme){
+        if(theme==="dark"){
             this._dayNightIcon = "moon";
-            this._logoFill3 = "#fff";
+            this._logoFill3 = this._themes.light.logo3.color;
+            document.body.style.setProperty("--qwc-background-1", this._themes.dark.background1.color);
+            document.body.style.setProperty("--qwc-color-1", this._themes.dark.color1.color);
+            
+            document.body.style.setProperty("--qwc-mute-1", this._themes.dark.mute1.color);
+            
+            document.body.style.setProperty("--qwc-logo-1", this._themes.dark.logo1.color);
+            document.body.style.setProperty("--qwc-logo-2", this._themes.dark.logo2.color);
+            document.body.style.setProperty("--qwc-logo-3", this._themes.dark.logo3.color);
         }else{
             this._dayNightIcon = "sun";
-            this._logoFill3 = "#091313";
+            this._logoFill3 = this._themes.dark.logo3.color;
+            document.body.style.setProperty("--qwc-background-1", this._themes.light.background1.color);
+            
+            document.body.style.setProperty("--qwc-color-1", this._themes.light.color1.color);
+            
+            document.body.style.setProperty("--qwc-mute-1", this._themes.light.mute1.color);
+            
+            document.body.style.setProperty("--qwc-logo-1", this._themes.light.logo1.color);
+            document.body.style.setProperty("--qwc-logo-2", this._themes.light.logo2.color);
+            document.body.style.setProperty("--qwc-logo-3", this._themes.light.logo3.color);
         }
     }
 

@@ -7,10 +7,7 @@ import { buildSteps } from 'devui-data';
 export class QwcBuildSteps extends LitElement {
   static styles = css`
         .todo {
-            font-size: small;
-            color: #4695EB;
             padding-left: 10px;
-            background: white;
             height: 100%;
         }`;
 

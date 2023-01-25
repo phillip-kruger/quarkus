@@ -1,12 +1,17 @@
 package io.quarkus.vertx.http.deployment.devui;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -14,11 +19,13 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
+import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.devui.deployment.DevUIRoutesBuildItem;
 import io.quarkus.devui.deployment.spi.DevUIContent;
 import io.quarkus.devui.deployment.spi.buildtime.StaticContentBuildItem;
 import io.quarkus.devui.runtime.DevUIRecorder;
-import io.quarkus.qute.Engine;
+import io.quarkus.maven.dependency.ResolvedDependency;
+import io.quarkus.paths.PathCollection;
 import io.quarkus.qute.Qute;
 import io.quarkus.vertx.http.deployment.NonApplicationRootPathBuildItem;
 import io.quarkus.vertx.http.deployment.RouteBuildItem;
@@ -36,20 +43,9 @@ public class DevUIProcessor {
     private static final String JSONRPC = "json-rpc-ws";
 
     @BuildStep(onlyIf = IsDevelopment.class)
-    DevUIQuteEngineBuildItem devUIQuteEngine() {
-        Engine engine = Engine.builder()
-                .addDefaults()
-                .strictRendering(true)
-                //.addLocator(id -> locateTemplate(id)) // We would need this for runtime ? Or paths ?
-                .build();
-
-        return new DevUIQuteEngineBuildItem(engine);
-    }
-
-    @BuildStep(onlyIf = IsDevelopment.class)
     @Record(ExecutionTime.STATIC_INIT)
     void registerDevUiHandler(
-            DevUIQuteEngineBuildItem engineBuildItem,
+            CurateOutcomeBuildItem curateOutcomeBuildItem,
             List<DevUIRoutesBuildItem> devUIRoutesBuildItems,
             List<StaticContentBuildItem> staticContentBuildItems,
             BuildProducer<RouteBuildItem> routeProducer,
@@ -84,7 +80,6 @@ public class DevUIProcessor {
 
         String basepath = nonApplicationRootPathBuildItem.resolvePath(DEVUI);
         // For static content generated at build time
-        Engine engine = engineBuildItem.getEngine();
         for (StaticContentBuildItem staticContentBuildItem : staticContentBuildItems) {
 
             Map<String, String> urlAndPath = new HashMap<>();
@@ -98,8 +93,6 @@ public class DevUIProcessor {
                     urlAndPath.put(c.getFileName(), tempFile.toString());
                 }
                 Handler<RoutingContext> buildTimeStaticHandler = recorder.buildTimeStaticHandler(basepath, urlAndPath);
-
-                System.err.println(">>>>>>>>>>>>>>> static content = [" + basepath + "]");
 
                 routeProducer.produce(
                         nonApplicationRootPathBuildItem.routeBuilder().route(basepath + SLASH_ALL)
@@ -117,18 +110,33 @@ public class DevUIProcessor {
         // For the Vaadin router (So that bookmarks/url refreshes work)
         for (DevUIRoutesBuildItem devUIRoutesBuildItem : devUIRoutesBuildItems) {
             String route = devUIRoutesBuildItem.getPath();
-            System.err.println(">>>>>>>>>>>>>>> vaadin route [" + route + "]");
             basepath = nonApplicationRootPathBuildItem.resolvePath(route);
             Handler<RoutingContext> routerhandler = recorder.vaadinRouterHandler(basepath);
             routeProducer.produce(
                     nonApplicationRootPathBuildItem.routeBuilder().route(route + SLASH_ALL).handler(routerhandler).build());
         }
 
-        System.err.println(">>>>>>>>>>>>>>> mvnpm [" + "_static" + "]");
         // Static mvnpm jars
+        Set<URL> mvnpmJars = new HashSet<>();
+        Collection<ResolvedDependency> dependencies = curateOutcomeBuildItem.getApplicationModel().getDependencies();
+        for (ResolvedDependency dependency : dependencies) {
+            String groupId = dependency.getGroupId();
+
+            if (groupId.startsWith("org.mvnpm")) {
+                PathCollection resolvedPaths = dependency.getResolvedPaths();
+                resolvedPaths.forEach((t) -> {
+                    try {
+                        mvnpmJars.add(t.toUri().toURL());
+                    } catch (MalformedURLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                });
+            }
+        }
+
         routeProducer.produce(RouteBuildItem.builder()
-                .route("/_static" + SLASH_ALL)
-                .handler(recorder.mvnpmHandler())
+                .route("/_static" + SLASH_ALL) // TODO: Maybe add /q/dev-ui ?? Would need changes in importmap creator
+                .handler(recorder.mvnpmHandler(mvnpmJars))
                 .build());
 
     }

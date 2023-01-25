@@ -3,26 +3,37 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <link rel="shortcut icon" type="image/png" href="./favicon.ico">
+        <link rel="shortcut icon" type="image/png" href="{contextRoot}favicon.ico">
 
         <script type="importmap">
             {importmap}
         </script>
 
-        <link rel="stylesheet" href="font/red-hat-font.min.css">
-        <script type="module" src="icon/font-awesome.js"></script>
+        <link rel="stylesheet" href="{contextRoot}font/red-hat-font.min.css">
+        <script type="module" src="{contextRoot}icon/font-awesome.js"></script>
 
-        <script type="module" src="qwc/qwc-header.js"></script>
-        <script type="module" src="qwc/qwc-menu.js"></script>
-        <script type="module" src="qwc/qwc-footer.js"></script>
+        <script type="module" src="{contextRoot}qwc/qwc-header.js"></script>
+        <script type="module" src="{contextRoot}qwc/qwc-menu.js"></script>
+        <script type="module" src="{contextRoot}qwc/qwc-footer.js"></script>
 
-        <script type="module" src="qwc/qwc-server-log.js"></script>
-        <script type="module" src="qwc/qwc-jsonrpc-messages.js"></script>
+        <script type="module" src="{contextRoot}qwc/qwc-server-log.js"></script>
+        <script type="module" src="{contextRoot}qwc/qwc-jsonrpc-messages.js"></script>
         
         <title>Dev UI | {applicationName} {applicationVersion}</title>
 
         <style>
+            
             body {
+                --qwc-background-1: white;
+                --qwc-color-1: black;
+            
+                --qwc-mute-1: grey;
+                --qwc-mute-2: lightgrey;
+                
+                --qwc-logo-1: blue;
+                --qwc-logo-2: red;
+                --qwc-logo-3: black;
+                
                 margin: 0;
                 width:100vw;
                 height: 100vh;
@@ -31,6 +42,8 @@
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
+                color: var(--qwc-color-1);
+                background: var(--qwc-background-1);
             }
 
 

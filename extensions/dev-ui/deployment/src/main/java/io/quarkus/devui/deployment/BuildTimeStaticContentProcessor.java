@@ -45,15 +45,15 @@ public class BuildTimeStaticContentProcessor {
         InternalImportMapBuildItem internalImportMapBuildItem = new InternalImportMapBuildItem();
 
         // Also add some of our own
-        // TODO: Test by adding this to an importMap.json ?
-        internalImportMapBuildItem.add("qwc/", "./qwc/");
-        internalImportMapBuildItem.add("icon/", "./icon/");
-        internalImportMapBuildItem.add("font/", "./font/");
-        internalImportMapBuildItem.add("controller/", "./controller/");
-        internalImportMapBuildItem.add("jsonrpc", "./controller/jsonrpc.js");
-        internalImportMapBuildItem.add("log-controller", "./controller/log-controller.js");
-        internalImportMapBuildItem.add("router-controller", "./controller/router-controller.js");
-        internalImportMapBuildItem.add("notification-controller", "./controller/notification-controller.js");
+        // TODO: Work out the correct value of /q/dev-ui/
+        internalImportMapBuildItem.add("qwc/", "/q/dev-ui/qwc/");
+        internalImportMapBuildItem.add("icon/", "/q/dev-ui/icon/");
+        internalImportMapBuildItem.add("font/", "/q/dev-ui/font/");
+        internalImportMapBuildItem.add("controller/", "/q/dev-ui/controller/");
+        internalImportMapBuildItem.add("jsonrpc", "/q/dev-ui/controller/jsonrpc.js");
+        internalImportMapBuildItem.add("log-controller", "/q/dev-ui/controller/log-controller.js");
+        internalImportMapBuildItem.add("router-controller", "/q/dev-ui/controller/router-controller.js");
+        internalImportMapBuildItem.add("notification-controller", "/q/dev-ui/controller/notification-controller.js");
 
         return internalImportMapBuildItem;
     }
@@ -116,7 +116,7 @@ public class BuildTimeStaticContentProcessor {
                 String ref = buildTimeConstBuildItem.getExtensionPathName() + "-data";
                 String file = ref + ".js";
                 quteTemplateBuildItem.add("build-time-data.js", file, qutedata);
-                internalImportMapBuildItem.add(ref, "./" + file);
+                internalImportMapBuildItem.add(ref, "/q/dev-ui/" + file); // TODO: Work out the correct value for /q/dev-ui/
             }
         }
 
@@ -132,7 +132,9 @@ public class BuildTimeStaticContentProcessor {
      * @return The QuteTemplate Build item that will create the end result
      */
     @BuildStep(onlyIf = IsDevelopment.class)
-    QuteTemplateBuildItem createIndexHtmlTemplate(List<InternalImportMapBuildItem> internalImportMapBuildItems) {
+    QuteTemplateBuildItem createIndexHtmlTemplate(
+            //            NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem,
+            List<InternalImportMapBuildItem> internalImportMapBuildItems) {
         QuteTemplateBuildItem quteTemplateBuildItem = new QuteTemplateBuildItem(
                 QuteTemplateBuildItem.DEV_UI);
 
@@ -142,10 +144,10 @@ public class BuildTimeStaticContentProcessor {
         }
 
         String importmap = Aggregator.aggregateAsJson();
-
         // TODO: Move version and name to build time data
 
         Map<String, Object> data = Map.of(
+                "contextRoot", "/q/dev-ui/", // TODO: Work out the correct value for /q/dev-ui/
                 "importmap", importmap,
                 "quarkusVersion", Version.getVersion(),
                 "applicationName", config.getOptionalValue("quarkus.application.name", String.class).orElse(""),

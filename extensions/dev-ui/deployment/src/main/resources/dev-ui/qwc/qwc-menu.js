@@ -27,14 +27,14 @@ export class QwcMenu extends LitElement {
             .menuSizeControl {
                 align-self: flex-end;
                 cursor: pointer;
-                color: #E8E8E8;
+                color: var(--qwc-mute-1);
                 height: 60px;
                 width: 30px;
                 padding-top:30px;
             }
             
             .menuSizeControl:hover {
-                color: #ff004a;
+                color: var(--qwc-logo-2);
             }
 
             .item {
@@ -47,25 +47,21 @@ export class QwcMenu extends LitElement {
                 gap: 10px;
                 cursor: pointer;
                 border-left: 5px solid transparent;
-                color: #54789F;
+                color: var(--qwc-color-1);
                 height:30px;
                 text-decoration: none;
             }
             
             .item:hover{
-                border-left: 5px solid #ff004a;
-                color: #ff004a;
-                background-color: #f8fafc;
-            }
-
-            .item-text:hover{
-                color: #ff004a;
+                border-left: 5px solid var(--qwc-logo-1);  
+                filter: brightness(80%);
             }
 
             .selected {
-                border-left: 5px solid #4695EB;
-                color: #20446B;
+                border-left: 5px solid var(--qwc-logo-1);
                 cursor: default;
+                background-color: var(--qwc-background-1);
+                filter: brightness(90%);
             }
 
             qwc-quarkus-version {

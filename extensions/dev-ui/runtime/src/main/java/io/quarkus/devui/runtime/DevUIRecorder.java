@@ -1,7 +1,9 @@
 package io.quarkus.devui.runtime;
 
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import io.quarkus.arc.runtime.BeanContainer;
 import io.quarkus.devui.runtime.comms.JsonRpcRouter;
@@ -23,9 +25,8 @@ public class DevUIRecorder {
         jsonRpcRouter.populateJsonRPCMethods(extensionMethodsMap);
     }
 
-    public Handler<RoutingContext> mvnpmHandler() {
-        MvnpmHandler.classLoader = Thread.currentThread().getContextClassLoader();
-        return new MvnpmHandler();
+    public Handler<RoutingContext> mvnpmHandler(Set<URL> mvnpmJarFiles) {
+        return new MvnpmHandler(mvnpmJarFiles);
     }
 
     public Handler<RoutingContext> uiHandler(String finalDestination,
