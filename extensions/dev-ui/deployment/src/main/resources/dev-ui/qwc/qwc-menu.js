@@ -27,14 +27,14 @@ export class QwcMenu extends LitElement {
             .menuSizeControl {
                 align-self: flex-end;
                 cursor: pointer;
-                color: var(--qwc-mute-1);
+                color: var(--lumo-contrast-30pct);
                 height: 60px;
                 width: 30px;
                 padding-top:30px;
             }
             
             .menuSizeControl:hover {
-                color: var(--qwc-logo-2);
+                color: var(--quarkus-red);
             }
 
             .item {
@@ -47,20 +47,20 @@ export class QwcMenu extends LitElement {
                 gap: 10px;
                 cursor: pointer;
                 border-left: 5px solid transparent;
-                color: var(--qwc-color-1);
+                color: var(--lumo-contrast);
                 height:30px;
                 text-decoration: none;
             }
             
             .item:hover{
-                border-left: 5px solid var(--qwc-logo-1);  
+                border-left: 5px solid var(--lumo-primary-color);
                 filter: brightness(80%);
             }
 
             .selected {
-                border-left: 5px solid var(--qwc-logo-1);
+                border-left: 5px solid var(--lumo-primary-color);
                 cursor: default;
-                background-color: var(--qwc-background-1);
+                background-color: var(--lumo-base-color);
                 filter: brightness(90%);
             }
 

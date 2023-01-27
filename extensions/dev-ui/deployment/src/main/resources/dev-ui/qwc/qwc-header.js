@@ -8,6 +8,7 @@ import '@vaadin/tabs';
  */
 export class QwcHeader extends LitElement {
     static styles = css`
+        
         .top-bar {
             height: 70px;
             display: flex;
@@ -84,7 +85,9 @@ export class QwcHeader extends LitElement {
         _title: {state: true},
         _rightSideNav: {state: true},
         _dayNightIcon: {state: true},
-        _logoFill3: {state: true},
+        _quarkusBlue: {state: true},
+        _quarkusRed: {state: true},
+        _quarkusCenter: {state: true},
         _themes: {state: true},
         applicationName: {type: String},
         applicationVersion: {type: String},
@@ -95,9 +98,20 @@ export class QwcHeader extends LitElement {
         this._title = "Extensions";
         this._rightSideNav = "";
         this._themes = themes;
-        this._setTheme("light"); // TODO: get from storage / os
+        
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            this._setTheme("dark");
+        }else{
+            this._setTheme("light");
+        }
+        
         window.addEventListener('vaadin-router-location-changed', (event) => {
             this._updateHeader(event);
+        });
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            const newColorScheme = e.matches ? "dark" : "light";
+            this._setTheme(newColorScheme);
         });
     }
 
@@ -106,7 +120,7 @@ export class QwcHeader extends LitElement {
         <div class="top-bar">
             <div class="logo-title">
                 <div class="logo-reload-click">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><defs><style>.cls-1{fill:#4695eb;}.cls-2{fill:#ff004a;}.cls-3{fill:${this._logoFill3};}</style></defs><title>Quarkus</title><polygon class="cls-1" points="669.34 180.57 512 271.41 669.34 362.25 669.34 180.57"/><polygon class="cls-2" points="354.66 180.57 354.66 362.25 512 271.41 354.66 180.57"/><polygon class="cls-3" points="669.34 362.25 512 271.41 354.66 362.25 512 453.09 669.34 362.25"/><polygon class="cls-1" points="188.76 467.93 346.1 558.76 346.1 377.09 188.76 467.93"/><polygon class="cls-2" points="346.1 740.44 503.43 649.6 346.1 558.76 346.1 740.44"/><polygon class="cls-3" points="346.1 377.09 346.1 558.76 503.43 649.6 503.43 467.93 346.1 377.09"/><polygon class="cls-1" points="677.9 740.44 677.9 558.76 520.57 649.6 677.9 740.44"/><polygon class="cls-2" points="835.24 467.93 677.9 377.09 677.9 558.76 835.24 467.93"/><polygon class="cls-3" points="520.57 649.6 677.9 558.76 677.9 377.09 520.57 467.93 520.57 649.6"/><path class="cls-1" d="M853.47,1H170.53C77.29,1,1,77.29,1,170.53V853.47C1,946.71,77.29,1023,170.53,1023h467.7L512,716.39,420.42,910H170.53C139.9,910,114,884.1,114,853.47V170.53C114,139.9,139.9,114,170.53,114H853.47C884.1,114,910,139.9,910,170.53V853.47C910,884.1,884.1,910,853.47,910H705.28l46.52,113H853.47c93.24,0,169.53-76.29,169.53-169.53V170.53C1023,77.29,946.71,1,853.47,1Z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><defs><style>.cls-1{fill:${this._quarkusBlue};}.cls-2{fill:${this._quarkusRed};}.cls-3{fill:${this._quarkusCenter};}</style></defs><title>Quarkus</title><polygon class="cls-1" points="669.34 180.57 512 271.41 669.34 362.25 669.34 180.57"/><polygon class="cls-2" points="354.66 180.57 354.66 362.25 512 271.41 354.66 180.57"/><polygon class="cls-3" points="669.34 362.25 512 271.41 354.66 362.25 512 453.09 669.34 362.25"/><polygon class="cls-1" points="188.76 467.93 346.1 558.76 346.1 377.09 188.76 467.93"/><polygon class="cls-2" points="346.1 740.44 503.43 649.6 346.1 558.76 346.1 740.44"/><polygon class="cls-3" points="346.1 377.09 346.1 558.76 503.43 649.6 503.43 467.93 346.1 377.09"/><polygon class="cls-1" points="677.9 740.44 677.9 558.76 520.57 649.6 677.9 740.44"/><polygon class="cls-2" points="835.24 467.93 677.9 377.09 677.9 558.76 835.24 467.93"/><polygon class="cls-3" points="520.57 649.6 677.9 558.76 677.9 377.09 520.57 467.93 520.57 649.6"/><path class="cls-1" d="M853.47,1H170.53C77.29,1,1,77.29,1,170.53V853.47C1,946.71,77.29,1023,170.53,1023h467.7L512,716.39,420.42,910H170.53C139.9,910,114,884.1,114,853.47V170.53C114,139.9,139.9,114,170.53,114H853.47C884.1,114,910,139.9,910,170.53V853.47C910,884.1,884.1,910,853.47,910H705.28l46.52,113H853.47c93.24,0,169.53-76.29,169.53-169.53V170.53C1023,77.29,946.71,1,853.47,1Z"/></svg>
                     <span class="logo-text" @click="${this._reload}">Dev UI</span>
                 </div>
                 <span class="title">${this._title}</span>
@@ -130,29 +144,25 @@ export class QwcHeader extends LitElement {
     }I
 
     _setTheme(theme){
+        var colorMap;
         if(theme==="dark"){
             this._dayNightIcon = "moon";
-            this._logoFill3 = this._themes.light.logo3.color;
-            document.body.style.setProperty("--qwc-background-1", this._themes.dark.background1.color);
-            document.body.style.setProperty("--qwc-color-1", this._themes.dark.color1.color);
-            
-            document.body.style.setProperty("--qwc-mute-1", this._themes.dark.mute1.color);
-            
-            document.body.style.setProperty("--qwc-logo-1", this._themes.dark.logo1.color);
-            document.body.style.setProperty("--qwc-logo-2", this._themes.dark.logo2.color);
-            document.body.style.setProperty("--qwc-logo-3", this._themes.dark.logo3.color);
+            colorMap = this._themes.dark;
         }else{
             this._dayNightIcon = "sun";
-            this._logoFill3 = this._themes.dark.logo3.color;
-            document.body.style.setProperty("--qwc-background-1", this._themes.light.background1.color);
-            
-            document.body.style.setProperty("--qwc-color-1", this._themes.light.color1.color);
-            
-            document.body.style.setProperty("--qwc-mute-1", this._themes.light.mute1.color);
-            
-            document.body.style.setProperty("--qwc-logo-1", this._themes.light.logo1.color);
-            document.body.style.setProperty("--qwc-logo-2", this._themes.light.logo2.color);
-            document.body.style.setProperty("--qwc-logo-3", this._themes.light.logo3.color);
+            colorMap = this._themes.light;
+        }
+        
+        for (const [key, value] of Object.entries(colorMap)) {
+            console.log(key, value);
+            document.body.style.setProperty(key, value);
+            if(key === "--quarkus-blue"){
+                this._quarkusBlue = value;
+            }else if(key === "--quarkus-red"){
+                this._quarkusRed = value;
+            }else if(key === "--quarkus-center"){
+                this._quarkusCenter = value;
+            }
         }
     }
 

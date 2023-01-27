@@ -15,7 +15,7 @@ export class QwcExtension extends LitElement {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            border: 1px solid var(--qwc-background-1);
+            border: 1px solid var(--lumo-base-color);
             border-radius: 4px;
             width: 300px;
             filter: brightness(90%);
@@ -28,12 +28,12 @@ export class QwcExtension extends LitElement {
             justify-content: space-between;
             align-items: center;
             padding: 10px 10px;
-            background-color: var(--qwc-background-1);
+            background-color: var(--lumo-base-color);
             filter: brightness(90%);
         }
 
         .card-content {
-            color: var(--qwc-mute-1, grey);
+            color: var(--lumo-contrast-90pct);
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -62,7 +62,7 @@ export class QwcExtension extends LitElement {
         }
 
         .active .card-header{
-            color: var(--qwc-color-1, black);
+            color: var(--lumo-contrast);
         }
         
         .active:hover .card-footer, .active:hover .guide {

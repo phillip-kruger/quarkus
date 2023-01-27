@@ -22,17 +22,8 @@
         <title>Dev UI | {applicationName} {applicationVersion}</title>
 
         <style>
-            
             body {
-                --qwc-background-1: white;
-                --qwc-color-1: black;
-            
-                --qwc-mute-1: grey;
-                --qwc-mute-2: lightgrey;
-                
-                --qwc-logo-1: blue;
-                --qwc-logo-2: red;
-                --qwc-logo-3: black;
+                {themeVars}
                 
                 margin: 0;
                 width:100vw;
@@ -42,10 +33,11 @@
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
-                color: var(--qwc-color-1);
-                background: var(--qwc-background-1);
+                color: var(--lumo-body-text-color);                        
+                background: var(--lumo-base-color);
+                background-position: center;
+                background-repeat: no-repeat;
             }
-
 
             /*Contains the menu and pages*/
             .middle {

@@ -12,7 +12,7 @@ export class QwcExtensionLink extends LitElement {
             flex-direction: row;
             justify-content: space-between;
             align-items: center;
-            color: var(--qwc-color-1, black);
+            color: var(--lumo-contrast);
             font-size: small;
             padding: 2px 5px;
             cursor: pointer;
@@ -29,13 +29,11 @@ export class QwcExtensionLink extends LitElement {
             flex-direction: row;
             justify-content: flex-start;
             align-items: center;
-            color: var(--qwc-color-1, black);
+            color: var(--lumo-contrast);
         }
-        .iconAndName:hover {
-            color: var(--qwc-logo-2, red);
-        }
+
         .badge {
-            color: var(--qwc-mute-1, grey);
+            color: var(--lumo-contrast);
             text-align: center;
             font-size: x-small;
             border-radius: 8px;

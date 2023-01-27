@@ -133,6 +133,7 @@ public class BuildTimeStaticContentProcessor {
      */
     @BuildStep(onlyIf = IsDevelopment.class)
     QuteTemplateBuildItem createIndexHtmlTemplate(
+            ThemeVarsBuildItem themeVarsBuildItem,
             //            NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem,
             List<InternalImportMapBuildItem> internalImportMapBuildItems) {
         QuteTemplateBuildItem quteTemplateBuildItem = new QuteTemplateBuildItem(
@@ -143,12 +144,14 @@ public class BuildTimeStaticContentProcessor {
             Aggregator.add(importMap);
         }
 
+        String themeVars = themeVarsBuildItem.getTemplateValue();
         String importmap = Aggregator.aggregateAsJson();
         // TODO: Move version and name to build time data
 
         Map<String, Object> data = Map.of(
                 "contextRoot", "/q/dev-ui/", // TODO: Work out the correct value for /q/dev-ui/
                 "importmap", importmap,
+                "themeVars", themeVars,
                 "quarkusVersion", Version.getVersion(),
                 "applicationName", config.getOptionalValue("quarkus.application.name", String.class).orElse(""),
                 "applicationVersion", config.getOptionalValue("quarkus.application.version", String.class).orElse(""));
