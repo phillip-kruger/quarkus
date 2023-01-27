@@ -1,12 +1,16 @@
 import { LitElement, html, css} from 'lit';
 import { RouterController } from 'router-controller';
-import { themes } from 'devui-data';
+import { ThemeController } from 'theme-controller';
+//import { themes } from 'devui-data';
 import '@vaadin/tabs';
 
 /**
  * This component represent the Dev UI Header
  */
 export class QwcHeader extends LitElement {
+    
+    themeControl = new ThemeController(this);
+    
     static styles = css`
         
         .top-bar {
@@ -88,7 +92,6 @@ export class QwcHeader extends LitElement {
         _quarkusBlue: {state: true},
         _quarkusRed: {state: true},
         _quarkusCenter: {state: true},
-        _themes: {state: true},
         applicationName: {type: String},
         applicationVersion: {type: String},
     };
@@ -97,22 +100,17 @@ export class QwcHeader extends LitElement {
         super();
         this._title = "Extensions";
         this._rightSideNav = "";
-        this._themes = themes;
-        
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            this._setTheme("dark");
-        }else{
-            this._setTheme("light");
-        }
         
         window.addEventListener('vaadin-router-location-changed', (event) => {
             this._updateHeader(event);
         });
         
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-            const newColorScheme = e.matches ? "dark" : "light";
-            this._setTheme(newColorScheme);
-        });
+        // Receive theme change
+        document.addEventListener('themeChange', (e) => { 
+            this._setTheme(e.detail);
+        }, false);
+        
+        this._setTheme(ThemeController.currentTheme);
     }
 
     render() {
@@ -137,33 +135,17 @@ export class QwcHeader extends LitElement {
 
     _dayNightToggle(event){
         if(this._dayNightIcon === "sun"){
-            this._setTheme("dark");
+            this.themeControl.changeTheme("dark");
         }else{
-            this._setTheme("light");
+            this.themeControl.changeTheme("light");
         }
     }I
 
     _setTheme(theme){
-        var colorMap;
-        if(theme==="dark"){
-            this._dayNightIcon = "moon";
-            colorMap = this._themes.dark;
-        }else{
-            this._dayNightIcon = "sun";
-            colorMap = this._themes.light;
-        }
-        
-        for (const [key, value] of Object.entries(colorMap)) {
-            console.log(key, value);
-            document.body.style.setProperty(key, value);
-            if(key === "--quarkus-blue"){
-                this._quarkusBlue = value;
-            }else if(key === "--quarkus-red"){
-                this._quarkusRed = value;
-            }else if(key === "--quarkus-center"){
-                this._quarkusCenter = value;
-            }
-        }
+        this._dayNightIcon = theme.icon;
+        this._quarkusBlue = theme.quarkusBlue;
+        this._quarkusRed = theme.quarkusRed;
+        this._quarkusCenter = theme.quarkusCenter;
     }
 
     _updateHeader(event){

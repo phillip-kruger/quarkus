@@ -53,6 +53,7 @@ public class BuildTimeStaticContentProcessor {
         internalImportMapBuildItem.add("jsonrpc", "/q/dev-ui/controller/jsonrpc.js");
         internalImportMapBuildItem.add("log-controller", "/q/dev-ui/controller/log-controller.js");
         internalImportMapBuildItem.add("router-controller", "/q/dev-ui/controller/router-controller.js");
+        internalImportMapBuildItem.add("theme-controller", "/q/dev-ui/controller/theme-controller.js");
         internalImportMapBuildItem.add("notification-controller", "/q/dev-ui/controller/notification-controller.js");
 
         return internalImportMapBuildItem;

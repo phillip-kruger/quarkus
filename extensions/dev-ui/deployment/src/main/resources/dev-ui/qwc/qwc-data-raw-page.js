@@ -1,5 +1,6 @@
 import { LitElement, html, css} from 'lit';
 import { RouterController } from 'router-controller';
+import { ThemeController } from 'theme-controller';
 import '@vanillawc/wc-codemirror';
 import '@vanillawc/wc-codemirror/mode/javascript/javascript.js';
 
@@ -9,6 +10,13 @@ import '@vanillawc/wc-codemirror/mode/javascript/javascript.js';
 export class QwcDataRawPage extends LitElement {
     
     static styles = css`
+        .codeBlock {
+            display:flex;
+            gap: 10px;
+            flex-direction: column;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
         .jsondata {
             height: 100%;
             overflow: scroll;
@@ -17,9 +25,20 @@ export class QwcDataRawPage extends LitElement {
     `;
 
     static properties = {
+        _theme: {type: String},
         _buildTimeDataKey: {attribute: false},
         _buildTimeData: {attribute: false},
     };
+
+    constructor() {
+        super();
+        this._theme = ThemeController.currentTheme.theme;
+        
+        // Receive theme change
+        document.addEventListener('themeChange', (e) => { 
+            this._theme = e.detail.theme;
+        }, false);
+    }
 
     connectedCallback() {
         super.connectedCallback();
@@ -46,13 +65,17 @@ export class QwcDataRawPage extends LitElement {
 
         var json = JSON.stringify(this._buildTimeData, null, '\t');
 
-        return html`<wc-codemirror class="jsondata" 
-                mode='javascript'
-                readonly>
-                <script type="wc-content">
-                    ${json}
-                </script>
-            </wc-codemirror>`;
+        return html`<div class="codeBlock">
+                <wc-codemirror class="jsondata" 
+                    mode='javascript'
+                    theme='base16-${this._theme}'
+                    readonly>
+                    <link rel="stylesheet" href="/_static/wc-codemirror/theme/base16-${this._theme}.css">
+                    <script type="wc-content">
+                        ${json}
+                    </script>
+                </wc-codemirror>
+            </div>`;
     }
 
 }
