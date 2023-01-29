@@ -62,9 +62,9 @@ export class QwcDataRawPage extends observeState(LitElement) {
         return html`<div class="codeBlock">
                 <wc-codemirror class="jsondata" 
                     mode='javascript'
-                    theme='base16-${themeState.theme}'
+                    theme='base16-${themeState.theme.name}'
                     readonly>
-                    <link rel="stylesheet" href="/_static/wc-codemirror/theme/base16-${themeState.theme}.css">
+                    <link rel="stylesheet" href="/_static/wc-codemirror/theme/base16-${themeState.theme.name}.css">
                     <script type="wc-content">
                         ${json}
                     </script>

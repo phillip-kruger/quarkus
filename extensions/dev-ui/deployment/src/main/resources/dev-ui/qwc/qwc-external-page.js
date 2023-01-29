@@ -51,7 +51,7 @@ export class QwcExternalPage extends observeState(LitElement)  {
     }
     
     render() {
-        return html`${until(this._loadExternal(), html`<span>Loading...</span>`)}`;
+        return html`${until(this._loadExternal(), html`<span>Loading with ${themeState.theme.name} theme</span>`)}`;
     }
 
     _autoDetectMimeType(){
@@ -95,9 +95,9 @@ export class QwcExternalPage extends observeState(LitElement)  {
                             </span>
                             <wc-codemirror mode='${this._mode}'
                                         src='${this._externalUrl}'
-                                        theme='base16-${themeState.theme}'
+                                        theme='base16-${themeState.theme.name}'
                                         readonly>
-                                <link rel="stylesheet" href="/_static/wc-codemirror/theme/base16-${themeState.theme}.css">
+                                <link rel="stylesheet" href="/_static/wc-codemirror/theme/base16-${themeState.theme.name}.css">
                             </wc-codemirror>
                         </div>
                         `;
