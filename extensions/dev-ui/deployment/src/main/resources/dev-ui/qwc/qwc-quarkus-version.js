@@ -9,10 +9,10 @@ export class QwcQuarkusVersion extends LitElement {
         span {
             cursor: pointer;
             font-size: small;
-            color: grey;
+            color: var(--lumo-contrast-50pct);
         }
         span:hover {
-            color: #ff004a;
+            color: var(--lumo-primary-color-50pct);
         }`;
 
     static properties = {

@@ -15,7 +15,7 @@ export class QwcExtension extends LitElement {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            border: 1px solid var(--lumo-base-color);
+            border: 1px solid var(--lumo-contrast-10pct);
             border-radius: 4px;
             width: 300px;
             filter: brightness(90%);
@@ -28,8 +28,8 @@ export class QwcExtension extends LitElement {
             justify-content: space-between;
             align-items: center;
             padding: 10px 10px;
-            background-color: var(--lumo-base-color);
-            filter: brightness(90%);
+            background-color: var(--lumo-contrast-5pct);
+            border-bottom: 1px solid var(--lumo-contrast-10pct);
         }
 
         .card-content {
@@ -50,7 +50,7 @@ export class QwcExtension extends LitElement {
         .card-footer {
             height: 20px;
             padding: 10px 10px;
-            color: grey;
+            color: var(--lumo-contrast-50pct);
             display: flex;
             flex-direction: row;
             justify-content: space-between;

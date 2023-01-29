@@ -30,6 +30,7 @@ public class LogStreamProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     @Record(ExecutionTime.STATIC_INIT)
+    @SuppressWarnings("unchecked")
     public void handler(BuildProducer<StreamingLogHandlerBuildItem> streamingLogHandlerBuildItem,
             LogStreamRecorder recorder) {
 

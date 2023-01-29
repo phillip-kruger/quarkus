@@ -1,15 +1,12 @@
 import { LitElement, html, css} from 'lit';
 import { RouterController } from 'router-controller';
-import { ThemeController } from 'theme-controller';
-//import { themes } from 'devui-data';
+import { themeState } from 'theme-state';
 import '@vaadin/tabs';
 
 /**
  * This component represent the Dev UI Header
  */
 export class QwcHeader extends LitElement {
-    
-    themeControl = new ThemeController(this);
     
     static styles = css`
         
@@ -104,13 +101,11 @@ export class QwcHeader extends LitElement {
         window.addEventListener('vaadin-router-location-changed', (event) => {
             this._updateHeader(event);
         });
-        
-        // Receive theme change
-        document.addEventListener('themeChange', (e) => { 
-            this._setTheme(e.detail);
-        }, false);
-        
-        this._setTheme(ThemeController.currentTheme);
+    }
+
+    connectedCallback() {
+        super.connectedCallback();
+        this._setTheme(themeState.getCurrentTheme());
     }
 
     render() {
@@ -134,11 +129,12 @@ export class QwcHeader extends LitElement {
     }
 
     _dayNightToggle(event){
+        var name = "light";
         if(this._dayNightIcon === "sun"){
-            this.themeControl.changeTheme("dark");
-        }else{
-            this.themeControl.changeTheme("light");
+            name = "dark";           
         }
+        themeState.theme = name;
+        this._setTheme(themeState.changeTo(name));
     }I
 
     _setTheme(theme){
@@ -146,6 +142,7 @@ export class QwcHeader extends LitElement {
         this._quarkusBlue = theme.quarkusBlue;
         this._quarkusRed = theme.quarkusRed;
         this._quarkusCenter = theme.quarkusCenter;
+        
     }
 
     _updateHeader(event){

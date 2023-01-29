@@ -1,7 +1,8 @@
 import { LitElement, html, css} from 'lit';
 import { until } from 'lit/directives/until.js';
 import { RouterController } from 'router-controller';
-import { ThemeController } from 'theme-controller';
+import { observeState } from 'lit-element-state';
+import { themeState } from 'theme-state';
 import '@vanillawc/wc-codemirror';
 import '@vanillawc/wc-codemirror/mode/yaml/yaml.js';
 import '@vanillawc/wc-codemirror/mode/properties/properties.js';
@@ -11,7 +12,7 @@ import '@vaadin/icon';
 /**
  * This component loads an external page
  */
-export class QwcExternalPage extends LitElement {
+export class QwcExternalPage extends observeState(LitElement)  {
     
     static styles = css`
         .codeBlock {
@@ -21,24 +22,19 @@ export class QwcExternalPage extends LitElement {
             padding-left: 10px;
             padding-right: 10px;
         }
+        .download {
+            padding-left: 6px;
+            color: var(--lumo-contrast-50pct);
+            font-size: small;
+            cursor: pointer;
+        }
     `;
 
     static properties = {
-        _theme: {type: String},
         _externalUrl: {type: String},
         _mode: {type: String},
-        _mimeType: {type: String},
+        _mimeType: {type: String}
     };
-
-    constructor() {
-        super();
-        this._theme = ThemeController.currentTheme.theme;
-        
-        // Receive theme change
-        document.addEventListener('themeChange', (e) => { 
-            this._theme = e.detail.theme;
-        }, false);
-    }
 
     connectedCallback() {
         super.connectedCallback();
@@ -93,18 +89,18 @@ export class QwcExternalPage extends LitElement {
                             </object>`;
             } else {
                 return html`<div class="codeBlock">
-                                <span class="download" @click="${this._download}">
-                                    <vaadin-icon class="icon" icon="font-awesome-solid:download"></vaadin-icon>
-                                    Download
-                                </span>
-                                <wc-codemirror mode='${this._mode}'
-                                            src='${this._externalUrl}'
-                                            theme='base16-${this._theme}'
-                                            readonly>
-                                    <link rel="stylesheet" href="/_static/wc-codemirror/theme/base16-${this._theme}.css">
-                                </wc-codemirror>
-                            </div>
-                            `;
+                            <span class="download" @click="${this._download}">
+                                <vaadin-icon class="icon" icon="font-awesome-solid:download"></vaadin-icon>
+                                Download
+                            </span>
+                            <wc-codemirror mode='${this._mode}'
+                                        src='${this._externalUrl}'
+                                        theme='base16-${themeState.theme}'
+                                        readonly>
+                                <link rel="stylesheet" href="/_static/wc-codemirror/theme/base16-${themeState.theme}.css">
+                            </wc-codemirror>
+                        </div>
+                        `;
             }
         }   
     }

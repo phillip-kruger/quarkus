@@ -27,14 +27,14 @@ export class QwcMenu extends LitElement {
             .menuSizeControl {
                 align-self: flex-end;
                 cursor: pointer;
-                color: var(--lumo-contrast-30pct);
+                color: var(--lumo-contrast-10pct);
                 height: 60px;
                 width: 30px;
                 padding-top:30px;
             }
             
             .menuSizeControl:hover {
-                color: var(--quarkus-red);
+                color: var(--lumo-primary-color-50pct);
             }
 
             .item {
@@ -54,14 +54,13 @@ export class QwcMenu extends LitElement {
             
             .item:hover{
                 border-left: 5px solid var(--lumo-primary-color);
-                filter: brightness(80%);
+                background-color: var(--lumo-primary-color-10pct);
             }
 
             .selected {
                 border-left: 5px solid var(--lumo-primary-color);
                 cursor: default;
-                background-color: var(--lumo-base-color);
-                filter: brightness(90%);
+                background-color: var(--lumo-primary-color-10pct);
             }
 
             qwc-quarkus-version {

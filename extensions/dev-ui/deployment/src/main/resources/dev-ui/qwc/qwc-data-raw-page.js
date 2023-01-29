@@ -1,13 +1,14 @@
 import { LitElement, html, css} from 'lit';
 import { RouterController } from 'router-controller';
-import { ThemeController } from 'theme-controller';
+import { observeState } from 'lit-element-state';
+import { themeState } from 'theme-state';
 import '@vanillawc/wc-codemirror';
 import '@vanillawc/wc-codemirror/mode/javascript/javascript.js';
 
 /**
  * This component renders build time data in raw json format
  */
-export class QwcDataRawPage extends LitElement {
+export class QwcDataRawPage extends observeState(LitElement) {
     
     static styles = css`
         .codeBlock {
@@ -25,19 +26,12 @@ export class QwcDataRawPage extends LitElement {
     `;
 
     static properties = {
-        _theme: {type: String},
         _buildTimeDataKey: {attribute: false},
         _buildTimeData: {attribute: false},
     };
 
     constructor() {
         super();
-        this._theme = ThemeController.currentTheme.theme;
-        
-        // Receive theme change
-        document.addEventListener('themeChange', (e) => { 
-            this._theme = e.detail.theme;
-        }, false);
     }
 
     connectedCallback() {
@@ -68,9 +62,9 @@ export class QwcDataRawPage extends LitElement {
         return html`<div class="codeBlock">
                 <wc-codemirror class="jsondata" 
                     mode='javascript'
-                    theme='base16-${this._theme}'
+                    theme='base16-${themeState.theme}'
                     readonly>
-                    <link rel="stylesheet" href="/_static/wc-codemirror/theme/base16-${this._theme}.css">
+                    <link rel="stylesheet" href="/_static/wc-codemirror/theme/base16-${themeState.theme}.css">
                     <script type="wc-content">
                         ${json}
                     </script>

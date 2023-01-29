@@ -15,6 +15,7 @@
 
     <properties>
         <lit.version>2.6.1</lit.version>
+        <lit-state.version>1.7.0</lit-state.version>
         <vaadin.version>23.3.5</vaadin.version>
         <vaadin-router.version>1.7.4</vaadin-router.version>
         <wc-codemirror.version>2.1.0</wc-codemirror.version>
@@ -64,6 +65,12 @@
             <groupId>org.mvnpm</groupId>
             <artifactId>lit</artifactId>
             <version>${lit.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mvnpm</groupId>
+            <artifactId>lit-element-state</artifactId>
+            <version>${lit-state.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
