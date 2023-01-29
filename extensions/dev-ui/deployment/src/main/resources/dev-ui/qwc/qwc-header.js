@@ -106,7 +106,7 @@ export class QwcHeader extends observeState(LitElement) {
         this._changeTheme(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
         
         // Change theme setting when OS theme change
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
             this._changeTheme(e.matches);
         });
     }
