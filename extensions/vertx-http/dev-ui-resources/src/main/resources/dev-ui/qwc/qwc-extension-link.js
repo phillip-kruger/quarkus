@@ -14,7 +14,6 @@ export class QwcExtensionLink extends LitElement {
             flex-direction: row;
             justify-content: space-between;
             align-items: center;
-            color: var(--lumo-contrast);
             font-size: small;
             padding: 2px 5px;
             cursor: pointer;
@@ -31,7 +30,6 @@ export class QwcExtensionLink extends LitElement {
             flex-direction: row;
             justify-content: flex-start;
             align-items: center;
-            color: var(--lumo-contrast);
         }
     `;
 
@@ -42,34 +40,50 @@ export class QwcExtensionLink extends LitElement {
         staticLabel: {type: String},
         dynamicLabel: {type: String},
         streamingLabel: {type: String},
+        streamingColor: {type: String},
         path:  {type: String},
         webcomponent: {type: String},
         embed: {type: Boolean},
         externalUrl: {type: String},
         _effectiveLabel: {state: true},
-        _observer: {state: false},
+        _effectiveColor: {state: true},
+        _streamingLabelObserver: {state: false},
+        _streamingColorObserver: {state: false},
     };
 
+    constructor() {
+        super();
+        this._effectiveColor = "var(--lumo-contrast)";
+    }
+    
     connectedCallback() {
         super.connectedCallback();
-        if(this.streamingLabel){
-            this.jsonRpc = new JsonRpc(this);
-            this._observer = this.jsonRpc[this.streamingLabel]().onNext(jsonRpcResponse => {
+        this.jsonRpc = new JsonRpc(this);
+        if(this.streamingLabel){    
+            this._streamingLabelObserver = this.jsonRpc[this.streamingLabel]().onNext(jsonRpcResponse => {
                 this._effectiveLabel = jsonRpcResponse.result;
             });
         }else if(this.dynamicLabel){
-            this.jsonRpc = new JsonRpc(this);
             this.jsonRpc[this.dynamicLabel]().then(jsonRpcResponse => {
                 this._effectiveLabel = jsonRpcResponse.result;
             });
         }else if(this.staticLabel){
             this._effectiveLabel = this.staticLabel;
         }
+        
+        if(this.streamingColor){
+            this._streamingColorObserver = this.jsonRpc[this.streamingColor]().onNext(jsonRpcResponse => {
+                this._effectiveColor = jsonRpcResponse.result;
+            });
+        }
     }
 
     disconnectedCallback() {
-        if(this._observer){
-            this._observer.cancel();
+        if(this._streamingLabelObserver){
+            this._streamingLabelObserver.cancel();
+        }
+        if(this._streamingColorObserver){
+            this._streamingColorObserver.cancel();
         }
         super.disconnectedCallback()
     }
@@ -85,7 +99,7 @@ export class QwcExtensionLink extends LitElement {
             t = "_blank";
         }
         return html`
-        <a class="extensionLink" href="${p}" ?router-ignore=${routerIgnore} target="${t}">
+        <a class="extensionLink" href="${p}" ?router-ignore=${routerIgnore} target="${t}" style="color:${this._effectiveColor}">
             <span class="iconAndName">
                 <vaadin-icon class="icon" icon="${this.iconName}"></vaadin-icon>
                 ${this.displayName} 

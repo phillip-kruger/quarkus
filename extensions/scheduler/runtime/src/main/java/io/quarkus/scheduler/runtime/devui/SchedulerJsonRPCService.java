@@ -39,7 +39,11 @@ public class SchedulerJsonRPCService {
     private static final Logger LOG = Logger.getLogger(SchedulerJsonRPCService.class);
     private static final String SCHEDULER_ID = "quarkus_scheduler";
 
+    private static final String COLOR_RUNNING = "var(--lumo-success-text-color)";
+    private static final String COLOR_PAUSED = "var(--lumo-warning-text-color)";
+
     private final BroadcastProcessor<JsonObject> runningStatus;
+    private final BroadcastProcessor<String> runningStatusColor;
     private final BroadcastProcessor<JsonObject> log;
     private final Instance<SchedulerContext> context;
     private final Instance<Scheduler> scheduler;
@@ -47,6 +51,7 @@ public class SchedulerJsonRPCService {
 
     public SchedulerJsonRPCService(Instance<SchedulerContext> context, Instance<Scheduler> scheduler, Instance<Vertx> vertx) {
         runningStatus = BroadcastProcessor.create();
+        runningStatusColor = BroadcastProcessor.create();
         log = BroadcastProcessor.create();
         this.context = context;
         this.scheduler = scheduler;
@@ -55,18 +60,22 @@ public class SchedulerJsonRPCService {
 
     void onPause(@Observes SchedulerPaused e) {
         runningStatus.onNext(newRunningStatus(SCHEDULER_ID, false));
+        runningStatusColor.onNext(COLOR_PAUSED);
     }
 
     void onResume(@Observes SchedulerResumed e) {
         runningStatus.onNext(newRunningStatus(SCHEDULER_ID, true));
+        runningStatusColor.onNext(COLOR_RUNNING);
     }
 
     void onPause(@Observes ScheduledJobPaused e) {
         runningStatus.onNext(newRunningStatus(e.getTrigger().getId(), false));
+        runningStatusColor.onNext(COLOR_PAUSED);
     }
 
     void onResume(@Observes ScheduledJobResumed e) {
         runningStatus.onNext(newRunningStatus(e.getTrigger().getId(), true));
+        runningStatusColor.onNext(COLOR_RUNNING);
     }
 
     void onJobSuccess(@Observes SuccessfulExecution e) {
@@ -85,6 +94,10 @@ public class SchedulerJsonRPCService {
 
     public Multi<JsonObject> streamRunningStatus() {
         return runningStatus;
+    }
+
+    public Multi<String> streamRunningStatusColor() {
+        return runningStatusColor;
     }
 
     @NonBlocking

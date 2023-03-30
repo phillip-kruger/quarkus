@@ -124,6 +124,7 @@ export class QwcExtensions extends observeState(LitElement) {
                                 staticLabel="${page.staticLabel}"
                                 dynamicLabel="${page.dynamicLabel}"
                                 streamingLabel="${page.streamingLabel}"
+                                streamingColor="${page.streamingColor}"
                                 path="${page.id}"
                                 ?embed=${page.embed}
                                 externalUrl="${page.metadata.externalUrl}"

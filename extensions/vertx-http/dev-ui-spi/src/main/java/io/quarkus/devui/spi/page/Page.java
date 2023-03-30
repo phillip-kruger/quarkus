@@ -15,7 +15,7 @@ public class Page {
     private final String staticLabel; // This is optional extra info that might be displayed next to the link
     private final String dynamicLabel; // This is optional extra info that might be displayed next to the link. This will override above static label. This expects a jsonRPC method name
     private final String streamingLabel; // This is optional extra info that might be displayed next to the link. This will override above dynamic label. This expects a jsonRPC Multi method name
-
+    private final String streamingColor; // This allows changing the color of the link to the page. It's usefull to indicate status etc.
     private final String componentName; // This is name of the component
     private final String componentLink; // This is a link to the component, excluding namespace
     private final Map<String, String> metadata; // Key value Metadata
@@ -32,6 +32,7 @@ public class Page {
             String staticLabel,
             String dynamicLabel,
             String streamingLabel,
+            String streamingColor,
             String componentName,
             String componentLink,
             Map<String, String> metadata,
@@ -45,6 +46,7 @@ public class Page {
         this.staticLabel = staticLabel;
         this.dynamicLabel = dynamicLabel;
         this.streamingLabel = streamingLabel;
+        this.streamingColor = streamingColor;
         this.componentName = componentName;
         this.componentLink = componentLink;
         this.metadata = metadata;
@@ -96,6 +98,10 @@ public class Page {
         return streamingLabel;
     }
 
+    public String getStreamingColor() {
+        return streamingColor;
+    }
+
     public String getComponentName() {
         return componentName;
     }
@@ -128,6 +134,7 @@ public class Page {
                 + ", \n\tstaticLabel=" + staticLabel
                 + ", \n\tdynamicLabel=" + dynamicLabel
                 + ", \n\tstreamingLabel=" + streamingLabel
+                + ", \n\tstreamingColor=" + streamingColor
                 + ", \n\tnamespace=" + namespace
                 + ", \n\tcomponentName=" + componentName
                 + ", \n\tcomponentLink=" + componentLink

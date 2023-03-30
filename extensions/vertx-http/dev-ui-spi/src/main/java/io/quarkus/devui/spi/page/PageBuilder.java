@@ -17,6 +17,7 @@ public abstract class PageBuilder<T> {
     protected String staticLabel = null;
     protected String dynamicLabel = null;
     protected String streamingLabel = null;
+    protected String streamingColor = null;
     protected String componentName;
     protected String componentLink;
     protected Map<String, String> metadata = new HashMap<>();
@@ -53,6 +54,12 @@ public abstract class PageBuilder<T> {
     @SuppressWarnings("unchecked")
     public T streamingLabelJsonRPCMethodName(String methodName) {
         this.streamingLabel = methodName;
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T streamingColorJsonRPCMethodName(String methodName) {
+        this.streamingColor = methodName;
         return (T) this;
     }
 
@@ -112,7 +119,8 @@ public abstract class PageBuilder<T> {
             this.title = n.substring(0, 1).toUpperCase() + n.substring(1); // Capitalize first letter
         }
 
-        Page page = new Page(icon, title, staticLabel, dynamicLabel, streamingLabel, componentName, componentLink, metadata,
+        Page page = new Page(icon, title, staticLabel, dynamicLabel, streamingLabel, streamingColor, componentName,
+                componentLink, metadata,
                 embed,
                 internalComponent, namespace, extensionId);
 
