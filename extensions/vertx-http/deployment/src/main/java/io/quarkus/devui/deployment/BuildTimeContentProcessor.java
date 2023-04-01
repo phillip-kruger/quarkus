@@ -329,28 +329,22 @@ public class BuildTimeContentProcessor {
                 .icon("font-awesome-solid:puzzle-piece")
                 .componentLink("qwc-extensions.js").build();
 
-        Page configuration = Page.webComponentPageBuilder().internal()
+        Page configuration = Page.webComponentPageBuilder().internal("Configuration")
                 .namespace("devui-configuration")
-                .title("Configuration")
+                .title("Form Editor")
                 .icon("font-awesome-solid:sliders")
                 .componentLink("qwc-configuration.js").build();
 
-        Page configurationSourceEditor = Page.webComponentPageBuilder().internal()
+        Page configurationSourceEditor = Page.webComponentPageBuilder().internal("Configuration")
                 .namespace("devui-configuration")
-                .title("Config Editor")
+                .title("Source Editor")
                 .icon("font-awesome-solid:code")
                 .componentLink("qwc-configuration-editor.js").build();
 
         internalBuildTimeData.addBuildTimeData("allConfiguration",
                 getAllConfig(configDescriptionBuildItems, devServicesLauncherConfig));
 
-        Page continuousTesting = Page.webComponentPageBuilder().internal()
-                .namespace("devui-continuous-testing")
-                .title("Continuous Testing")
-                .icon("font-awesome-solid:flask-vial")
-                .componentLink("qwc-continuous-testing.js").build();
-
-        internalBuildTimeData.addBuildTimeData("continuousTesting", "TODO: Continuous Testing");
+        Page continuousTesting = getContinuousTestingPage(internalBuildTimeData);
 
         Page devServices = Page.webComponentPageBuilder().internal()
                 .namespace("devui-dev-services")
@@ -360,14 +354,14 @@ public class BuildTimeContentProcessor {
 
         internalBuildTimeData.addBuildTimeData("devServices", devServiceDescriptions);
 
-        Page buildSteps = Page.webComponentPageBuilder().internal()
+        Page buildSteps = Page.webComponentPageBuilder().internal("Build Information")
                 .namespace("devui-build-information")
                 .title("Build Steps")
                 .icon("font-awesome-solid:hammer")
                 .componentLink("qwc-build-steps.js").build();
         internalBuildTimeData.addBuildTimeData("buildSteps", "TODO: Build Steps");
 
-        Page buildItems = Page.webComponentPageBuilder().internal()
+        Page buildItems = Page.webComponentPageBuilder().internal("Build Information")
                 .namespace("devui-build-information")
                 .title("Build Items")
                 .icon("font-awesome-solid:trowel")
@@ -427,6 +421,18 @@ public class BuildTimeContentProcessor {
         themeVarsProducer.produce(new ThemeVarsBuildItem(light.keySet(), QUARKUS_BLUE.toString()));
     }
 
+    private Page getContinuousTestingPage(BuildTimeConstBuildItem internalBuildTimeData){
+        Page page = Page.webComponentPageBuilder().internal()
+                .namespace("devui-continuous-testing")
+                .title("Continuous Testing")
+                .icon("font-awesome-solid:flask-vial")
+                .componentLink("qwc-continuous-testing.js").build();
+
+        internalBuildTimeData.addBuildTimeData("continuousTesting", "TODO: Continuous Testing");
+        
+        return page;
+    }
+    
     private static void computeColors(Map<String, Map<String, String>> themes, Map<String, String> dark,
             Map<String, String> light) {
         // Quarkus logo colors

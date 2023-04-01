@@ -41,6 +41,7 @@ export class QwcExtensionLink extends LitElement {
         dynamicLabel: {type: String},
         streamingLabel: {type: String},
         streamingColor: {type: String},
+        initStreamingColor: {type: String},
         path:  {type: String},
         webcomponent: {type: String},
         embed: {type: Boolean},
@@ -71,11 +72,17 @@ export class QwcExtensionLink extends LitElement {
             this._effectiveLabel = this.staticLabel;
         }
         
+        if(this.initStreamingColor){
+            this.jsonRpc[this.initStreamingColor]().then(jsonRpcResponse => {
+                this._effectiveColor = jsonRpcResponse.result;
+            });
+        }
         if(this.streamingColor){
             this._streamingColorObserver = this.jsonRpc[this.streamingColor]().onNext(jsonRpcResponse => {
                 this._effectiveColor = jsonRpcResponse.result;
             });
         }
+        
     }
 
     disconnectedCallback() {

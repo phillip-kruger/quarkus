@@ -39,7 +39,7 @@ public class SchedulerJsonRPCService {
     private static final Logger LOG = Logger.getLogger(SchedulerJsonRPCService.class);
     private static final String SCHEDULER_ID = "quarkus_scheduler";
 
-    private static final String COLOR_RUNNING = "var(--lumo-success-text-color)";
+    private static final String COLOR_RUNNING = "var(--lumo-contrast)";
     private static final String COLOR_PAUSED = "var(--lumo-warning-text-color)";
 
     private final BroadcastProcessor<JsonObject> runningStatus;
@@ -98,6 +98,17 @@ public class SchedulerJsonRPCService {
 
     public Multi<String> streamRunningStatusColor() {
         return runningStatusColor;
+    }
+
+    @NonBlocking
+    public String dynamicRunningStatusColor() {
+        SchedulerContext c = context.get();
+        Scheduler s = scheduler.get();
+        if (s.isRunning()) {
+            return COLOR_RUNNING;
+        }
+
+        return COLOR_PAUSED;
     }
 
     @NonBlocking

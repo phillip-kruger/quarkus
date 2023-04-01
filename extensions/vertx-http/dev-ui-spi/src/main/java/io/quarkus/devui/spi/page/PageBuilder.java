@@ -18,12 +18,14 @@ public abstract class PageBuilder<T> {
     protected String dynamicLabel = null;
     protected String streamingLabel = null;
     protected String streamingColor = null;
+    protected String initStreamingColor = null;
     protected String componentName;
     protected String componentLink;
     protected Map<String, String> metadata = new HashMap<>();
     protected boolean embed = true; // default
     protected boolean internalComponent = false; // default
     protected String namespace = null;
+    protected String namespaceLabel = null;
     protected String extensionId = null;
     protected Class preprocessor = null;
 
@@ -59,7 +61,13 @@ public abstract class PageBuilder<T> {
 
     @SuppressWarnings("unchecked")
     public T streamingColorJsonRPCMethodName(String methodName) {
+        return this.streamingColorJsonRPCMethodName(methodName, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public T streamingColorJsonRPCMethodName(String methodName, String initValueMethodName) {
         this.streamingColor = methodName;
+        this.initStreamingColor = initValueMethodName;
         return (T) this;
     }
 
@@ -79,7 +87,13 @@ public abstract class PageBuilder<T> {
 
     @SuppressWarnings("unchecked")
     public T internal() {
+        return this.internal(null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public T internal(String namespaceLabel) {
         this.internalComponent = true;
+        this.namespaceLabel = namespaceLabel;
         return (T) this;
     }
 
@@ -119,10 +133,11 @@ public abstract class PageBuilder<T> {
             this.title = n.substring(0, 1).toUpperCase() + n.substring(1); // Capitalize first letter
         }
 
-        Page page = new Page(icon, title, staticLabel, dynamicLabel, streamingLabel, streamingColor, componentName,
+        Page page = new Page(icon, title, staticLabel, dynamicLabel, streamingLabel, streamingColor, initStreamingColor,
+                componentName,
                 componentLink, metadata,
                 embed,
-                internalComponent, namespace, extensionId);
+                internalComponent, namespace, namespaceLabel, extensionId);
 
         return page;
     }

@@ -16,6 +16,7 @@ public class Page {
     private final String dynamicLabel; // This is optional extra info that might be displayed next to the link. This will override above static label. This expects a jsonRPC method name
     private final String streamingLabel; // This is optional extra info that might be displayed next to the link. This will override above dynamic label. This expects a jsonRPC Multi method name
     private final String streamingColor; // This allows changing the color of the link to the page. It's usefull to indicate status etc.
+    private final String initStreamingColor; // This sets the initial color of the link to the page.
     private final String componentName; // This is name of the component
     private final String componentLink; // This is a link to the component, excluding namespace
     private final Map<String, String> metadata; // Key value Metadata
@@ -24,6 +25,7 @@ public class Page {
     private final boolean internalComponent; // True if this component is provided by dev-ui (usually provided by the extension)
 
     private String namespace = null; // The namespace can be the extension path or, if internal, qwc
+    private String namespaceLabel = null; // When more than one page belongs to the same namespace, we use the namespace as a title sometimes
 
     private String extensionId = null; // If this originates from an extension, then id. For internal this will be null;
 
@@ -33,12 +35,14 @@ public class Page {
             String dynamicLabel,
             String streamingLabel,
             String streamingColor,
+            String initStreamingColor,
             String componentName,
             String componentLink,
             Map<String, String> metadata,
             boolean embed,
             boolean internalComponent,
             String namespace,
+            String namespaceLabel,
             String extensionId) {
 
         this.icon = icon;
@@ -47,12 +51,14 @@ public class Page {
         this.dynamicLabel = dynamicLabel;
         this.streamingLabel = streamingLabel;
         this.streamingColor = streamingColor;
+        this.initStreamingColor = initStreamingColor;
         this.componentName = componentName;
         this.componentLink = componentLink;
         this.metadata = metadata;
         this.embed = embed;
         this.internalComponent = internalComponent;
         this.namespace = namespace;
+        this.namespaceLabel = namespaceLabel;
         this.extensionId = extensionId;
     }
 
@@ -78,6 +84,10 @@ public class Page {
         return this.namespace;
     }
 
+    public String getNamespaceLabel() {
+        return this.namespaceLabel;
+    }
+
     public String getIcon() {
         return icon;
     }
@@ -100,6 +110,10 @@ public class Page {
 
     public String getStreamingColor() {
         return streamingColor;
+    }
+
+    public String getInitStreamingColor() {
+        return initStreamingColor;
     }
 
     public String getComponentName() {
@@ -135,7 +149,9 @@ public class Page {
                 + ", \n\tdynamicLabel=" + dynamicLabel
                 + ", \n\tstreamingLabel=" + streamingLabel
                 + ", \n\tstreamingColor=" + streamingColor
+                + ", \n\tinitStreamingColor=" + initStreamingColor
                 + ", \n\tnamespace=" + namespace
+                + ", \n\tnamespaceLabel=" + namespaceLabel
                 + ", \n\tcomponentName=" + componentName
                 + ", \n\tcomponentLink=" + componentLink
                 + ", \n\tembed=" + embed + "\n}";

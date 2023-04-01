@@ -26,7 +26,7 @@ public class SchedulerDevUIProcessor {
                 .icon("font-awesome-solid:clock")
                 .componentLink("qwc-scheduler-scheduled-methods.js")
                 .staticLabel(String.valueOf(scheduledMethods.size()))
-                .streamingColorJsonRPCMethodName("streamRunningStatusColor"));
+                .streamingColorJsonRPCMethodName("streamRunningStatusColor", "dynamicRunningStatusColor"));
         cardPages.produce(pageBuildItem);
 
         WebComponentPageBuilder logPageBuilder = Page.webComponentPageBuilder()
