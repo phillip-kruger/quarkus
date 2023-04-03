@@ -65,7 +65,18 @@ public class Page {
     public String getId() {
         String id = this.title.toLowerCase().replaceAll(SPACE, DASH);
         if (!this.isInternal() && this.namespace != null) {
-            id = this.namespace + SLASH + id;
+            // This is extension pages in Dev UI
+            id = this.namespace.toLowerCase() + SLASH + id;
+        } else if (this.isInternal() && this.namespace != null) {
+            // This is internal pages in Dev UI
+            String d = "devui-" + id;
+            if (d.equals(this.namespace)) {
+                return id;
+            } else {
+                int i = this.namespace.indexOf(DASH) + 1;
+                String stripDevui = this.namespace.substring(i);
+                return stripDevui + DASH + id;
+            }
         }
         return id;
     }
