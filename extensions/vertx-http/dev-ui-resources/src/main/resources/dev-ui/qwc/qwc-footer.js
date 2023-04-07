@@ -9,7 +9,8 @@ import '@vaadin/tabs';
 import '@vaadin/icon';
 import '@vaadin/menu-bar';
 import 'qwc/qwc-ws-status.js';
-        
+import { JsonRpc } from 'jsonrpc';
+
 /**
  * This component shows the Bottom Drawer
  * 
@@ -164,7 +165,7 @@ export class QwcFooter extends observeState(LitElement) {
         const storedState = this.storageControl.get("state");
         if(storedState && storedState === "open"){
             this._open();
-        }else {
+        }else {vaadin-tab
             this._close();
         }
     }
@@ -214,7 +215,28 @@ export class QwcFooter extends observeState(LitElement) {
     
     _renderTabHeader(footerTab, index){
         import(footerTab.componentRef);
-        return html`<vaadin-tab id="tab-${index}" class="${this._tabClass}" @click=${() => this._tabSelected(index)}>${footerTab.title}</vaadin-tab>`;
+
+        console.log(JSON.stringify(footerTab));
+
+        let fontcolor = "var(--lumo-contrast)";
+        if(footerTab.initStreamingColor){
+            let jrpc = new JsonRpc(footerTab.namespace, false);
+            jrpc[footerTab.initStreamingColor]().then(jsonRpcResponse => {
+                fontcolor = jsonRpcResponse.result;
+            });
+        }
+        if(footerTab.streamingColor){
+            let jrpc = new JsonRpc(footerTab.namespace, false);
+            jrpc[footerTab.streamingColor]().onNext(jsonRpcResponse => {
+                fontcolor = jsonRpcResponse.result;
+            });
+        }
+
+        return html`<vaadin-tab id="tab-${index}" class="${this._tabClass}" @click=${() => this._tabSelected(index)}>
+                        <span style="color:${fontcolor};cursor: pointer;">
+                            <vaadin-icon style="font-size: x-small;" icon="${footerTab.icon}"></vaadin-icon> ${footerTab.title}
+                        </span>
+                    </vaadin-tab>`;
     }
     
     _renderControls(){

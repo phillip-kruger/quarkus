@@ -32,19 +32,15 @@ public class KubernetesDevUiProcessor {
     @BuildStep(onlyIf = IsDevelopment.class)
     JsonRPCProvidersBuildItem createJsonRPCServiceForCache() {
         DevConsoleManager.register("kubernetes-generate-manifest", ignored -> {
-            System.out.println("calling action");
             try {
                 List<KubernetesDevConsoleProcessor.Manifest> manifests = holder.getManifests();
                 // Avoid relying on databind.
                 Map<String, String> map = new LinkedHashMap<>();
-                System.out.println("manifests are " + manifests);
                 for (KubernetesDevConsoleProcessor.Manifest manifest : manifests) {
                     map.put(manifest.getName(), manifest.getContent());
-                    System.out.println("added " + manifest.getName());
                 }
                 return map;
             } catch (Exception e) {
-                e.printStackTrace();
                 throw new RuntimeException(e);
             }
         });

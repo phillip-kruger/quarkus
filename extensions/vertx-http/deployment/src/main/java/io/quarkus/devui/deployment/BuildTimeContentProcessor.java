@@ -64,6 +64,7 @@ public class BuildTimeContentProcessor {
         // Quarkus Web Components
         internalImportMapBuildItem.add("qwc/", contextRoot + "qwc/");
         internalImportMapBuildItem.add("qwc-hot-reload-element", contextRoot + "qwc/qwc-hot-reload-element.js");
+        internalImportMapBuildItem.add("qwc-server-log", contextRoot + "qwc/qwc-server-log.js");
         // Quarkus UI
         internalImportMapBuildItem.add("qui/", contextRoot + "qui/");
         internalImportMapBuildItem.add("qui-badge", contextRoot + "qui/qui-badge.js");
@@ -71,6 +72,7 @@ public class BuildTimeContentProcessor {
         // Echarts
         internalImportMapBuildItem.add("echarts/", contextRoot + "echarts/");
         internalImportMapBuildItem.add("echarts-gauge-grade", contextRoot + "echarts/echarts-gauge-grade.js");
+        internalImportMapBuildItem.add("echarts-pie", contextRoot + "echarts/echarts-pie.js");
 
         // Other assets
         internalImportMapBuildItem.add("icon/", contextRoot + "icon/");
@@ -345,20 +347,31 @@ public class BuildTimeContentProcessor {
     private void addFooterTabBuildTimeData(BuildTimeConstBuildItem internalBuildTimeData,
             ExtensionsBuildItem extensionsBuildItem) {
         // Add the Footer tabs
+        List<Page> footerTabs = new ArrayList();
         Page serverLog = Page.webComponentPageBuilder().internal()
                 .namespace("devui-logstream")
                 .title("Server")
                 .icon("font-awesome-solid:server")
                 .componentLink("qwc-server-log.js").build();
+        footerTabs.add(serverLog);
 
-        Page devUiLog = Page.webComponentPageBuilder().internal()
-                .namespace("devui-jsonrpcstream")
-                .title("Dev UI")
-                .icon("font-awesome-solid:satellite-dish")
-                .componentLink("qwc-jsonrpc-messages.js").build();
+        Page testLog = Page.webComponentPageBuilder().internal()
+                .namespace("devui-continuous-testing")
+                .title("Testing")
+                .icon("font-awesome-solid:flask-vial")
+                .componentLink("qwc-test-log.js")
+                .streamingColorJsonRPCMethodName("streamStatusColor", "dynamicStatusColor").build();
+        footerTabs.add(testLog);
 
-        @SuppressWarnings("unchecked")
-        List<Page> footerTabs = new ArrayList(List.of(serverLog, devUiLog));
+        // This is only needed when extension developers work on an extension, so we only included it if you build from source.
+        if (Version.getVersion().equalsIgnoreCase("999-SNAPSHOT")) {
+            Page devUiLog = Page.webComponentPageBuilder().internal()
+                    .namespace("devui-jsonrpcstream")
+                    .title("Dev UI")
+                    .icon("font-awesome-solid:satellite-dish")
+                    .componentLink("qwc-jsonrpc-messages.js").build();
+            footerTabs.add(devUiLog);
+        }
 
         // Add any Footer tabs from extensions
         for (Extension e : extensionsBuildItem.getFooterTabsExtensions()) {

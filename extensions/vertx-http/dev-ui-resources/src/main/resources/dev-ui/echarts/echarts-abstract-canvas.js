@@ -20,10 +20,13 @@ class EchartsAbstractCanvas extends LitElement {
     static properties = {
         _width: {state: true},
         _height: {state: true},
+        _chart: {state: true},
+        _option: {state: true},
     };
 
     constructor() {
         super();
+        this._chart = null;
     }
 
     connectedCallback() {
@@ -33,6 +36,7 @@ class EchartsAbstractCanvas extends LitElement {
 
         this.themeStateObserver = () => this.reload();
         themeState.addObserver(this.themeStateObserver);
+
     }
       
     disconnectedCallback() {
@@ -48,6 +52,13 @@ class EchartsAbstractCanvas extends LitElement {
         if(!this._width){
             this._width = parseFloat(getComputedStyle(this).getPropertyValue('width'), 10) - 20;
         }
+        
+
+        if(this._chart && this._chart !== null){
+            this._option = this.getOption();
+            this._chart.setOption(this._option);
+        }
+
         return html`<div class="canvasContainer" style="width:${this._width}px;height:${this._height}px;"></div>`;
     }
 
@@ -62,8 +73,8 @@ class EchartsAbstractCanvas extends LitElement {
         super.firstUpdated();
         let canvasContainer = this.shadowRoot.querySelector('.canvasContainer');
         this._chart = echarts.init(canvasContainer);
-        var option = this.getOption();
-        this._chart.setOption(option);
+        this._option = this.getOption();
+        this._chart.setOption(this._option);
     }
 
     getOption(){
@@ -71,8 +82,8 @@ class EchartsAbstractCanvas extends LitElement {
     }
 
     reload(){
-        var option = this.getOption();
-        this._chart.setOption(option);
+        this._option = this.getOption();
+        this._chart.setOption(this._option);
         this.requestUpdate();
     }
 
