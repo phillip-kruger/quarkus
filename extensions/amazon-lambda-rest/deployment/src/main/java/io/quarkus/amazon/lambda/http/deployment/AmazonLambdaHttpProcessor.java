@@ -24,6 +24,7 @@ import io.quarkus.amazon.lambda.http.model.Headers;
 import io.quarkus.amazon.lambda.http.model.MultiValuedTreeMap;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
+import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
@@ -64,9 +65,17 @@ public class AmazonLambdaHttpProcessor {
         recorder.setConfig(config);
     }
 
-    @BuildStep
-    public RequireVirtualHttpBuildItem requestVirtualHttp() {
-        return RequireVirtualHttpBuildItem.ALWAYS_VIRTUAL;
+    @BuildStep(onlyIf = IsDevelopment.class)
+    public void requestVirtualHttpDev(BuildProducer<RequireVirtualHttpBuildItem> requireVirtualHttpProducer,
+            LambdaHttpBuildTimeConfig config) {
+        if (config.virtualInDev) {
+            requireVirtualHttpProducer.produce(RequireVirtualHttpBuildItem.ALWAYS_VIRTUAL);
+        }
+    }
+
+    @BuildStep(onlyIfNot = IsDevelopment.class)
+    public void requestVirtualHttpNonDev(BuildProducer<RequireVirtualHttpBuildItem> requireVirtualHttpProducer) {
+        requireVirtualHttpProducer.produce(RequireVirtualHttpBuildItem.ALWAYS_VIRTUAL);
     }
 
     @BuildStep

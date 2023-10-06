@@ -11,4 +11,13 @@ public class LambdaHttpBuildTimeConfig {
      */
     @ConfigItem(defaultValue = "false")
     public boolean enableSecurity;
+
+    /**
+     * If true, HTTP will run in the virtual server in Dev Mode.
+     * Dev UI do not work in this mode.
+     *
+     * True by default
+     */
+    @ConfigItem(defaultValue = "true")
+    public boolean virtualInDev;
 }
