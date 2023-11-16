@@ -25,6 +25,7 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.ConfigDescriptionBuildItem;
 import io.quarkus.deployment.builditem.CuratedApplicationShutdownBuildItem;
 import io.quarkus.deployment.builditem.DevServicesLauncherConfigResultBuildItem;
+import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.dev.config.CurrentConfig;
 import io.quarkus.dev.console.DevConsoleManager;
 import io.quarkus.devui.deployment.InternalPageBuildItem;
@@ -35,6 +36,7 @@ import io.quarkus.devui.runtime.config.ConfigJsonRPCService;
 import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.spi.page.Page;
+import io.quarkus.runtime.LaunchMode;
 
 /**
  * This creates Extensions Page
@@ -42,7 +44,7 @@ import io.quarkus.devui.spi.page.Page;
 public class ConfigurationProcessor {
 
     @BuildStep(onlyIf = IsDevUI.class)
-    InternalPageBuildItem createConfigurationPages(
+    InternalPageBuildItem createConfigurationPages(LaunchModeBuildItem launchModeBuildItem,
             List<ConfigDescriptionBuildItem> configDescriptionBuildItems,
             Optional<DevServicesLauncherConfigResultBuildItem> devServicesLauncherConfig) {
 
@@ -54,11 +56,13 @@ public class ConfigurationProcessor {
                 .icon("font-awesome-solid:sliders")
                 .componentLink("qwc-configuration.js"));
 
-        configurationPages.addPage(Page.webComponentPageBuilder()
-                .namespace("devui-configuration")
-                .title("Source Editor")
-                .icon("font-awesome-solid:code")
-                .componentLink("qwc-configuration-editor.js"));
+        if (launchModeBuildItem.getLaunchMode().equals(LaunchMode.DEVELOPMENT)) {
+            configurationPages.addPage(Page.webComponentPageBuilder()
+                    .namespace("devui-configuration")
+                    .title("Source Editor")
+                    .icon("font-awesome-solid:code")
+                    .componentLink("qwc-configuration-editor.js"));
+        }
 
         configurationPages.addBuildTimeData("allConfiguration", new ArrayList<ConfigDescription>());
 

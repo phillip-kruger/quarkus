@@ -306,21 +306,11 @@ public class BuildTimeContentProcessor {
 
         String themeVars = themeVarsBuildItem.getTemplateValue();
         String nonApplicationRoot = nonApplicationRootPathBuildItem.getNonApplicationRootPath();
-        String contextRoot = nonApplicationRoot + DEV_UI + SLASH;
 
-        Map<String, Object> data = new HashMap<>();
-        data.put("nonApplicationRoot", nonApplicationRoot);
-        data.put("contextRoot", contextRoot);
+        Map<String, Object> data = applicationInfoMap(launchMode.getLaunchMode(), nonApplicationRoot);
         data.put("importmap", importmap);
         data.put("themeVars", themeVars);
         data.put("esModuleShimsVersion", esModuleShimsVersion);
-        if (launchMode.getLaunchMode().equals(LaunchMode.DEVELOPMENT)) {
-            data.put("heading", "Dev UI");
-            data.put("headingColor", "var(--lumo-contrast)");
-        } else {
-            data.put("heading", "Prod UI");
-            data.put("headingColor", "var(--quarkus-red)");
-        }
 
         quteTemplateBuildItem.add("index.html", data);
 
@@ -501,22 +491,29 @@ public class BuildTimeContentProcessor {
 
     private void addVersionInfoBuildTimeData(BuildTimeConstBuildItem internalBuildTimeData,
             NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem, LaunchModeBuildItem launchModeBuildItem) {
-        // Add version info
-        String contextRoot = nonApplicationRootPathBuildItem.getNonApplicationRootPath() + DEV_UI + SLASH;
-        Map<String, String> applicationInfo = new HashMap<>();
-        if (!launchModeBuildItem.getLaunchMode().equals(LaunchMode.DEVELOPMENT)) {
+        Map<String, Object> applicationInfo = applicationInfoMap(launchModeBuildItem.getLaunchMode(),
+                nonApplicationRootPathBuildItem.getNonApplicationRootPath());
+        internalBuildTimeData.addBuildTimeData("applicationInfo", applicationInfo);
+    }
+
+    private Map<String, Object> applicationInfoMap(LaunchMode launchMode, String nonApplicationRoot) {
+        Map<String, Object> applicationInfo = new HashMap<>();
+        String contextRoot = nonApplicationRoot + DEV_UI + SLASH;
+        if (!launchMode.equals(LaunchMode.DEVELOPMENT)) {
             applicationInfo.put("heading", "Prod UI");
             applicationInfo.put("headingColor", "var(--quarkus-red)");
         } else {
             applicationInfo.put("heading", "Dev UI");
             applicationInfo.put("headingColor", "var(--lumo-contrast)");
         }
+        applicationInfo.put("launchMode", launchMode.name());
         applicationInfo.put("contextRoot", contextRoot);
+        applicationInfo.put("nonApplicationRoot", nonApplicationRoot);
         applicationInfo.put("quarkusVersion", Version.getVersion());
         applicationInfo.put("applicationName", config.getOptionalValue("quarkus.application.name", String.class).orElse(""));
         applicationInfo.put("applicationVersion",
                 config.getOptionalValue("quarkus.application.version", String.class).orElse(""));
-        internalBuildTimeData.addBuildTimeData("applicationInfo", applicationInfo);
+        return applicationInfo;
     }
 
     private void addIdeBuildTimeData(BuildTimeConstBuildItem internalBuildTimeData,

@@ -19,6 +19,7 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { gridRowDetailsRenderer } from '@vaadin/grid/lit.js';
 import { observeState } from 'lit-element-state';
 import { connectionState } from 'connection-state';
+import { devuiState } from 'devui-state';
 import 'qui-badge';
 
 /**
@@ -322,6 +323,10 @@ export class QwcConfiguration extends observeState(LitElement) {
             actualValue = prop.defaultValue;
         }
 
+        let isDisabled = true;
+        if(devuiState.applicationInfo.launchMode === "DEVELOPMENT"){
+            isDisabled = false;
+        }
         if (prop.wildcardEntry) {
             // TODO
         } else if (prop.typeName === "java.lang.Boolean") {
@@ -331,7 +336,8 @@ export class QwcConfiguration extends observeState(LitElement) {
                                 @change="${(event) => {
                                     this._checkedChanged(prop, event, event.target.checked);
                                 }}"
-                                .checked=${isChecked}>
+                                .checked=${isChecked}
+                                .disabled=${isDisabled}>
                     <vaadin-tooltip slot="tooltip" text="${def}"></vaadin-tooltip>
                 </vaadin-checkbox>`;
         } else if (prop.typeName === "java.lang.Integer" || prop.typeName === "java.lang.Long") {
@@ -341,11 +347,12 @@ export class QwcConfiguration extends observeState(LitElement) {
                                     value="${actualValue}"
                                     theme="small"
                                     id="input-${prop.name}"
-                                    @keydown="${this._keydown}">
+                                    @keydown="${this._keydown}"
+                                    .readonly=${isDisabled}>
                     <vaadin-tooltip slot="tooltip" text="${def}"></vaadin-tooltip>
-                    <vaadin-icon slot="suffix" icon="font-awesome-solid:floppy-disk" class="save-button"
-                                id="save-button-${prop.name}"
-                                @click="${this._saveClicked}"></vaadin-icon>
+            
+                    ${this._saveIconRenderer(prop)}
+            
                 </vaadin-integer-field>`;
         } else if (prop.typeName === "java.lang.Float" || prop.typeName === "java.lang.Double") {
             return html`
@@ -354,10 +361,12 @@ export class QwcConfiguration extends observeState(LitElement) {
                                     id="input-${prop.name}"
                                     placeholder="${prop.defaultValue}"
                                     value="${actualValue}"
-                                    @keydown="${this._keydown}">
+                                    @keydown="${this._keydown}"
+                                    .readonly=${isDisabled}>
                     <vaadin-tooltip slot="tooltip" text="${def}"></vaadin-tooltip>
-                    <vaadin-icon slot="suffix" icon="font-awesome-solid:floppy-disk" class="save-button"
-                                id="save-button-${prop.name}" @click="${this._saveClicked}"></vaadin-icon>
+                    
+                    ${this._saveIconRenderer(prop)}
+                    
                 </vaadin-number-field>`;
         } else if (prop.typeName === "java.lang.Enum" || prop.typeName === "java.util.logging.Level") {
             let items = [];
@@ -380,7 +389,8 @@ export class QwcConfiguration extends observeState(LitElement) {
                                 theme="small"
                                 .items="${items}"
                                 .value="${defaultValue}"
-                                @change="${this._selectChanged}">
+                                @change="${this._selectChanged}"
+                                .readonly=${isDisabled}>
                             <vaadin-tooltip slot="tooltip" text="${def}"></vaadin-tooltip>
 
                 </vaadin-select>
@@ -392,16 +402,29 @@ export class QwcConfiguration extends observeState(LitElement) {
                                     value="${actualValue}"
                                     placeholder="${prop.defaultValue}"
                                     id="input-${prop.name}"
-                                    @keydown="${this._keydown}">
+                                    @keydown="${this._keydown}"
+                                    .readonly=${isDisabled}>
                         <vaadin-tooltip slot="tooltip" text="${def}"></vaadin-tooltip>
-                        <vaadin-icon slot="suffix" icon="font-awesome-solid:floppy-disk" class="save-button"
-                                    id="save-button-${prop.name}" @click="${this._saveClicked}"></vaadin-icon>
+                        
+                        ${this._saveIconRenderer(prop)}
+                        
                     </vaadin-button>
                 </vaadin-text-field>
             `;
         }
     }
 
+    _saveIconRenderer(prop) {
+        if(devuiState.applicationInfo.launchMode === "DEVELOPMENT"){
+            return html`<vaadin-icon slot="suffix" 
+                                        icon="font-awesome-solid:floppy-disk" 
+                                        class="save-button"
+                                        id="save-button-${prop.name}" 
+                                        @click="${this._saveClicked}">
+                        </vaadin-icon>`;
+        }
+    }
+    
     _descriptionRenderer(prop) {
         let val = prop.name;
         let res = "";
@@ -462,15 +485,18 @@ export class QwcConfiguration extends observeState(LitElement) {
     }
 
     _updateProperty(name, value){
-        this._busy = true;
-        this.jsonRpc.updateProperty({
-            'name': name,
-            'value': value
-        }).then(e => {
-            this._values[name] = value;
-            notifier.showInfoMessage("Property <code>" + name + "</code> updated");
-            this._busy = null;
-        });
+        if(devuiState.applicationInfo.launchMode === "DEVELOPMENT"){
+            this._busy = true;
+            this.jsonRpc.updateProperty({
+                'name': name,
+                'value': value
+            }).then(e => {
+                this._values[name] = value;
+                notifier.showInfoMessage("Property <code>" + name + "</code> updated");
+                this._busy = null;
+            });
+        }
+        // TODO: Enable this but fire an event for someone else to handle
     }
 }
 
