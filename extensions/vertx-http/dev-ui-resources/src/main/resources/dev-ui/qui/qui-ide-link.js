@@ -38,7 +38,7 @@ export class QuiIdeLink extends observeState(LitElement) {
         super.connectedCallback();
 
         // Detect the value from a stack trace line
-        if(this.stackTraceLine && devuiState.ideInfo.ideName && !this.stackTraceLine.includes(".zig") && this.stackTraceLine.includes(" ")){
+        if(devuiState.ideInfo && devuiState.ideInfo.idePackages && devuiState.ideInfo.ideName && this.stackTraceLine  && !this.stackTraceLine.includes(".zig") && this.stackTraceLine.includes(" ")){
             var parts = this.stackTraceLine.split(" ");
             // Make it clickable
             let classMethodFileNumber = parts[1];
@@ -74,7 +74,7 @@ export class QuiIdeLink extends observeState(LitElement) {
     }
 
     render() {
-        if(this.fileName){
+        if(this.fileName && devuiState.ideInfo && devuiState.ideInfo.idePackages){
             if(this._checkIfStringStartsWith(this.fileName, devuiState.ideInfo.idePackages)){
                 return html`<span style="font-weight: ${this._fontWeight};" @click=${() => this._openInIde()}><slot></slot></span>`;
             }else{

@@ -1,10 +1,10 @@
 package io.quarkus.smallrye.metrics.deployment;
 
-import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
+import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
 import io.quarkus.smallrye.metrics.runtime.SmallRyeMetricsRecorder;
@@ -16,7 +16,7 @@ import io.quarkus.vertx.http.runtime.management.ManagementInterfaceBuildTimeConf
  */
 public class SmallRyeMetricsDevUiProcessor {
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     @Record(ExecutionTime.STATIC_INIT)
     CardPageBuildItem create(NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem,
             ManagementInterfaceBuildTimeConfig managementInterfaceBuildTimeConfig,

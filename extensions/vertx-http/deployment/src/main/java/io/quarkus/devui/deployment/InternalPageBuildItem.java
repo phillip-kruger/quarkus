@@ -18,10 +18,12 @@ public final class InternalPageBuildItem extends MultiBuildItem {
     private final int position;
     private final List<Page> pages = new ArrayList<>();
     private final Map<String, Object> buildTimeData = new HashMap<>();
+    private final boolean canRunInProd;
 
-    public InternalPageBuildItem(String namespaceLabel, int position) {
+    public InternalPageBuildItem(String namespaceLabel, int position, boolean canRunInProd) {
         this.namespaceLabel = namespaceLabel;
         this.position = position;
+        this.canRunInProd = canRunInProd;
     }
 
     public void addPage(PageBuilder page) {
@@ -47,5 +49,9 @@ public final class InternalPageBuildItem extends MultiBuildItem {
 
     public Map<String, Object> getBuildTimeData() {
         return buildTimeData;
+    }
+
+    public boolean canRunInProd() {
+        return canRunInProd;
     }
 }

@@ -25,6 +25,7 @@ import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethod;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethodName;
 import io.quarkus.devui.runtime.jsonrpc.json.JsonMapper;
 import io.quarkus.devui.runtime.jsonrpc.json.JsonTypeAdapter;
+import io.quarkus.devui.runtime.prod.ProdUIDatabindCodec;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.vertx.http.runtime.devmode.FileSystemStaticHandler;
@@ -54,8 +55,7 @@ public class DevUIRecorder {
     private JsonMapper createJsonMapper() {
         // We use a codec defined in the deployment module
         // because that module always has access to Jackson-Databind regardless of the application dependencies.
-        JsonMapper.Factory factory = JsonMapper.Factory.deploymentLinker().createLink(
-                DevConsoleManager.getGlobal(DEV_MANAGER_GLOBALS_JSON_MAPPER_FACTORY));
+        JsonMapper.Factory factory = JsonMapper.Factory.deploymentLinker().createLink(getLinkData());
         // We need to pass some information so that the mapper, who lives in the deployment classloader,
         // knows how to deal with JsonObject/JsonArray/JsonBuffer, who live in the runtime classloader.
         return factory.create(new JsonTypeAdapter<>(JsonObject.class, JsonObject::getMap, JsonObject::new),
@@ -67,6 +67,17 @@ public class DevUIRecorder {
                         throw new IllegalArgumentException("Expected a base64 encoded byte array, got: " + text, e);
                     }
                 }));
+    }
+
+    private Map<String, ?> getLinkData() {
+        Map<String, ?> linkData = DevConsoleManager.getGlobal(DEV_MANAGER_GLOBALS_JSON_MAPPER_FACTORY);
+        if (linkData != null && !linkData.isEmpty()) {
+            return linkData;
+        } else {
+            // Prod mode
+            // TODO: Check config
+            return JsonMapper.Factory.deploymentLinker().createLinkData(new ProdUIDatabindCodec.Factory());
+        }
     }
 
     public Handler<RoutingContext> communicationHandler() {

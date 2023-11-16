@@ -46,7 +46,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mvnpm.importmap.Aggregator;
 import io.mvnpm.importmap.Location;
 import io.quarkus.builder.Version;
-import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
@@ -59,6 +58,7 @@ import io.quarkus.dev.spi.DevModeType;
 import io.quarkus.devui.deployment.extension.Extension;
 import io.quarkus.devui.spi.AbstractDevUIBuildItem;
 import io.quarkus.devui.spi.DevUIContent;
+import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.devui.spi.buildtime.QuteTemplateBuildItem;
 import io.quarkus.devui.spi.buildtime.StaticContentBuildItem;
 import io.quarkus.devui.spi.page.AbstractPageBuildItem;
@@ -67,6 +67,7 @@ import io.quarkus.devui.spi.page.FooterPageBuildItem;
 import io.quarkus.devui.spi.page.MenuPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
 import io.quarkus.devui.spi.page.PageBuilder;
+import io.quarkus.runtime.LaunchMode;
 import io.quarkus.vertx.http.deployment.NonApplicationRootPathBuildItem;
 import io.vertx.core.json.jackson.DatabindCodec;
 
@@ -88,7 +89,7 @@ public class BuildTimeContentProcessor {
      * Here we create references to internal dev ui files so that they can be imported by ref.
      * This will be merged into the final importmap
      */
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     InternalImportMapBuildItem createKnownInternalImportMap(NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem) {
 
         String contextRoot = nonApplicationRootPathBuildItem.getNonApplicationRootPath() + DEV_UI + SLASH;
@@ -146,7 +147,7 @@ public class BuildTimeContentProcessor {
      * @param pageBuildItems
      * @param buildTimeConstProducer
      */
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     void mapPageBuildTimeData(List<CardPageBuildItem> cards,
             List<MenuPageBuildItem> menus,
             List<FooterPageBuildItem> footers,
@@ -216,7 +217,7 @@ public class BuildTimeContentProcessor {
      * @param quteTemplateProducer
      * @param internalImportMapProducer
      */
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     void createBuildTimeConstJsTemplate(CurateOutcomeBuildItem curateOutcomeBuildItem,
             NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem,
             List<BuildTimeConstBuildItem> buildTimeConstBuildItems,
@@ -261,7 +262,7 @@ public class BuildTimeContentProcessor {
     /**
      * Here we find all the mvnpm jars
      */
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     void gatherMvnpmJars(BuildProducer<MvnpmBuildItem> mvnpmProducer, CurateOutcomeBuildItem curateOutcomeBuildItem) {
         Set<URL> mvnpmJars = new HashSet<>();
         ClassLoader tccl = Thread.currentThread().getContextClassLoader();
@@ -285,8 +286,8 @@ public class BuildTimeContentProcessor {
      *
      * @return The QuteTemplate Build item that will create the end result
      */
-    @BuildStep(onlyIf = IsDevelopment.class)
-    QuteTemplateBuildItem createIndexHtmlTemplate(
+    @BuildStep(onlyIf = IsDevUI.class)
+    QuteTemplateBuildItem createIndexHtmlTemplate(LaunchModeBuildItem launchMode,
             MvnpmBuildItem mvnpmBuildItem,
             ThemeVarsBuildItem themeVarsBuildItem,
             NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem,
@@ -307,12 +308,19 @@ public class BuildTimeContentProcessor {
         String nonApplicationRoot = nonApplicationRootPathBuildItem.getNonApplicationRootPath();
         String contextRoot = nonApplicationRoot + DEV_UI + SLASH;
 
-        Map<String, Object> data = Map.of(
-                "nonApplicationRoot", nonApplicationRoot,
-                "contextRoot", contextRoot,
-                "importmap", importmap,
-                "themeVars", themeVars,
-                "esModuleShimsVersion", esModuleShimsVersion);
+        Map<String, Object> data = new HashMap<>();
+        data.put("nonApplicationRoot", nonApplicationRoot);
+        data.put("contextRoot", contextRoot);
+        data.put("importmap", importmap);
+        data.put("themeVars", themeVars);
+        data.put("esModuleShimsVersion", esModuleShimsVersion);
+        if (launchMode.getLaunchMode().equals(LaunchMode.DEVELOPMENT)) {
+            data.put("heading", "Dev UI");
+            data.put("headingColor", "var(--lumo-contrast)");
+        } else {
+            data.put("heading", "Prod UI");
+            data.put("headingColor", "var(--quarkus-red)");
+        }
 
         quteTemplateBuildItem.add("index.html", data);
 
@@ -320,7 +328,7 @@ public class BuildTimeContentProcessor {
     }
 
     // Here load all templates
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     void loadAllBuildTimeTemplates(BuildProducer<StaticContentBuildItem> buildTimeContentProducer,
             List<QuteTemplateBuildItem> templates) {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -359,7 +367,7 @@ public class BuildTimeContentProcessor {
     /**
      * Creates json data that is available in Javascript
      */
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     void createBuildTimeData(BuildProducer<BuildTimeConstBuildItem> buildTimeConstProducer,
             BuildProducer<ThemeVarsBuildItem> themeVarsProducer,
             List<InternalPageBuildItem> internalPages,
@@ -371,9 +379,9 @@ public class BuildTimeContentProcessor {
         BuildTimeConstBuildItem internalBuildTimeData = new BuildTimeConstBuildItem(AbstractDevUIBuildItem.DEV_UI);
 
         addThemeBuildTimeData(internalBuildTimeData, themeVarsProducer);
-        addMenuSectionBuildTimeData(internalBuildTimeData, internalPages, extensionsBuildItem);
-        addFooterTabBuildTimeData(internalBuildTimeData, extensionsBuildItem);
-        addVersionInfoBuildTimeData(internalBuildTimeData, nonApplicationRootPathBuildItem);
+        addMenuSectionBuildTimeData(internalBuildTimeData, internalPages, extensionsBuildItem, launchModeBuildItem);
+        addFooterTabBuildTimeData(internalBuildTimeData, extensionsBuildItem, launchModeBuildItem);
+        addVersionInfoBuildTimeData(internalBuildTimeData, nonApplicationRootPathBuildItem, launchModeBuildItem);
         addIdeBuildTimeData(internalBuildTimeData, effectiveIdeBuildItem, launchModeBuildItem);
         buildTimeConstProducer.produce(internalBuildTimeData);
     }
@@ -407,7 +415,8 @@ public class BuildTimeContentProcessor {
 
     private void addMenuSectionBuildTimeData(BuildTimeConstBuildItem internalBuildTimeData,
             List<InternalPageBuildItem> internalPages,
-            ExtensionsBuildItem extensionsBuildItem) {
+            ExtensionsBuildItem extensionsBuildItem,
+            LaunchModeBuildItem launchModeBuildItem) {
         // Menu section
         @SuppressWarnings("unchecked")
         List<Page> sectionMenu = new ArrayList();
@@ -416,14 +425,17 @@ public class BuildTimeContentProcessor {
         });
 
         for (InternalPageBuildItem internalPageBuildItem : internalPages) {
-            List<Page> pages = internalPageBuildItem.getPages();
-            for (Page page : pages) {
-                sectionMenu.add(page);
+            if (shouldRenderMenuItem(internalPageBuildItem, launchModeBuildItem)) {
+                List<Page> pages = internalPageBuildItem.getPages();
+                for (Page page : pages) {
+                    sectionMenu.add(page);
+                }
+                internalBuildTimeData.addAllBuildTimeData(internalPageBuildItem.getBuildTimeData());
             }
-            internalBuildTimeData.addAllBuildTimeData(internalPageBuildItem.getBuildTimeData());
         }
 
         // Menus from extensions
+        // TODO: Prod Mode
         for (Extension e : extensionsBuildItem.getSectionMenuExtensions()) {
             List<Page> pagesFromExtension = e.getMenuPages();
             sectionMenu.addAll(pagesFromExtension);
@@ -432,8 +444,17 @@ public class BuildTimeContentProcessor {
         internalBuildTimeData.addBuildTimeData("menuItems", sectionMenu);
     }
 
+    private boolean shouldRenderMenuItem(InternalPageBuildItem internalPageBuildItem, LaunchModeBuildItem launchModeBuildItem) {
+        if (launchModeBuildItem.getLaunchMode().equals(LaunchMode.DEVELOPMENT)) {
+            return true;
+        } else {
+            return internalPageBuildItem.canRunInProd();
+        }
+    }
+
     private void addFooterTabBuildTimeData(BuildTimeConstBuildItem internalBuildTimeData,
-            ExtensionsBuildItem extensionsBuildItem) {
+            ExtensionsBuildItem extensionsBuildItem,
+            LaunchModeBuildItem launchModeBuildItem) {
         // Add the Footer tabs
         @SuppressWarnings("unchecked")
         List<Page> footerTabs = new ArrayList();
@@ -444,23 +465,31 @@ public class BuildTimeContentProcessor {
                 .componentLink("qwc-server-log.js").build();
         footerTabs.add(serverLog);
 
-        Page testLog = Page.webComponentPageBuilder().internal()
-                .namespace("devui-continuous-testing")
-                .title("Testing")
-                .icon("font-awesome-solid:flask-vial")
-                .componentLink("qwc-test-log.js").build();
-        footerTabs.add(testLog);
+        if (launchModeBuildItem.getLaunchMode().equals(LaunchMode.DEVELOPMENT)) {
+            Page testLog = Page.webComponentPageBuilder().internal()
+                    .namespace("devui-continuous-testing")
+                    .title("Testing")
+                    .icon("font-awesome-solid:flask-vial")
+                    .componentLink("qwc-test-log.js").build();
+            footerTabs.add(testLog);
+        }
 
         // This is only needed when extension developers work on an extension, so we only included it if you build from source.
         if (Version.getVersion().equalsIgnoreCase("999-SNAPSHOT")) {
+            String t = "Dev UI";
+            if (!launchModeBuildItem.getLaunchMode().equals(LaunchMode.DEVELOPMENT)) {
+                t = "Prod UI";
+            }
+
             Page devUiLog = Page.webComponentPageBuilder().internal()
                     .namespace("devui-jsonrpcstream")
-                    .title("Dev UI")
+                    .title(t)
                     .icon("font-awesome-solid:satellite-dish")
                     .componentLink("qwc-jsonrpc-messages.js").build();
             footerTabs.add(devUiLog);
         }
         // Add any Footer tabs from extensions
+        // TODO: Prod Mode
         for (Extension e : extensionsBuildItem.getFooterTabsExtensions()) {
             List<Page> tabsFromExtension = e.getFooterPages();
             footerTabs.addAll(tabsFromExtension);
@@ -471,10 +500,17 @@ public class BuildTimeContentProcessor {
     }
 
     private void addVersionInfoBuildTimeData(BuildTimeConstBuildItem internalBuildTimeData,
-            NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem) {
+            NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem, LaunchModeBuildItem launchModeBuildItem) {
         // Add version info
         String contextRoot = nonApplicationRootPathBuildItem.getNonApplicationRootPath() + DEV_UI + SLASH;
         Map<String, String> applicationInfo = new HashMap<>();
+        if (!launchModeBuildItem.getLaunchMode().equals(LaunchMode.DEVELOPMENT)) {
+            applicationInfo.put("heading", "Prod UI");
+            applicationInfo.put("headingColor", "var(--quarkus-red)");
+        } else {
+            applicationInfo.put("heading", "Dev UI");
+            applicationInfo.put("headingColor", "var(--lumo-contrast)");
+        }
         applicationInfo.put("contextRoot", contextRoot);
         applicationInfo.put("quarkusVersion", Version.getVersion());
         applicationInfo.put("applicationName", config.getOptionalValue("quarkus.application.name", String.class).orElse(""));

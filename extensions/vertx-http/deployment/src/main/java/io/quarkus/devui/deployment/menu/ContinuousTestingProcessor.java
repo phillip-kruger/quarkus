@@ -50,7 +50,7 @@ public class ContinuousTestingProcessor {
     @BuildStep(onlyIf = IsDevelopment.class)
     InternalPageBuildItem createContinuousTestingPages() {
 
-        InternalPageBuildItem continuousTestingPages = new InternalPageBuildItem("Continuous Testing", 30);
+        InternalPageBuildItem continuousTestingPages = new InternalPageBuildItem("Continuous Testing", 30, false);
 
         continuousTestingPages.addPage(Page.webComponentPageBuilder()
                 .namespace(NAMESPACE)

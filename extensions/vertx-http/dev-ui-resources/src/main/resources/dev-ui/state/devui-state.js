@@ -15,7 +15,7 @@ class DevUIState extends LitState {
     
     constructor() {
         super();
-        document.title = "Dev UI | " + applicationInfo.applicationName + " " + applicationInfo.applicationVersion; 
+        document.title = applicationInfo.heading + " | " + applicationInfo.applicationName + " " + applicationInfo.applicationVersion; 
         this.connectionStateObserver = () => this.reload();
         connectionState.addObserver(this.connectionStateObserver);
     }
@@ -55,7 +55,7 @@ class DevUIState extends LitState {
                 // Check application info for updates
                 if(newDevUIData.applicationInfo !== devuiState.applicationInfo){
                     devuiState.applicationInfo = newDevUIData.applicationInfo;
-                    document.title = "Dev UI | " + devuiState.applicationInfo.applicationName + " " + devuiState.applicationInfo.applicationVersion; 
+                    document.title = applicationInfo.heading + " | " + devuiState.applicationInfo.applicationName + " " + devuiState.applicationInfo.applicationVersion; 
                 }
                 
                 // Check ide info for updates

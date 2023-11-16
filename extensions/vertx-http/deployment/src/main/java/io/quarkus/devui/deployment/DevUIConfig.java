@@ -1,5 +1,7 @@
 package io.quarkus.devui.deployment;
 
+import java.util.Optional;
+
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigItem;
 import io.quarkus.runtime.annotations.ConfigRoot;
@@ -18,6 +20,11 @@ public class DevUIConfig {
      */
     public Cors cors = new Cors();
 
+    /**
+     * Production configuration
+     */
+    public Prod prod = new Prod();
+
     @ConfigGroup
     public static class Cors {
 
@@ -28,4 +35,13 @@ public class DevUIConfig {
         public boolean enabled = true;
     }
 
+    @ConfigGroup
+    public static class Prod {
+
+        /**
+         * Enable in Production
+         */
+        @ConfigItem(defaultValue = "false")
+        public Optional<Boolean> enabled = Optional.empty();
+    }
 }

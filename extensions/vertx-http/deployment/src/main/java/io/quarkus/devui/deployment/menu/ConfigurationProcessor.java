@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 import jakarta.inject.Singleton;
 
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
-import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
@@ -33,6 +32,7 @@ import io.quarkus.devui.runtime.config.ConfigDescription;
 import io.quarkus.devui.runtime.config.ConfigDescriptionBean;
 import io.quarkus.devui.runtime.config.ConfigDevUIRecorder;
 import io.quarkus.devui.runtime.config.ConfigJsonRPCService;
+import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.spi.page.Page;
 
@@ -41,12 +41,12 @@ import io.quarkus.devui.spi.page.Page;
  */
 public class ConfigurationProcessor {
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     InternalPageBuildItem createConfigurationPages(
             List<ConfigDescriptionBuildItem> configDescriptionBuildItems,
             Optional<DevServicesLauncherConfigResultBuildItem> devServicesLauncherConfig) {
 
-        InternalPageBuildItem configurationPages = new InternalPageBuildItem("Configuration", 20);
+        InternalPageBuildItem configurationPages = new InternalPageBuildItem("Configuration", 20, true);
 
         configurationPages.addPage(Page.webComponentPageBuilder()
                 .namespace("devui-configuration")
@@ -65,7 +65,7 @@ public class ConfigurationProcessor {
         return configurationPages;
     }
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     @Record(ExecutionTime.STATIC_INIT)
     void registerConfigs(List<ConfigDescriptionBuildItem> configDescriptionBuildItems,
             Optional<DevServicesLauncherConfigResultBuildItem> devServicesLauncherConfig,
@@ -91,7 +91,7 @@ public class ConfigurationProcessor {
         recorder.registerConfigs(configDescriptions, devServicesConfig);
     }
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     @Record(ExecutionTime.RUNTIME_INIT)
     void registerJsonRpcService(
             BuildProducer<JsonRPCProvidersBuildItem> jsonRPCProvidersProducer,

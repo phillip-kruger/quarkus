@@ -2,15 +2,15 @@ package io.quarkus.webjar.locator.deployment.devui;
 
 import java.util.List;
 
-import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
 
 public class WebJarLocatorDevUIProcessor {
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     public void createPages(BuildProducer<CardPageBuildItem> cardPageProducer,
             WebJarLibrariesBuildItem webJarLibrariesBuildItem) {
 

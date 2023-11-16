@@ -1,8 +1,8 @@
 package io.quarkus.smallrye.openapi.deployment.devui;
 
-import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
+import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
 import io.quarkus.smallrye.openapi.common.deployment.SmallRyeOpenApiConfig;
@@ -12,7 +12,7 @@ import io.quarkus.vertx.http.runtime.management.ManagementInterfaceBuildTimeConf
 
 public class OpenApiDevUIProcessor {
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     public CardPageBuildItem pages(NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem,
             ManagementInterfaceBuildTimeConfig managementInterfaceBuildTimeConfig,
             LaunchModeBuildItem launchModeBuildItem,

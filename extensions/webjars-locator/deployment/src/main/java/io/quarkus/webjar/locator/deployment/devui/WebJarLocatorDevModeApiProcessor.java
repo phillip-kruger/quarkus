@@ -20,10 +20,10 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.bootstrap.classloading.ClassPathElement;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
-import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
+import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.maven.dependency.ArtifactKey;
 import io.quarkus.maven.dependency.ResolvedDependency;
 import io.quarkus.vertx.http.runtime.HttpBuildTimeConfig;
@@ -33,7 +33,7 @@ public class WebJarLocatorDevModeApiProcessor {
     private static final String WEBJARS_PREFIX = "META-INF/resources/webjars";
     private static final Logger log = Logger.getLogger(WebJarLocatorDevModeApiProcessor.class.getName());
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     public void findWebjarsAssets(
             HttpBuildTimeConfig httpConfig,
             CurateOutcomeBuildItem curateOutcome,

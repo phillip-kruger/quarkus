@@ -1,7 +1,7 @@
 package io.quarkus.smallrye.faulttolerance.deployment.devui;
 
-import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
@@ -9,7 +9,7 @@ import io.quarkus.smallrye.faulttolerance.runtime.devui.FaultToleranceJsonRpcSer
 
 public class FaultToleranceDevUIProcessor {
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     CardPageBuildItem cardPage(FaultToleranceInfoBuildItem faultToleranceInfo) {
         CardPageBuildItem pageBuildItem = new CardPageBuildItem();
 
@@ -22,7 +22,7 @@ public class FaultToleranceDevUIProcessor {
         return pageBuildItem;
     }
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     JsonRPCProvidersBuildItem jsonRPCService() {
         return new JsonRPCProvidersBuildItem(FaultToleranceJsonRpcService.class);
     }

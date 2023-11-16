@@ -19,16 +19,16 @@ import io.quarkus.arc.runtime.devconsole.InvocationsMonitor;
 import io.quarkus.arc.runtime.devconsole.Monitored;
 import io.quarkus.arc.runtime.devmode.EventsMonitor;
 import io.quarkus.arc.runtime.devui.ArcJsonRPCService;
-import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
 
 public class ArcDevUIProcessor {
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     public CardPageBuildItem pages(ArcBeanInfoBuildItem arcBeanInfoBuildItem, ArcConfig config) {
         DevBeanInfos beanInfos = arcBeanInfoBuildItem.getBeanInfos();
 
@@ -102,12 +102,12 @@ public class ArcDevUIProcessor {
         return pageBuildItem;
     }
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     JsonRPCProvidersBuildItem createJsonRPCService() {
         return new JsonRPCProvidersBuildItem(ArcJsonRPCService.class);
     }
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     void registerMonitoringComponents(ArcConfig config, BuildProducer<AdditionalBeanBuildItem> beans,
             BuildProducer<AnnotationsTransformerBuildItem> annotationTransformers,
             CustomScopeAnnotationsBuildItem customScopes, List<BeanDefiningAnnotationBuildItem> beanDefiningAnnotations) {

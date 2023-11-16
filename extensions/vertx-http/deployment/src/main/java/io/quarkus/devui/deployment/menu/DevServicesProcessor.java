@@ -16,7 +16,7 @@ public class DevServicesProcessor {
     @BuildStep(onlyIf = IsDevelopment.class)
     InternalPageBuildItem createDevServicesPages(List<DevServiceDescriptionBuildItem> devServiceDescriptions) {
 
-        InternalPageBuildItem devServicesPages = new InternalPageBuildItem("Dev Services", 40);
+        InternalPageBuildItem devServicesPages = new InternalPageBuildItem("Dev Services", 40, false);
 
         devServicesPages.addPage(Page.webComponentPageBuilder()
                 .namespace("devui-dev-services")

@@ -46,7 +46,6 @@ import io.quarkus.bootstrap.logging.InitialConfigurator;
 import io.quarkus.dev.console.CurrentAppExceptionHighlighter;
 import io.quarkus.dev.testing.ExceptionReporting;
 import io.quarkus.runtime.ImageMode;
-import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.runtime.configuration.ConfigInstantiator;
@@ -85,13 +84,13 @@ public class LoggingSetupRecorder {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Collections.emptyList(), banner, LaunchMode.DEVELOPMENT, false);
+                Collections.emptyList(), banner, false);
     }
 
     public ShutdownListener initializeLogging(LogConfig config, LogBuildTimeConfig buildConfig,
             DiscoveredLogComponents discoveredLogComponents,
             final Map<String, InheritableLevel> categoryDefaultMinLevels,
-            final boolean enableWebStream,
+            boolean streamLog,
             final RuntimeValue<Optional<Handler>> streamingDevUiConsoleHandler,
             final List<RuntimeValue<Optional<Handler>>> additionalHandlers,
             final List<RuntimeValue<Map<String, Handler>>> additionalNamedHandlers,
@@ -99,7 +98,6 @@ public class LoggingSetupRecorder {
             final List<RuntimeValue<Optional<Formatter>>> possibleFileFormatters,
             final List<RuntimeValue<Optional<Formatter>>> possibleSyslogFormatters,
             final RuntimeValue<Optional<Supplier<String>>> possibleBannerSupplier,
-            LaunchMode launchMode,
             boolean includeFilters) {
 
         ShutdownNotifier shutdownNotifier = new ShutdownNotifier();
@@ -145,11 +143,11 @@ public class LoggingSetupRecorder {
         if (config.console.enable) {
             final Handler consoleHandler = configureConsoleHandler(config.console, consoleRuntimeConfig.getValue(),
                     errorManager, cleanupFiler, namedFilters, possibleConsoleFormatters, possibleBannerSupplier,
-                    launchMode, includeFilters);
+                    streamLog, includeFilters);
             errorManager = consoleHandler.getErrorManager();
             handlers.add(consoleHandler);
         }
-        if (launchMode.isDevOrTest()) {
+        if (streamLog) {
             handlers.add(new Handler() {
                 @Override
                 public void publish(LogRecord record) {
@@ -182,7 +180,7 @@ public class LoggingSetupRecorder {
             }
         }
 
-        if ((launchMode.isDevOrTest() || enableWebStream)
+        if (streamLog
                 && streamingDevUiConsoleHandler != null
                 && streamingDevUiConsoleHandler.getValue().isPresent()) {
 
@@ -201,7 +199,7 @@ public class LoggingSetupRecorder {
         Map<String, Handler> namedHandlers = shouldCreateNamedHandlers(config, additionalNamedHandlers)
                 ? createNamedHandlers(config, consoleRuntimeConfig.getValue(), additionalNamedHandlers,
                         possibleConsoleFormatters, possibleFileFormatters, possibleSyslogFormatters,
-                        errorManager, cleanupFiler, namedFilters, launchMode,
+                        errorManager, cleanupFiler, namedFilters, streamLog,
                         shutdownNotifier, includeFilters)
                 : Collections.emptyMap();
         if (!categories.isEmpty()) {
@@ -282,7 +280,7 @@ public class LoggingSetupRecorder {
     public static void initializeBuildTimeLogging(LogConfig config, LogBuildTimeConfig buildConfig,
             Map<String, InheritableLevel> categoryDefaultMinLevels,
             ConsoleRuntimeConfig consoleConfig,
-            LaunchMode launchMode) {
+            boolean streamLog) {
         ShutdownNotifier dummy = new ShutdownNotifier();
 
         final Map<String, CategoryConfig> categories = config.categories;
@@ -305,14 +303,14 @@ public class LoggingSetupRecorder {
         if (config.console.enable) {
             final Handler consoleHandler = configureConsoleHandler(config.console, consoleConfig, errorManager,
                     logCleanupFilter, Collections.emptyMap(), Collections.emptyList(),
-                    new RuntimeValue<>(Optional.empty()), launchMode, false);
+                    new RuntimeValue<>(Optional.empty()), streamLog, false);
             errorManager = consoleHandler.getErrorManager();
             handlers.add(consoleHandler);
         }
 
         Map<String, Handler> namedHandlers = createNamedHandlers(config, consoleConfig, Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), errorManager, logCleanupFilter,
-                Collections.emptyMap(), launchMode, dummy, false);
+                Collections.emptyMap(), streamLog, dummy, false);
 
         for (Map.Entry<String, CategoryConfig> entry : categories.entrySet()) {
             final String categoryName = entry.getKey();
@@ -399,7 +397,7 @@ public class LoggingSetupRecorder {
             List<RuntimeValue<Optional<Formatter>>> possibleFileFormatters,
             List<RuntimeValue<Optional<Formatter>>> possibleSyslogFormatters,
             ErrorManager errorManager, LogCleanupFilter cleanupFilter,
-            Map<String, Filter> namedFilters, LaunchMode launchMode,
+            Map<String, Filter> namedFilters, boolean streamLog,
             ShutdownNotifier shutdownHandler, boolean includeFilters) {
         Map<String, Handler> namedHandlers = new HashMap<>();
         for (Entry<String, ConsoleConfig> consoleConfigEntry : config.consoleHandlers.entrySet()) {
@@ -408,7 +406,7 @@ public class LoggingSetupRecorder {
                 continue;
             }
             final Handler consoleHandler = configureConsoleHandler(namedConsoleConfig, consoleRuntimeConfig,
-                    errorManager, cleanupFilter, namedFilters, possibleConsoleFormatters, null, launchMode,
+                    errorManager, cleanupFilter, namedFilters, possibleConsoleFormatters, null, streamLog,
                     includeFilters);
             addToNamedHandlers(namedHandlers, consoleHandler, consoleConfigEntry.getKey());
         }
@@ -520,7 +518,7 @@ public class LoggingSetupRecorder {
             final Map<String, Filter> namedFilters,
             final List<RuntimeValue<Optional<Formatter>>> possibleFormatters,
             final RuntimeValue<Optional<Supplier<String>>> possibleBannerSupplier,
-            LaunchMode launchMode,
+            boolean streamLog,
             boolean includeFilters) {
         Formatter formatter = null;
         boolean formatterWarning = false;
@@ -559,7 +557,7 @@ public class LoggingSetupRecorder {
         Handler handler = config.async.enable ? createAsyncHandler(config.async, config.level, consoleHandler)
                 : consoleHandler;
 
-        if (color && launchMode.isDevOrTest() && !config.async.enable) {
+        if (color && streamLog && !config.async.enable) {
             final Handler delegate = handler;
             handler = new Handler() {
                 @Override

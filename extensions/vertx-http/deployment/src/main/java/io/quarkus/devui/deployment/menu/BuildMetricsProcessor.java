@@ -1,8 +1,8 @@
 package io.quarkus.devui.deployment.menu;
 
-import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.devui.deployment.InternalPageBuildItem;
+import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.devui.spi.page.Page;
 
 /**
@@ -10,10 +10,10 @@ import io.quarkus.devui.spi.page.Page;
  */
 public class BuildMetricsProcessor {
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     InternalPageBuildItem createBuildMetricsPages() {
 
-        InternalPageBuildItem buildMetricsPages = new InternalPageBuildItem("Build Metrics", 50);
+        InternalPageBuildItem buildMetricsPages = new InternalPageBuildItem("Build Metrics", 50, true);
 
         buildMetricsPages.addPage(Page.webComponentPageBuilder()
                 .namespace("devui-build-metrics")

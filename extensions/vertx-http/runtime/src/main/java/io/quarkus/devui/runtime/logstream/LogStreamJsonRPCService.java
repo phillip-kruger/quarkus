@@ -19,6 +19,7 @@ import io.vertx.core.json.JsonObject;
  */
 public class LogStreamJsonRPCService {
     private static final org.jboss.logging.Logger LOG = org.jboss.logging.Logger.getLogger(LogStreamJsonRPCService.class);
+    private LogStreamBroadcaster logStreamBroadcaster;
 
     @NonBlocking
     public String ping() {
@@ -27,14 +28,12 @@ public class LogStreamJsonRPCService {
 
     @NonBlocking
     public List<JsonObject> history() {
-        LogStreamBroadcaster logStreamBroadcaster = Arc.container().instance(LogStreamBroadcaster.class).get();
-        LinkedBlockingQueue<JsonObject> history = logStreamBroadcaster.getHistory();
+        LinkedBlockingQueue<JsonObject> history = getBroadcaster().getHistory();
         return new ArrayList<>(history);
     }
 
     public Multi<JsonObject> streamLog() {
-        LogStreamBroadcaster logStreamBroadcaster = Arc.container().instance(LogStreamBroadcaster.class).get();
-        return logStreamBroadcaster.getLogStream();
+        return getBroadcaster().getLogStream();
     }
 
     @NonBlocking
@@ -98,5 +97,14 @@ public class LogStreamJsonRPCService {
             return logger.getLevel().getName();
         }
         return getEffectiveLogLevel(logger.getParent());
+    }
+
+    private LogStreamBroadcaster getBroadcaster() {
+        synchronized (this) {
+            if (this.logStreamBroadcaster == null && Arc.container() != null) {
+                this.logStreamBroadcaster = Arc.container().instance(LogStreamBroadcaster.class).get();
+            }
+        }
+        return this.logStreamBroadcaster;
     }
 }

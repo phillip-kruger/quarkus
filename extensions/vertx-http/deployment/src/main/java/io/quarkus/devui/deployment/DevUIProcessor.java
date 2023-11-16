@@ -32,14 +32,12 @@ import org.yaml.snakeyaml.Yaml;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
 import io.quarkus.arc.processor.BuiltinScope;
-import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.AdditionalIndexedClassesBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
-import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.dev.console.DevConsoleManager;
@@ -53,6 +51,7 @@ import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethod;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethodName;
 import io.quarkus.devui.runtime.jsonrpc.json.JsonMapper;
 import io.quarkus.devui.spi.DevUIContent;
+import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.spi.buildtime.StaticContentBuildItem;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
@@ -120,7 +119,7 @@ public class DevUIProcessor {
 
     private static final Logger log = Logger.getLogger(DevUIProcessor.class);
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     @Record(ExecutionTime.STATIC_INIT)
     void registerDevUiHandlers(
             DevUIConfig devUIConfig,
@@ -129,13 +128,8 @@ public class DevUIProcessor {
             List<StaticContentBuildItem> staticContentBuildItems,
             BuildProducer<RouteBuildItem> routeProducer,
             DevUIRecorder recorder,
-            LaunchModeBuildItem launchModeBuildItem,
             NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem,
             ShutdownContextBuildItem shutdownContext) throws IOException {
-
-        if (launchModeBuildItem.isNotLocalDevModeType()) {
-            return;
-        }
 
         if (devUIConfig.cors.enabled) {
             routeProducer.produce(nonApplicationRootPathBuildItem.routeBuilder()
@@ -235,7 +229,7 @@ public class DevUIProcessor {
     /**
      * This makes sure the JsonRPC Classes for both the internal Dev UI and extensions is available as a bean and on the index.
      */
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     void additionalBean(BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
             BuildProducer<AdditionalIndexedClassesBuildItem> additionalIndexProducer,
             List<JsonRPCProvidersBuildItem> jsonRPCProvidersBuildItems) {
@@ -269,17 +263,12 @@ public class DevUIProcessor {
     /**
      * This goes through all jsonRPC methods and discover the methods using Jandex
      */
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     void findAllJsonRPCMethods(BuildProducer<JsonRPCMethodsBuildItem> jsonRPCMethodsProvider,
             BuildProducer<BuildTimeConstBuildItem> buildTimeConstProducer,
-            LaunchModeBuildItem launchModeBuildItem,
             CombinedIndexBuildItem combinedIndexBuildItem,
             CurateOutcomeBuildItem curateOutcomeBuildItem,
             List<JsonRPCProvidersBuildItem> jsonRPCProvidersBuildItems) {
-
-        if (launchModeBuildItem.isNotLocalDevModeType()) {
-            return;
-        }
 
         IndexView index = combinedIndexBuildItem.getIndex();
 
@@ -363,7 +352,7 @@ public class DevUIProcessor {
 
     }
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     @Record(ExecutionTime.STATIC_INIT)
     void createJsonRpcRouter(DevUIRecorder recorder,
             BeanContainerBuildItem beanContainer,
@@ -382,23 +371,22 @@ public class DevUIProcessor {
     /**
      * This build all the pages for dev ui, based on the extension included
      */
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     @SuppressWarnings("unchecked")
     void getAllExtensions(List<CardPageBuildItem> cardPageBuildItems,
             List<MenuPageBuildItem> menuPageBuildItems,
             List<FooterPageBuildItem> footerPageBuildItems,
-            LaunchModeBuildItem launchModeBuildItem,
             CurateOutcomeBuildItem curateOutcomeBuildItem,
             BuildProducer<ExtensionsBuildItem> extensionsProducer,
             BuildProducer<WebJarBuildItem> webJarBuildProducer,
             BuildProducer<DevUIWebJarBuildItem> devUIWebJarProducer) {
 
-        if (launchModeBuildItem.isNotLocalDevModeType()) {
-            // produce extension build item as cascade of build steps rely on it
-            var emptyExtensionBuildItem = new ExtensionsBuildItem(List.of(), List.of(), List.of(), List.of());
-            extensionsProducer.produce(emptyExtensionBuildItem);
-            return;
-        }
+        //        if (launchModeBuildItem.isNotLocalDevModeType()) {
+        //            // produce extension build item as cascade of build steps rely on it
+        //            var emptyExtensionBuildItem = new ExtensionsBuildItem(List.of(), List.of(), List.of(), List.of());
+        //            extensionsProducer.produce(emptyExtensionBuildItem);
+        //            return;
+        //        }
 
         // First create the static resources for our own internal components
         webJarBuildProducer.produce(WebJarBuildItem.builder()
@@ -599,15 +587,10 @@ public class DevUIProcessor {
                         DEVUI));
     }
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     void createAllRoutes(WebJarResultsBuildItem webJarResultsBuildItem,
-            LaunchModeBuildItem launchModeBuildItem,
             List<DevUIWebJarBuildItem> devUIWebJarBuiltItems,
             BuildProducer<DevUIRoutesBuildItem> devUIRoutesProducer) {
-
-        if (launchModeBuildItem.isNotLocalDevModeType()) {
-            return;
-        }
 
         for (DevUIWebJarBuildItem devUIWebJarBuiltItem : devUIWebJarBuiltItems) {
             WebJarResultsBuildItem.WebJarResult result = webJarResultsBuildItem

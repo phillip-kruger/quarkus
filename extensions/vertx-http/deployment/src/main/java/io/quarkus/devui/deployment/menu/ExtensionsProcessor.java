@@ -3,12 +3,12 @@ package io.quarkus.devui.deployment.menu;
 import java.util.List;
 import java.util.Map;
 
-import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.devui.deployment.ExtensionsBuildItem;
 import io.quarkus.devui.deployment.InternalPageBuildItem;
 import io.quarkus.devui.deployment.extension.Extension;
 import io.quarkus.devui.deployment.extension.ExtensionGroup;
+import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.devui.spi.page.Page;
 
 /**
@@ -16,10 +16,10 @@ import io.quarkus.devui.spi.page.Page;
  */
 public class ExtensionsProcessor {
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     InternalPageBuildItem createExtensionsPages(ExtensionsBuildItem extensionsBuildItem) {
 
-        InternalPageBuildItem extensionsPages = new InternalPageBuildItem("Extensions", 10);
+        InternalPageBuildItem extensionsPages = new InternalPageBuildItem("Extensions", 10, true);
 
         // Extensions
         Map<ExtensionGroup, List<Extension>> response = Map.of(

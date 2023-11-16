@@ -5,12 +5,12 @@ import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.devui.deployment.InternalPageBuildItem;
 import io.quarkus.devui.runtime.DevUIRecorder;
 import io.quarkus.devui.runtime.EndpointInfo;
+import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.devui.spi.page.Page;
 import io.quarkus.vertx.http.deployment.HttpRootPathBuildItem;
 import io.quarkus.vertx.http.deployment.NonApplicationRootPathBuildItem;
@@ -23,7 +23,7 @@ public class EndpointsProcessor {
     private static final String DEVUI = "dev-ui";
 
     @Record(STATIC_INIT)
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     void addEndpointInfos(List<NotFoundPageDisplayableEndpointBuildItem> displayableEndpoints,
             DevUIRecorder recorder, HttpRootPathBuildItem httpRoot) {
 
@@ -36,12 +36,12 @@ public class EndpointsProcessor {
         recorder.setEndpoints(endpoints);
     }
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     InternalPageBuildItem createEndpointsPage(NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem) {
 
         String basepath = nonApplicationRootPathBuildItem.resolvePath(DEVUI);
 
-        InternalPageBuildItem endpointsPage = new InternalPageBuildItem("Endpoints", 25);
+        InternalPageBuildItem endpointsPage = new InternalPageBuildItem("Endpoints", 25, true);
 
         endpointsPage.addBuildTimeData("basepath", basepath);
 

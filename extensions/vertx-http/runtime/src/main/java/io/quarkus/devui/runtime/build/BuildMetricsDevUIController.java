@@ -36,7 +36,7 @@ public class BuildMetricsDevUIController {
 
     private Path buildMetricsPath;
 
-    private volatile Map<String, Object> buildStepsMetrics;
+    private Map<String, Object> buildStepsMetrics;
 
     private BuildMetricsDevUIController() {
     }

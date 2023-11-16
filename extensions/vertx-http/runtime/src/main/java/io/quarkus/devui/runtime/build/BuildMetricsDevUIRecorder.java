@@ -8,6 +8,8 @@ import io.quarkus.runtime.annotations.Recorder;
 public class BuildMetricsDevUIRecorder {
 
     public void setBuildMetricsPath(String buildMetricsPath) {
-        BuildMetricsDevUIController.get().setBuildMetricsPath(Path.of(buildMetricsPath));
+        BuildMetricsDevUIController controller = BuildMetricsDevUIController.get();
+        controller.setBuildMetricsPath(Path.of(buildMetricsPath));
+        controller.getBuildStepsMetrics();
     }
 }

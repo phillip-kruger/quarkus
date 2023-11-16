@@ -234,7 +234,6 @@ public final class LoggingResourceProcessor {
             List<LogFileFormatBuildItem> fileFormatItems,
             List<LogSyslogFormatBuildItem> syslogFormatItems,
             Optional<ConsoleFormatterBannerBuildItem> possibleBannerBuildItem,
-            List<LogStreamBuildItem> logStreamBuildItems,
             BuildProducer<ShutdownListenerBuildItem> shutdownListenerBuildItemBuildProducer,
             LaunchModeBuildItem launchModeBuildItem,
             List<LogCleanupFilterBuildItem> logCleanupFilters,
@@ -263,10 +262,7 @@ public final class LoggingResourceProcessor {
                 streamingDevUiLogHandler = streamingLogStreamHandlerBuildItem.get().getHandlerValue();
             }
 
-            boolean alwaysEnableLogStream = false;
-            if (!logStreamBuildItems.isEmpty()) {
-                alwaysEnableLogStream = true;
-            }
+            boolean streamLog = streamingDevUiLogHandler != null || launchModeBuildItem.getLaunchMode().isDevOrTest();
 
             List<RuntimeValue<Optional<Formatter>>> possibleConsoleFormatters = consoleFormatItems.stream()
                     .map(LogConsoleFormatBuildItem::getFormatterValue).collect(Collectors.toList());
@@ -289,10 +285,9 @@ public final class LoggingResourceProcessor {
 
             shutdownListenerBuildItemBuildProducer.produce(new ShutdownListenerBuildItem(
                     recorder.initializeLogging(log, buildLog, discoveredLogComponents,
-                            categoryMinLevelDefaults.content, alwaysEnableLogStream,
-                            streamingDevUiLogHandler, handlers, namedHandlers,
-                            possibleConsoleFormatters, possibleFileFormatters, possibleSyslogFormatters,
-                            possibleSupplier, launchModeBuildItem.getLaunchMode(), true)));
+                            categoryMinLevelDefaults.content, streamLog, streamingDevUiLogHandler, handlers,
+                            namedHandlers, possibleConsoleFormatters, possibleFileFormatters, possibleSyslogFormatters,
+                            possibleSupplier, true)));
             LogConfig logConfig = new LogConfig();
             ConfigInstantiator.handleObject(logConfig);
             for (LogCleanupFilterBuildItem i : logCleanupFilters) {
@@ -306,7 +301,7 @@ public final class LoggingResourceProcessor {
             ConsoleRuntimeConfig crc = new ConsoleRuntimeConfig();
             ConfigInstantiator.handleObject(crc);
             LoggingSetupRecorder.initializeBuildTimeLogging(logConfig, buildLog, categoryMinLevelDefaults.content,
-                    crc, launchModeBuildItem.getLaunchMode());
+                    crc, streamLog);
             ((QuarkusClassLoader) Thread.currentThread().getContextClassLoader()).addCloseTask(new Runnable() {
                 @Override
                 public void run() {

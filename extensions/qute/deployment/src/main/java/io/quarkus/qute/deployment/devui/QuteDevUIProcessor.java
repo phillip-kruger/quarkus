@@ -13,9 +13,9 @@ import java.util.stream.Collectors;
 
 import org.jboss.jandex.DotName;
 
-import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
 import io.quarkus.qute.ParameterDeclaration;
@@ -31,7 +31,7 @@ import io.quarkus.qute.deployment.TemplatesAnalysisBuildItem.TemplateAnalysis;
 
 public class QuteDevUIProcessor {
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     public void pages(
             List<TemplatePathBuildItem> templatePaths,
             List<CheckedTemplateBuildItem> checkedTemplates,

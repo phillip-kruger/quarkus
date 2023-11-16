@@ -1,7 +1,7 @@
 package io.quarkus.smallrye.graphql.deployment.devui;
 
-import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
 import io.quarkus.devui.spi.page.PageBuilder;
@@ -12,7 +12,7 @@ public class SmallRyeGraphQLDevUIProcessor {
 
     SmallRyeGraphQLConfig graphQLConfig;
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep(onlyIf = IsDevUI.class)
     CardPageBuildItem createCard(NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem) {
 
         CardPageBuildItem cardPageBuildItem = new CardPageBuildItem();
