@@ -263,15 +263,17 @@ public class BuildTimeContentProcessor {
      * Here we find all the mvnpm jars
      */
     @BuildStep(onlyIf = IsDevUI.class)
-    void gatherMvnpmJars(BuildProducer<MvnpmBuildItem> mvnpmProducer, CurateOutcomeBuildItem curateOutcomeBuildItem) {
+    void gatherMvnpmJars(BuildProducer<MvnpmBuildItem> mvnpmProducer) {
         Set<URL> mvnpmJars = new HashSet<>();
         ClassLoader tccl = Thread.currentThread().getContextClassLoader();
         try {
             Enumeration<URL> jarsWithImportMaps = tccl.getResources(Location.IMPORTMAP_PATH);
             while (jarsWithImportMaps.hasMoreElements()) {
+
                 URL jarUrl = jarsWithImportMaps.nextElement();
                 final JarURLConnection connection = (JarURLConnection) jarUrl.openConnection();
-                mvnpmJars.add(connection.getJarFileURL());
+                URL jarFileURL = connection.getJarFileURL();
+                mvnpmJars.add(jarFileURL);
             }
             mvnpmProducer.produce(new MvnpmBuildItem(mvnpmJars));
         } catch (IOException ex) {

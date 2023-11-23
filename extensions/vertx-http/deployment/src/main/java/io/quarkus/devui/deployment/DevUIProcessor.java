@@ -38,8 +38,10 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.AdditionalIndexedClassesBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
+import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
+import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
 import io.quarkus.dev.console.DevConsoleManager;
 import io.quarkus.devui.deployment.extension.Codestart;
 import io.quarkus.devui.deployment.extension.Extension;
@@ -63,6 +65,7 @@ import io.quarkus.devui.spi.page.QuteDataPageBuilder;
 import io.quarkus.maven.dependency.GACT;
 import io.quarkus.maven.dependency.GACTV;
 import io.quarkus.qute.Qute;
+import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.util.ClassPathUtils;
 import io.quarkus.vertx.http.deployment.FilterBuildItem;
 import io.quarkus.vertx.http.deployment.NonApplicationRootPathBuildItem;
@@ -118,10 +121,12 @@ public class DevUIProcessor {
     private static final String LANGUAGES = "languages";
 
     private static final Logger log = Logger.getLogger(DevUIProcessor.class);
+    private static final String TARGET_DIR_NAME = "web-bundler"; // TODO: Change to Prod UI ?
 
     @BuildStep(onlyIf = IsDevUI.class)
     @Record(ExecutionTime.STATIC_INIT)
     void registerDevUiHandlers(
+            LaunchModeBuildItem launchModeBuildItem,
             DevUIConfig devUIConfig,
             MvnpmBuildItem mvnpmBuildItem,
             List<DevUIRoutesBuildItem> devUIRoutesBuildItems,
@@ -129,7 +134,8 @@ public class DevUIProcessor {
             BuildProducer<RouteBuildItem> routeProducer,
             DevUIRecorder recorder,
             NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem,
-            ShutdownContextBuildItem shutdownContext) throws IOException {
+            ShutdownContextBuildItem shutdownContext,
+            OutputTargetBuildItem outputTarget) throws IOException {
 
         if (devUIConfig.cors.enabled) {
             routeProducer.produce(nonApplicationRootPathBuildItem.routeBuilder()
@@ -148,6 +154,9 @@ public class DevUIProcessor {
         // Static handler for components
         for (DevUIRoutesBuildItem devUIRoutesBuildItem : devUIRoutesBuildItems) {
             String route = devUIRoutesBuildItem.getPath();
+            String finalDestination = devUIRoutesBuildItem.getFinalDestination();
+
+            System.out.println("------------> finalDestination = " + finalDestination);
 
             String path = nonApplicationRootPathBuildItem.resolvePath(route);
             Handler<RoutingContext> uihandler = recorder.uiHandler(
@@ -172,17 +181,20 @@ public class DevUIProcessor {
         String basepath = nonApplicationRootPathBuildItem.resolvePath(DEVUI);
         // For static content generated at build time
         Path devUiBasePath = Files.createTempDirectory("quarkus-devui");
+        System.out.println("------------> devUiBasePath = " + devUiBasePath);
+
         recorder.shutdownTask(shutdownContext, devUiBasePath.toString());
 
-        for (StaticContentBuildItem staticContentBuildItem : staticContentBuildItems) {
+        Map<String, String> urlAndPath = new HashMap<>();
 
-            Map<String, String> urlAndPath = new HashMap<>();
+        for (StaticContentBuildItem staticContentBuildItem : staticContentBuildItems) {
 
             List<DevUIContent> content = staticContentBuildItem.getContent();
             for (DevUIContent c : content) {
                 String parsedContent = Qute.fmt(new String(c.getTemplate()), c.getData());
                 Path tempFile = devUiBasePath
                         .resolve(c.getFileName());
+                System.out.println("------------> tempFile = " + tempFile);
                 Files.write(tempFile, parsedContent.getBytes(StandardCharsets.UTF_8));
 
                 urlAndPath.put(c.getFileName(), tempFile.toString());
@@ -211,13 +223,54 @@ public class DevUIProcessor {
                     nonApplicationRootPathBuildItem.routeBuilder().route(route + SLASH_ALL).handler(routerhandler).build());
         }
 
-        // Static mvnpm jars
         String contextRoot = nonApplicationRootPathBuildItem.getNonApplicationRootPath();
+
+        //if (launchModeBuildItem.getLaunchMode().equals(LaunchMode.DEVELOPMENT)) {
+        // Static mvnpm jars
         routeProducer.produce(
                 nonApplicationRootPathBuildItem.routeBuilder()
                         .route("_static" + SLASH_ALL)
                         .handler(recorder.mvnpmHandler(contextRoot, mvnpmBuildItem.getMvnpmJars()))
                         .build());
+
+        if (launchModeBuildItem.getLaunchMode().equals(LaunchMode.NORMAL)) {
+            List<Path> mvnpmPaths = mvnpmBuildItem.getMvnpmPaths();
+            for (Path p : mvnpmPaths) {
+                System.out.println("*** " + p.toString());
+            }
+        }
+
+        //        } else if (launchModeBuildItem.getLaunchMode().equals(LaunchMode.NORMAL)) {
+        //            // Bundle to be included
+        //            final Path targetDir = outputTarget.getOutputDirectory().resolve(TARGET_DIR_NAME);
+        //
+        //            Map<String, EsBuildConfig.Loader> loaders = new HashMap<>();
+        //            for (EsBuildConfig.Loader loader : EsBuildConfig.Loader.values()) {
+        //                loaders.put(loader.name(), loader);
+        //            }
+        //
+        //            final EsBuildConfigBuilder esBuildConfigBuilder = new EsBuildConfigBuilder()
+        //                    //.loader(loaders)
+        //                    //.addExternal(surroundWithSlashes(config.staticDir()) + "*")
+        //                    .minify(true);
+        //
+        //            ArrayList<String> scripts = new ArrayList<>(urlAndPath.keySet());
+        //
+        //            String name = UUID.randomUUID().toString();
+        //            final BundleOptionsBuilder options = new BundleOptionsBuilder()
+        //                    .addAutoEntryPoint(devUiBasePath, name, scripts)
+        //                    .setWorkFolder(targetDir)
+        //                    .withDependencies(mvnpmBuildItem.getMvnpmPaths())
+        //                    .withEsConfig(esBuildConfigBuilder.build())
+        //                    .withType(BundleType.MVNPM);
+        //
+        //            final BundleResult result = Bundler.bundle(options.build());
+        //
+        //            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>> ");
+        //            System.out.println(">> " + result);
+        //            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>> ");
+        //
+        //        }
 
         // Redirect /q/dev -> /q/dev-ui
         routeProducer.produce(nonApplicationRootPathBuildItem.routeBuilder()
@@ -387,11 +440,15 @@ public class DevUIProcessor {
         //            extensionsProducer.produce(emptyExtensionBuildItem);
         //            return;
         //        }
-
         // First create the static resources for our own internal components
-        webJarBuildProducer.produce(WebJarBuildItem.builder()
+        WebJarBuildItem internalComponents = WebJarBuildItem.builder()
                 .artifactKey(UI_JAR)
-                .root(DEVUI + SLASH).build());
+                .root(DEVUI + SLASH).build();
+        webJarBuildProducer.produce(internalComponents);
+
+        System.out.println("=======> internalComponents = " + internalComponents.getRoot());
+
+        internalComponents.getRoot();
 
         devUIWebJarProducer.produce(new DevUIWebJarBuildItem(UI_JAR, DEVUI));
 
