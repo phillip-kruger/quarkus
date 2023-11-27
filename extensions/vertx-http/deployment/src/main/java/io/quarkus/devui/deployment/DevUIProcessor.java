@@ -180,7 +180,7 @@ public class DevUIProcessor {
 
         String basepath = nonApplicationRootPathBuildItem.resolvePath(DEVUI);
         // For static content generated at build time
-        Path devUiBasePath = Files.createTempDirectory("quarkus-devui");
+        Path devUiBasePath = Files.createTempDirectory("quarkus-devui"); // TODO: Make this availabel via config
         System.out.println("------------> devUiBasePath = " + devUiBasePath);
 
         recorder.shutdownTask(shutdownContext, devUiBasePath.toString());
