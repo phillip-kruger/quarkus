@@ -24,18 +24,18 @@ public final class JsonRpcCodec {
 
     public void writeResponse(ServerWebSocket socket, int id, Object object, MessageType messageType) {
         writeResponse(socket, new JsonRpcResponse(id,
-                new JsonRpcResponse.Result(messageType.name(), object)));
+                new Result(messageType.name(), object)));
     }
 
     public void writeMethodNotFoundResponse(ServerWebSocket socket, int id, String jsonRpcMethodName) {
         writeResponse(socket, new JsonRpcResponse(id,
-                new JsonRpcResponse.Error(METHOD_NOT_FOUND, "Method [" + jsonRpcMethodName + "] not found")));
+                new Error(METHOD_NOT_FOUND, "Method [" + jsonRpcMethodName + "] not found")));
     }
 
     public void writeErrorResponse(ServerWebSocket socket, int id, String jsonRpcMethodName, Throwable exception) {
         LOG.error("Error in JsonRPC Call", exception);
         writeResponse(socket, new JsonRpcResponse(id,
-                new JsonRpcResponse.Error(INTERNAL_ERROR,
+                new Error(INTERNAL_ERROR,
                         "Method [" + jsonRpcMethodName + "] failed: " + exception.getMessage())));
     }
 

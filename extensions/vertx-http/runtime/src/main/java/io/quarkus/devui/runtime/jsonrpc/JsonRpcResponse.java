@@ -5,9 +5,13 @@ import static io.quarkus.devui.runtime.jsonrpc.JsonRpcKeys.VERSION;
 public final class JsonRpcResponse {
 
     // Public for serialization
-    public final int id;
-    public final Result result;
-    public final Error error;
+    private int id;
+    private Result result;
+    private Error error;
+
+    public JsonRpcResponse() {
+
+    }
 
     public JsonRpcResponse(int id, Result result) {
         this.id = id;
@@ -25,48 +29,27 @@ public final class JsonRpcResponse {
         return VERSION;
     }
 
-    @Override
-    public String toString() {
-        return "JsonRpcResponse{" +
-                "id=" + id +
-                ", result=" + result +
-                ", error=" + error +
-                '}';
+    public int getId() {
+        return id;
     }
 
-    public static final class Result {
-        public final String messageType;
-        public final Object object;
-
-        public Result(String messageType, Object object) {
-            this.messageType = messageType;
-            this.object = object;
-        }
-
-        @Override
-        public String toString() {
-            return "Result{" +
-                    "messageType='" + messageType + '\'' +
-                    ", object=" + object +
-                    '}';
-        }
+    public void setId(int id) {
+        this.id = id;
     }
 
-    public static final class Error {
-        public final int code;
-        public final String message;
+    public Result getResult() {
+        return result;
+    }
 
-        public Error(int code, String message) {
-            this.code = code;
-            this.message = message;
-        }
+    public void setResult(Result result) {
+        this.result = result;
+    }
 
-        @Override
-        public String toString() {
-            return "Error{" +
-                    "code=" + code +
-                    ", message='" + message + '\'' +
-                    '}';
-        }
+    public Error getError() {
+        return error;
+    }
+
+    public void setError(Error error) {
+        this.error = error;
     }
 }

@@ -13,10 +13,13 @@ import io.vertx.core.json.JsonObject;
 
 public class JsonRpcRequest {
 
-    private final JsonMapper jsonMapper;
-    private final JsonObject jsonObject;
+    private JsonMapper jsonMapper;
+    private JsonObject jsonObject;
 
-    JsonRpcRequest(JsonMapper jsonMapper, JsonObject jsonObject) {
+    public JsonRpcRequest() {
+    }
+
+    public JsonRpcRequest(JsonMapper jsonMapper, JsonObject jsonObject) {
         this.jsonMapper = jsonMapper;
         this.jsonObject = jsonObject;
     }

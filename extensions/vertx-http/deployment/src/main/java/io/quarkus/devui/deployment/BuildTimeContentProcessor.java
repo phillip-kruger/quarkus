@@ -303,7 +303,13 @@ public class BuildTimeContentProcessor {
             aggregator.addMappings(importMap);
         }
         String esModuleShimsVersion = extractEsModuleShimsVersion(mvnpmBuildItem.getMvnpmJars());
-        String importmap = aggregator.aggregateAsJson(nonApplicationRootPathBuildItem.getNonApplicationRootPath());
+        String importmap;
+        if (launchMode.getLaunchMode().isDevOrTest()) {
+            importmap = aggregator.aggregateAsJson(nonApplicationRootPathBuildItem.getNonApplicationRootPath());
+        } else {
+            importmap = aggregator.aggregateAsJson();
+        }
+
         aggregator.reset();
 
         String themeVars = themeVarsBuildItem.getTemplateValue();
@@ -314,14 +320,14 @@ public class BuildTimeContentProcessor {
         data.put("themeVars", themeVars);
         data.put("esModuleShimsVersion", esModuleShimsVersion);
 
-        quteTemplateBuildItem.add("index.html", data);
+        quteTemplateBuildItem.add(getIndexHtmlTemplateName(launchMode.getLaunchMode()), "index.html", data);
 
         return quteTemplateBuildItem;
     }
 
     // Here load all templates
     @BuildStep(onlyIf = IsDevUI.class)
-    void loadAllBuildTimeTemplates(BuildProducer<StaticContentBuildItem> buildTimeContentProducer,
+    void loadAllBuildTimeTemplates(BuildProducer<StaticContentBuildItem> staticContentProducer,
             List<QuteTemplateBuildItem> templates) {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         for (QuteTemplateBuildItem template : templates) {
@@ -351,7 +357,7 @@ public class BuildTimeContentProcessor {
                     throw new UncheckedIOException("An error occurred while processing " + resourceName, ioe);
                 }
             }
-            buildTimeContentProducer.produce(new StaticContentBuildItem(
+            staticContentProducer.produce(new StaticContentBuildItem(
                     StaticContentBuildItem.DEV_UI, contentPerExtension));
         }
     }
@@ -370,7 +376,7 @@ public class BuildTimeContentProcessor {
 
         BuildTimeConstBuildItem internalBuildTimeData = new BuildTimeConstBuildItem(AbstractDevUIBuildItem.DEV_UI);
 
-        addThemeBuildTimeData(internalBuildTimeData, themeVarsProducer);
+        addThemeBuildTimeData(internalBuildTimeData, themeVarsProducer, launchModeBuildItem);
         addMenuSectionBuildTimeData(internalBuildTimeData, internalPages, extensionsBuildItem, launchModeBuildItem);
         addFooterTabBuildTimeData(internalBuildTimeData, extensionsBuildItem, launchModeBuildItem);
         addVersionInfoBuildTimeData(internalBuildTimeData, nonApplicationRootPathBuildItem, launchModeBuildItem);
@@ -391,7 +397,8 @@ public class BuildTimeContentProcessor {
     }
 
     private void addThemeBuildTimeData(BuildTimeConstBuildItem internalBuildTimeData,
-            BuildProducer<ThemeVarsBuildItem> themeVarsProducer) {
+            BuildProducer<ThemeVarsBuildItem> themeVarsProducer,
+            LaunchModeBuildItem launchModeBuildItem) {
         // Theme details TODO: Allow configuration
         Map<String, Map<String, String>> themes = new HashMap<>();
         Map<String, String> dark = new HashMap<>();
@@ -402,7 +409,11 @@ public class BuildTimeContentProcessor {
         internalBuildTimeData.addBuildTimeData("themes", themes);
 
         // Also set at least one there for a default
-        themeVarsProducer.produce(new ThemeVarsBuildItem(light.keySet(), QUARKUS_BLUE.toString()));
+        if (launchModeBuildItem.getLaunchMode().isDevOrTest()) {
+            themeVarsProducer.produce(new ThemeVarsBuildItem(light.keySet(), QUARKUS_BLUE.toString()));
+        } else {
+            themeVarsProducer.produce(new ThemeVarsBuildItem(dark.keySet(), QUARKUS_RED.toString()));
+        }
     }
 
     private void addMenuSectionBuildTimeData(BuildTimeConstBuildItem internalBuildTimeData,
@@ -469,7 +480,7 @@ public class BuildTimeContentProcessor {
         // This is only needed when extension developers work on an extension, so we only included it if you build from source.
         if (Version.getVersion().equalsIgnoreCase("999-SNAPSHOT")) {
             String t = "Dev UI";
-            if (!launchModeBuildItem.getLaunchMode().equals(LaunchMode.DEVELOPMENT)) {
+            if (launchModeBuildItem.getLaunchMode().equals(LaunchMode.NORMAL)) {
                 t = "Prod UI";
             }
 
@@ -496,6 +507,13 @@ public class BuildTimeContentProcessor {
         Map<String, Object> applicationInfo = applicationInfoMap(launchModeBuildItem.getLaunchMode(),
                 nonApplicationRootPathBuildItem.getNonApplicationRootPath());
         internalBuildTimeData.addBuildTimeData("applicationInfo", applicationInfo);
+    }
+
+    private String getIndexHtmlTemplateName(LaunchMode launchMode) {
+        if (launchMode.isDevOrTest()) {
+            return "dev-index.html";
+        }
+        return "prod-index.html";
     }
 
     private Map<String, Object> applicationInfoMap(LaunchMode launchMode, String nonApplicationRoot) {

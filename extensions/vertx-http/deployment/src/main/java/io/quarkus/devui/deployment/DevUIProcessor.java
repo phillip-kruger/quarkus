@@ -40,6 +40,7 @@ import io.quarkus.deployment.builditem.AdditionalIndexedClassesBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
 import io.quarkus.dev.console.DevConsoleManager;
@@ -51,7 +52,10 @@ import io.quarkus.devui.runtime.DevUIRecorder;
 import io.quarkus.devui.runtime.comms.JsonRpcRouter;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethod;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethodName;
+import io.quarkus.devui.runtime.jsonrpc.JsonRpcResponse;
+import io.quarkus.devui.runtime.jsonrpc.Result;
 import io.quarkus.devui.runtime.jsonrpc.json.JsonMapper;
+import io.quarkus.devui.runtime.prod.ProdUIDatabindCodec;
 import io.quarkus.devui.spi.DevUIContent;
 import io.quarkus.devui.spi.IsDevUI;
 import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
@@ -70,6 +74,7 @@ import io.quarkus.runtime.util.ClassPathUtils;
 import io.quarkus.vertx.http.deployment.FilterBuildItem;
 import io.quarkus.vertx.http.deployment.NonApplicationRootPathBuildItem;
 import io.quarkus.vertx.http.deployment.RouteBuildItem;
+import io.quarkus.vertx.http.deployment.spi.AdditionalStaticResourceBuildItem;
 import io.quarkus.vertx.http.deployment.webjar.WebJarBuildItem;
 import io.quarkus.vertx.http.deployment.webjar.WebJarResourcesFilter;
 import io.quarkus.vertx.http.deployment.webjar.WebJarResultsBuildItem;
@@ -101,6 +106,10 @@ public class DevUIProcessor {
 
     private static final String JAR = "jar";
     private static final GACT UI_JAR = new GACT("io.quarkus", "quarkus-vertx-http-dev-ui-resources", null, JAR);
+    private static final String CLASSES = "classes";
+    private static final String META_INF = "META-INF";
+    private static final String RESOURCES = "resources";
+    private static final String EMPTY = "";
     private static final String YAML_FILE = "/META-INF/quarkus-extension.yaml";
     private static final String NAME = "name";
     private static final String DESCRIPTION = "description";
@@ -135,7 +144,9 @@ public class DevUIProcessor {
             DevUIRecorder recorder,
             NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem,
             ShutdownContextBuildItem shutdownContext,
-            OutputTargetBuildItem outputTarget) throws IOException {
+            OutputTargetBuildItem outputTarget,
+            BuildProducer<AdditionalStaticResourceBuildItem> additionalStaticResourceProducer)
+            throws IOException {
 
         if (devUIConfig.cors.enabled) {
             routeProducer.produce(nonApplicationRootPathBuildItem.routeBuilder()
@@ -155,10 +166,8 @@ public class DevUIProcessor {
         for (DevUIRoutesBuildItem devUIRoutesBuildItem : devUIRoutesBuildItems) {
             String route = devUIRoutesBuildItem.getPath();
             String finalDestination = devUIRoutesBuildItem.getFinalDestination();
-
-            System.out.println("------------> finalDestination = " + finalDestination);
-
             String path = nonApplicationRootPathBuildItem.resolvePath(route);
+
             Handler<RoutingContext> uihandler = recorder.uiHandler(
                     devUIRoutesBuildItem.getFinalDestination(),
                     path,
@@ -180,10 +189,17 @@ public class DevUIProcessor {
 
         String basepath = nonApplicationRootPathBuildItem.resolvePath(DEVUI);
         // For static content generated at build time
-        Path devUiBasePath = Files.createTempDirectory("quarkus-devui"); // TODO: Make this availabel via config
-        System.out.println("------------> devUiBasePath = " + devUiBasePath);
-
-        recorder.shutdownTask(shutdownContext, devUiBasePath.toString());
+        Path devUiBasePath = Files.createTempDirectory("quarkus-devui");
+        Path outputRoot = null;
+        if (launchModeBuildItem.getLaunchMode().equals(LaunchMode.NORMAL)) {
+            outputRoot = outputTarget.getOutputDirectory().resolve(CLASSES).resolve(META_INF).resolve(RESOURCES);
+            String narp = nonApplicationRootPathBuildItem.getNonApplicationRootPath().replace(SLASH, EMPTY);
+            devUiBasePath = outputRoot
+                    .resolve(narp).resolve(DEVUI); // TODO: Make this prod-ui ?
+            Files.createDirectories(devUiBasePath);
+        } else {
+            recorder.shutdownTask(shutdownContext, devUiBasePath.toString());
+        }
 
         Map<String, String> urlAndPath = new HashMap<>();
 
@@ -194,17 +210,23 @@ public class DevUIProcessor {
                 String parsedContent = Qute.fmt(new String(c.getTemplate()), c.getData());
                 Path tempFile = devUiBasePath
                         .resolve(c.getFileName());
-                System.out.println("------------> tempFile = " + tempFile);
                 Files.write(tempFile, parsedContent.getBytes(StandardCharsets.UTF_8));
+                String servingFrom = tempFile.toString();
+                if (outputRoot != null && launchModeBuildItem.getLaunchMode().equals(LaunchMode.NORMAL)) {
+                    servingFrom = servingFrom.substring(outputRoot.toString().length());
+                    additionalStaticResourceProducer.produce(new AdditionalStaticResourceBuildItem(servingFrom, false));
+                }
 
-                urlAndPath.put(c.getFileName(), tempFile.toString());
+                urlAndPath.put(c.getFileName(), servingFrom);
             }
-            Handler<RoutingContext> buildTimeStaticHandler = recorder.buildTimeStaticHandler(basepath, urlAndPath);
+            if (launchModeBuildItem.getLaunchMode().isDevOrTest()) {
+                Handler<RoutingContext> buildTimeStaticHandler = recorder.buildTimeStaticHandler(basepath, urlAndPath);
 
-            routeProducer.produce(
-                    nonApplicationRootPathBuildItem.routeBuilder().route(DEVUI + SLASH_ALL)
-                            .handler(buildTimeStaticHandler)
-                            .build());
+                routeProducer.produce(
+                        nonApplicationRootPathBuildItem.routeBuilder().route(DEVUI + SLASH_ALL)
+                                .handler(buildTimeStaticHandler)
+                                .build());
+            }
         }
 
         Handler<RoutingContext> endpointInfoHandler = recorder.endpointInfoHandler(basepath);
@@ -225,53 +247,51 @@ public class DevUIProcessor {
 
         String contextRoot = nonApplicationRootPathBuildItem.getNonApplicationRootPath();
 
-        //if (launchModeBuildItem.getLaunchMode().equals(LaunchMode.DEVELOPMENT)) {
-        // Static mvnpm jars
-        routeProducer.produce(
-                nonApplicationRootPathBuildItem.routeBuilder()
-                        .route("_static" + SLASH_ALL)
-                        .handler(recorder.mvnpmHandler(contextRoot, mvnpmBuildItem.getMvnpmJars()))
-                        .build());
+        if (launchModeBuildItem.getLaunchMode().isDevOrTest()) {
+            // Static mvnpm jars
+            routeProducer.produce(
+                    nonApplicationRootPathBuildItem.routeBuilder()
+                            .route("_static" + SLASH_ALL)
+                            .handler(recorder.mvnpmHandler(contextRoot, mvnpmBuildItem.getMvnpmJars()))
+                            .build());
 
-        if (launchModeBuildItem.getLaunchMode().equals(LaunchMode.NORMAL)) {
-            List<Path> mvnpmPaths = mvnpmBuildItem.getMvnpmPaths();
-            for (Path p : mvnpmPaths) {
-                System.out.println("*** " + p.toString());
-            }
+        } else if (launchModeBuildItem.getLaunchMode().equals(LaunchMode.NORMAL)) {
+
+            //            List<Path> mvnpmPaths = mvnpmBuildItem.getMvnpmPaths();
+            //            for (Path p : mvnpmPaths) {
+            //                System.out.println("*** " + p.toString());
+            //            }
+
+            //            // Bundle to be included
+            //            final Path targetDir = outputTarget.getOutputDirectory().resolve(TARGET_DIR_NAME);
+            //
+            //            Map<String, EsBuildConfig.Loader> loaders = new HashMap<>();
+            //            for (EsBuildConfig.Loader loader : EsBuildConfig.Loader.values()) {
+            //                loaders.put(loader.name(), loader);
+            //            }
+            //
+            //            final EsBuildConfigBuilder esBuildConfigBuilder = new EsBuildConfigBuilder()
+            //                    //.loader(loaders)
+            //                    //.addExternal(surroundWithSlashes(config.staticDir()) + "*")
+            //                    .minify(true);
+            //
+            //            ArrayList<String> scripts = new ArrayList<>(urlAndPath.keySet());
+            //
+            //            String name = UUID.randomUUID().toString();
+            //            final BundleOptionsBuilder options = new BundleOptionsBuilder()
+            //                    .addAutoEntryPoint(devUiBasePath, name, scripts)
+            //                    .setWorkFolder(targetDir)
+            //                    .withDependencies(mvnpmBuildItem.getMvnpmPaths())
+            //                    .withEsConfig(esBuildConfigBuilder.build())
+            //                    .withType(BundleType.MVNPM);
+            //
+            //            final BundleResult result = Bundler.bundle(options.build());
+            //
+            //            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>> ");
+            //            System.out.println(">> " + result);
+            //            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>> ");
+            //
         }
-
-        //        } else if (launchModeBuildItem.getLaunchMode().equals(LaunchMode.NORMAL)) {
-        //            // Bundle to be included
-        //            final Path targetDir = outputTarget.getOutputDirectory().resolve(TARGET_DIR_NAME);
-        //
-        //            Map<String, EsBuildConfig.Loader> loaders = new HashMap<>();
-        //            for (EsBuildConfig.Loader loader : EsBuildConfig.Loader.values()) {
-        //                loaders.put(loader.name(), loader);
-        //            }
-        //
-        //            final EsBuildConfigBuilder esBuildConfigBuilder = new EsBuildConfigBuilder()
-        //                    //.loader(loaders)
-        //                    //.addExternal(surroundWithSlashes(config.staticDir()) + "*")
-        //                    .minify(true);
-        //
-        //            ArrayList<String> scripts = new ArrayList<>(urlAndPath.keySet());
-        //
-        //            String name = UUID.randomUUID().toString();
-        //            final BundleOptionsBuilder options = new BundleOptionsBuilder()
-        //                    .addAutoEntryPoint(devUiBasePath, name, scripts)
-        //                    .setWorkFolder(targetDir)
-        //                    .withDependencies(mvnpmBuildItem.getMvnpmPaths())
-        //                    .withEsConfig(esBuildConfigBuilder.build())
-        //                    .withType(BundleType.MVNPM);
-        //
-        //            final BundleResult result = Bundler.bundle(options.build());
-        //
-        //            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>> ");
-        //            System.out.println(">> " + result);
-        //            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>> ");
-        //
-        //        }
-
         // Redirect /q/dev -> /q/dev-ui
         routeProducer.produce(nonApplicationRootPathBuildItem.routeBuilder()
                 .route("dev")
@@ -285,6 +305,7 @@ public class DevUIProcessor {
     @BuildStep(onlyIf = IsDevUI.class)
     void additionalBean(BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
             BuildProducer<AdditionalIndexedClassesBuildItem> additionalIndexProducer,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
             List<JsonRPCProvidersBuildItem> jsonRPCProvidersBuildItems) {
 
         additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
@@ -304,12 +325,20 @@ public class DevUIProcessor {
                     .addBeanClass(c)
                     .setDefaultScope(defaultBeanScope)
                     .setUnremovable().build());
+
+            reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(c).build());
         }
 
         additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
                 .addBeanClass(JsonRpcRouter.class)
                 .setDefaultScope(BuiltinScope.APPLICATION.getName())
                 .setUnremovable().build());
+
+        reflectiveClassProducer
+                .produce(ReflectiveClassBuildItem.builder(JsonRpcResponse.class,
+                        ProdUIDatabindCodec.class,
+                        Result.class,
+                        Error.class).build());
 
     }
 
@@ -445,8 +474,6 @@ public class DevUIProcessor {
                 .artifactKey(UI_JAR)
                 .root(DEVUI + SLASH).build();
         webJarBuildProducer.produce(internalComponents);
-
-        System.out.println("=======> internalComponents = " + internalComponents.getRoot());
 
         internalComponents.getRoot();
 

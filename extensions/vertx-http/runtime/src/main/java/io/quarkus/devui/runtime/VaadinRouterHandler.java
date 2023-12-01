@@ -27,10 +27,14 @@ public class VaadinRouterHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(RoutingContext event) {
-        if (event.normalizedPath().startsWith(basePath)) {
+        if (!isWebFile(event.normalizedPath()) && event.normalizedPath().startsWith(basePath)) {
             event.reroute(basePath + "/index.html");
             return;
         }
         event.next();
+    }
+
+    private boolean isWebFile(String rp) {
+        return rp.endsWith(".html") || rp.endsWith(".js") || rp.endsWith(".css") || rp.endsWith(".ico") || rp.endsWith(".png");
     }
 }
