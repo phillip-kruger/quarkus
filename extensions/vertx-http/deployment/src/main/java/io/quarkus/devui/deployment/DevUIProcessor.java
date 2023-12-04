@@ -130,7 +130,7 @@ public class DevUIProcessor {
     private static final String LANGUAGES = "languages";
 
     private static final Logger log = Logger.getLogger(DevUIProcessor.class);
-    private static final String TARGET_DIR_NAME = "web-bundler"; // TODO: Change to Prod UI ?
+    //    private static final String TARGET_DIR_NAME = "web-bundler"; // TODO: Change to Prod UI ?
 
     @BuildStep(onlyIf = IsDevUI.class)
     @Record(ExecutionTime.STATIC_INIT)
@@ -325,8 +325,6 @@ public class DevUIProcessor {
                     .addBeanClass(c)
                     .setDefaultScope(defaultBeanScope)
                     .setUnremovable().build());
-
-            reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(c).build());
         }
 
         additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
@@ -334,6 +332,7 @@ public class DevUIProcessor {
                 .setDefaultScope(BuiltinScope.APPLICATION.getName())
                 .setUnremovable().build());
 
+        System.out.println(">>>>>>>>>>>> Adding 2 : " + JsonRpcResponse.class.getName());
         reflectiveClassProducer
                 .produce(ReflectiveClassBuildItem.builder(JsonRpcResponse.class,
                         ProdUIDatabindCodec.class,
@@ -348,6 +347,7 @@ public class DevUIProcessor {
     @BuildStep(onlyIf = IsDevUI.class)
     void findAllJsonRPCMethods(BuildProducer<JsonRPCMethodsBuildItem> jsonRPCMethodsProvider,
             BuildProducer<BuildTimeConstBuildItem> buildTimeConstProducer,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
             CombinedIndexBuildItem combinedIndexBuildItem,
             CurateOutcomeBuildItem curateOutcomeBuildItem,
             List<JsonRPCProvidersBuildItem> jsonRPCProvidersBuildItems) {
@@ -382,6 +382,10 @@ public class DevUIProcessor {
                             if (method.returnType().name().equals(DotName.createSimple(Multi.class.getName()))) {
                                 subscriptionMethods.add(extension + DOT + method.name());
                             } else {
+                                Class returnClass = toClass(method.returnType());
+                                reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(returnClass).build());
+                                System.out.println(">>>>>>>>>>>> Adding 4 : " + returnClass.getName());
+
                                 requestResponseMethods.add(extension + DOT + method.name());
                             }
 
@@ -392,6 +396,8 @@ public class DevUIProcessor {
                                 for (int i = 0; i < method.parametersCount(); i++) {
                                     Type parameterType = method.parameterType(i);
                                     Class parameterClass = toClass(parameterType);
+                                    reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(parameterClass).build());
+                                    System.out.println(">>>>>>>>>>>> Adding 5 : " + parameterClass.getName());
                                     String parameterName = method.parameterName(i);
                                     params.put(parameterName, parameterClass);
                                 }
@@ -431,6 +437,10 @@ public class DevUIProcessor {
         }
 
         buildTimeConstProducer.produce(methodInfo);
+
+    }
+
+    private void registerReponseClass(Class clazz) {
 
     }
 

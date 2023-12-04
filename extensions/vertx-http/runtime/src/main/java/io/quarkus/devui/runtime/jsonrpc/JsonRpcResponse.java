@@ -8,6 +8,7 @@ public final class JsonRpcResponse {
     private int id;
     private Result result;
     private Error error;
+    private String jsonrpc = VERSION;
 
     public JsonRpcResponse() {
 
@@ -26,7 +27,11 @@ public final class JsonRpcResponse {
     }
 
     public String getJsonrpc() {
-        return VERSION;
+        return jsonrpc;
+    }
+
+    public void setJsonrpc(String jsonrpc) {
+        this.jsonrpc = jsonrpc;
     }
 
     public int getId() {

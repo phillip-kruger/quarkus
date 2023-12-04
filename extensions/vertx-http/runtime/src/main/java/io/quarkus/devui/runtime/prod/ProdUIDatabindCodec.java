@@ -1,6 +1,5 @@
 package io.quarkus.devui.runtime.prod;
 
-//import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.time.Instant;
@@ -20,6 +19,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
+import io.quarkus.devui.runtime.jsonrpc.JsonRpcResponse;
 import io.quarkus.devui.runtime.jsonrpc.json.JsonMapper;
 import io.quarkus.devui.runtime.jsonrpc.json.JsonTypeAdapter;
 import io.quarkus.vertx.runtime.jackson.ByteArrayDeserializer;
@@ -28,6 +28,7 @@ import io.quarkus.vertx.runtime.jackson.InstantDeserializer;
 import io.quarkus.vertx.runtime.jackson.InstantSerializer;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.EncodeException;
+import io.vertx.core.json.JsonObject;
 
 public class ProdUIDatabindCodec implements JsonMapper {
     private final ObjectMapper mapper;
@@ -93,6 +94,28 @@ public class ProdUIDatabindCodec implements JsonMapper {
     public String toString(Object object, boolean pretty) throws EncodeException {
         try {
             ObjectMapper theMapper = pretty ? prettyMapper : mapper;
+
+            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>> object = " + object.getClass().getName());
+            if (object.getClass().getName().equals("io.quarkus.devui.runtime.jsonrpc.JsonRpcResponse")) {
+
+                JsonRpcResponse jsonRpcResponse = (JsonRpcResponse) object;
+
+                Object realobject = jsonRpcResponse.getResult().getObject();
+                
+                if (realobject != null) {
+                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>> realobject class = " + realobject.getClass().getName());
+                }
+                JsonObject jsonRpcResponse2 = JsonObject.of();
+                jsonRpcResponse2.put("id", jsonRpcResponse.getId());
+                jsonRpcResponse2.put("jsonrpc", jsonRpcResponse.getJsonrpc());
+                JsonObject result2 = JsonObject.of();
+                result2.put("messageType", jsonRpcResponse.getResult().getMessageType());
+                result2.put("object", jsonRpcResponse.getResult().getObject());
+                jsonRpcResponse2.put("result", result2);
+
+                return jsonRpcResponse2.toString();
+                
+            }
             return theMapper.writeValueAsString(object);
         } catch (Exception e) {
             throw new EncodeException("Failed to encode as JSON: " + e.getMessage(), e);

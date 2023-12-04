@@ -1,13 +1,13 @@
 package io.quarkus.devui.runtime.jsonrpc;
 
-public class Result {
+public class Result<T> {
     private String messageType;
-    private Object object;
+    private T object;
 
     public Result() {
     }
 
-    public Result(String messageType, Object object) {
+    public Result(String messageType, T object) {
         this.messageType = messageType;
         this.object = object;
     }
@@ -20,11 +20,11 @@ public class Result {
         this.messageType = messageType;
     }
 
-    public Object getObject() {
+    public T getObject() {
         return object;
     }
 
-    public void setObject(Object object) {
+    public void setObject(T object) {
         this.object = object;
     }
 }
