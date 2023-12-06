@@ -101,7 +101,7 @@ public class ProdUIDatabindCodec implements JsonMapper {
                 JsonRpcResponse jsonRpcResponse = (JsonRpcResponse) object;
 
                 Object realobject = jsonRpcResponse.getResult().getObject();
-                
+
                 if (realobject != null) {
                     System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>> realobject class = " + realobject.getClass().getName());
                 }
@@ -114,7 +114,7 @@ public class ProdUIDatabindCodec implements JsonMapper {
                 jsonRpcResponse2.put("result", result2);
 
                 return jsonRpcResponse2.toString();
-                
+
             }
             return theMapper.writeValueAsString(object);
         } catch (Exception e) {
