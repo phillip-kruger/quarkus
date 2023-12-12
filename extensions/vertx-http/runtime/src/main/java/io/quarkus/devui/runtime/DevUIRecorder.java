@@ -80,6 +80,10 @@ public class DevUIRecorder {
         }
     }
 
+    public Handler<RoutingContext> corsHandler(DevUIRuntimeConfig devUIRuntimeConfig) {
+        return new DevUICORSFilter(devUIRuntimeConfig.cors);
+    }
+
     public Handler<RoutingContext> communicationHandler() {
         return new DevUIWebSocket();
     }

@@ -86,7 +86,7 @@ public class DevUICorsTest {
                 .options("q/dev-ui/configuration-form-editor").then()
                 .statusCode(403)
                 .header("Access-Control-Allow-Origin", nullValue())
-                .header("Access-Control-Allow-Methods", nullValue())
+                .header("Access-Control-Allow-Methods", methods)
                 .body(emptyOrNullString());
     }
 

@@ -32,7 +32,7 @@ public class DevUIConfig {
          * Enable CORS filter.
          */
         @ConfigItem(defaultValue = "true")
-        public boolean enabled = true;
+        public boolean enabled;
     }
 
     @ConfigGroup

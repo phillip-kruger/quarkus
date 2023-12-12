@@ -47,8 +47,8 @@ import io.quarkus.dev.console.DevConsoleManager;
 import io.quarkus.devui.deployment.extension.Codestart;
 import io.quarkus.devui.deployment.extension.Extension;
 import io.quarkus.devui.deployment.jsonrpc.DevUIDatabindCodec;
-import io.quarkus.devui.runtime.DevUICORSFilter;
 import io.quarkus.devui.runtime.DevUIRecorder;
+import io.quarkus.devui.runtime.DevUIRuntimeConfig;
 import io.quarkus.devui.runtime.comms.JsonRpcRouter;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethod;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethodName;
@@ -137,6 +137,7 @@ public class DevUIProcessor {
     void registerDevUiHandlers(
             LaunchModeBuildItem launchModeBuildItem,
             DevUIConfig devUIConfig,
+            DevUIRuntimeConfig devUIRuntimeConfig,
             MvnpmBuildItem mvnpmBuildItem,
             List<DevUIRoutesBuildItem> devUIRoutesBuildItems,
             List<StaticContentBuildItem> staticContentBuildItems,
@@ -151,7 +152,7 @@ public class DevUIProcessor {
         if (devUIConfig.cors.enabled) {
             routeProducer.produce(nonApplicationRootPathBuildItem.routeBuilder()
                     .orderedRoute(DEVUI + SLASH_ALL, -1 * FilterBuildItem.CORS)
-                    .handler(new DevUICORSFilter())
+                    .handler(recorder.corsHandler(devUIRuntimeConfig))
                     .build());
         }
 
