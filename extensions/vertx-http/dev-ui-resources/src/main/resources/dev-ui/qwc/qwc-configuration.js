@@ -20,6 +20,7 @@ import { gridRowDetailsRenderer } from '@vaadin/grid/lit.js';
 import { observeState } from 'lit-element-state';
 import { connectionState } from 'connection-state';
 import 'qui-badge';
+import 'qui-switch';
 
 /**
  * This component allows users to change the configuration
@@ -327,13 +328,11 @@ export class QwcConfiguration extends observeState(LitElement) {
         } else if (prop.typeName === "java.lang.Boolean") {
             let isChecked = (actualValue === 'true');
             return html`
-                <vaadin-checkbox theme="small"
-                                @change="${(event) => {
+                    <qui-switch @change="${(event) => {
                                     this._checkedChanged(prop, event, event.target.checked);
                                 }}"
-                                .checked=${isChecked}>
-                    <vaadin-tooltip slot="tooltip" text="${def}"></vaadin-tooltip>
-                </vaadin-checkbox>`;
+                                ?checked=${isChecked}>
+                    </qui-switch>`;
         } else if (prop.typeName === "java.lang.Integer" || prop.typeName === "java.lang.Long") {
             return html`
                 <vaadin-integer-field class="input-column"
@@ -457,6 +456,7 @@ export class QwcConfiguration extends observeState(LitElement) {
     }
 
     _checkedChanged(property, event, value) {
+        console.log("Yippy kaje !");
         event.preventDefault();
         this._updateProperty(property.name, value.toString());
     }
