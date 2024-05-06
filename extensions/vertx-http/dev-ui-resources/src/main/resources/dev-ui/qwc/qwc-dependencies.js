@@ -63,9 +63,9 @@ export class QwcDependencies extends LitElement {
     constructor() {
         super();
         this._root = root;
-        this._categories =     ['root'   , 'deployment', 'runtime'];
-        this._categoriesEnum = ['root'   , 'deployment', 'runtime'];
-        this._colors =         ['#ee6666', '#5470c6'   , '#91cc75'];
+        this._categories =     ['root'   , 'deployment', 'runtime', 'target'];
+        this._categoriesEnum = ['root'   , 'deployment', 'runtime', 'target'];
+        this._colors =         ['#ee6666', '#5470c6'   , '#91cc75', '#f7c657'];
         this._edgeLength = 120;
         this._nodes = null;
         this._links = null;
@@ -110,6 +110,8 @@ export class QwcDependencies extends LitElement {
             let newNode = this._createNode(dependencyGraphNode);
             if(this._isRoot(dependencyGraphNode)){
                 newNode.category = 0; // Root
+            }else if(this._isTarget(dependencyGraphNode)){
+                newNode.category = 3; // Target
             }else {
                 newNode.category = catindex;
             }
@@ -125,6 +127,13 @@ export class QwcDependencies extends LitElement {
 
     _isRoot(dependencyGraphNode){
         return dependencyGraphNode.id === this._root.rootId;
+    }
+
+    _isTarget(dependencyGraphNode){
+        if(this._selectedTarget){
+            return dependencyGraphNode.id === this._selectedTarget;
+        }
+        return false;
     }
 
     _createNode(node){

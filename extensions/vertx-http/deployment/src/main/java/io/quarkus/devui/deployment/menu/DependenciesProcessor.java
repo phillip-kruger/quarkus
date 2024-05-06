@@ -11,6 +11,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import io.quarkus.bootstrap.model.ApplicationModel;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -33,46 +36,55 @@ public class DependenciesProcessor {
 
         // Menu
 
-        InternalPageBuildItem page = new InternalPageBuildItem("Dependencies", 70);
+        if (isEnabled()) {
 
-        page.addPage(Page.webComponentPageBuilder()
-                .namespace(NAMESPACE)
-                .icon("font-awesome-solid:diagram-project")
-                .title("Application Dependencies")
-                .componentLink("qwc-dependencies.js"));
+            InternalPageBuildItem page = new InternalPageBuildItem("Dependencies", 70);
 
-        Root root = new Root();
-        root.rootId = curateOutcomeBuildItem.getApplicationModel().getAppArtifact().toCompactCoords();
-        Set<String> allGavs = new TreeSet<>();
-        buildTree(curateOutcomeBuildItem.getApplicationModel(), root, Optional.of(allGavs), Optional.empty());
+            page.addPage(Page.webComponentPageBuilder()
+                    .namespace(NAMESPACE)
+                    .icon("font-awesome-solid:diagram-project")
+                    .title("Application Dependencies")
+                    .componentLink("qwc-dependencies.js"));
 
-        page.addBuildTimeData("root", root);
-        page.addBuildTimeData("allGavs", allGavs);
+            Root root = new Root();
+            root.rootId = curateOutcomeBuildItem.getApplicationModel().getAppArtifact().toCompactCoords();
+            Set<String> allGavs = new TreeSet<>();
+            buildTree(curateOutcomeBuildItem.getApplicationModel(), root, Optional.of(allGavs), Optional.empty());
 
-        menuProducer.produce(page);
+            page.addBuildTimeData("root", root);
+            page.addBuildTimeData("allGavs", allGavs);
+
+            menuProducer.produce(page);
+        }
     }
 
     @BuildStep(onlyIf = IsDevelopment.class)
-    BuildTimeActionBuildItem createBuildTimeActions(CurateOutcomeBuildItem curateOutcomeBuildItem) {
-        BuildTimeActionBuildItem pathToTargetAction = new BuildTimeActionBuildItem(NAMESPACE);
-        pathToTargetAction.addAction("pathToTarget", p -> {
-            String target = p.get("target");
-            Root root = new Root();
-            root.rootId = curateOutcomeBuildItem.getApplicationModel().getAppArtifact().toCompactCoords();
+    void createBuildTimeActions(BuildProducer<BuildTimeActionBuildItem> buildTimeActionProducer,
+            CurateOutcomeBuildItem curateOutcomeBuildItem) {
+        if (isEnabled()) {
+            BuildTimeActionBuildItem pathToTargetAction = new BuildTimeActionBuildItem(NAMESPACE);
+            pathToTargetAction.addAction("pathToTarget", p -> {
+                String target = p.get("target");
+                Root root = new Root();
+                root.rootId = curateOutcomeBuildItem.getApplicationModel().getAppArtifact().toCompactCoords();
 
-            if (target == null || target.isBlank()) {
-                buildTree(curateOutcomeBuildItem.getApplicationModel(), root, Optional.empty(), Optional.empty());
-            } else {
-                buildTree(curateOutcomeBuildItem.getApplicationModel(), root, Optional.empty(), Optional.of(target));
-            }
+                if (target == null || target.isBlank()) {
+                    buildTree(curateOutcomeBuildItem.getApplicationModel(), root, Optional.empty(), Optional.empty());
+                } else {
+                    buildTree(curateOutcomeBuildItem.getApplicationModel(), root, Optional.empty(), Optional.of(target));
+                }
 
-            return root;
-        });
+                return root;
+            });
 
-        return pathToTargetAction;
+            buildTimeActionProducer.produce(pathToTargetAction);
+        }
     }
 
-    //"io.quarkus:quarkus-vertx-http:999-SNAPSHOT"
+    private boolean isEnabled() {
+        Config c = ConfigProvider.getConfig();
+        return c.getValue("quarkus.bootstrap.incubating-model-resolver", Boolean.class);
+    }
 
     private void buildTree(ApplicationModel model, Root root, Optional<Set<String>> allGavs, Optional<String> toTarget) {
         final Collection<ResolvedDependency> resolvedDeps = model.getDependencies();
@@ -81,20 +93,20 @@ public class DependenciesProcessor {
 
         if (toTarget.isEmpty()) {
 
-            addDependency(model.getAppArtifact(), nodes, links, allGavs);
+            addDependency(model.getAppArtifact(), root, nodes, links, allGavs);
             for (ResolvedDependency rd : resolvedDeps) {
-                addDependency(rd, nodes, links, allGavs);
+                addDependency(rd, root, nodes, links, allGavs);
             }
         } else {
-            var targetDep = getTargetDepNode(model, ArtifactCoords.fromString(toTarget.get()));
-            addDependency(targetDep, nodes, links, allGavs, new HashSet<>());
+            DepNode targetDep = getTargetDepNode(model, ArtifactCoords.fromString(toTarget.get()));
+            addDependency(targetDep, root, nodes, links, allGavs, new HashSet<>());
         }
 
         root.nodes = nodes;
         root.links = links;
     }
 
-    private static void addDependency(ResolvedDependency rd, List<Node> nodes, List<Link> links,
+    private static void addDependency(ResolvedDependency rd, Root root, List<Node> nodes, List<Link> links,
             Optional<Set<String>> allGavs) {
         Node node = new Node();
 
@@ -119,12 +131,12 @@ public class DependenciesProcessor {
             link.source = node.id;
             link.target = dep.toCompactCoords();
             link.type = type;
-            link.direct = rd.isDirect();
+            link.direct = (link.source == root.rootId);
             links.add(link);
         }
     }
 
-    private static void addDependency(DepNode dep, List<Node> nodes, List<Link> links, Optional<Set<String>> allGavs,
+    private static void addDependency(DepNode dep, Root root, List<Node> nodes, List<Link> links, Optional<Set<String>> allGavs,
             Set<String> visited) {
         String id = dep.resolvedDep.toCompactCoords();
         if (!visited.add(id)) {
@@ -133,7 +145,6 @@ public class DependenciesProcessor {
         var rd = dep.resolvedDep;
 
         if (allGavs.isPresent()) {
-            System.out.println(">>>>>>>>>>>>>> " + rd.toCompactCoords());
             allGavs.get().add(rd.toCompactCoords());
         }
 
@@ -144,11 +155,12 @@ public class DependenciesProcessor {
         nodes.add(node);
 
         for (DepNode dependent : dep.dependents) {
-            addDependency(dependent, nodes, links, allGavs, visited);
+            addDependency(dependent, root, nodes, links, allGavs, visited);
             Link link = new Link();
             link.source = dependent.resolvedDep.toCompactCoords();
             link.target = node.id;
             link.type = dependent.resolvedDep.isRuntimeCp() ? "runtime" : "deployment";
+            link.direct = (link.source == root.rootId);
             links.add(link);
         }
     }
