@@ -414,7 +414,8 @@ public class VertxHttpRecorder {
 
         applyCompression(httpBuildTimeConfig.enableCompression, httpRouteRouter);
         httpRouteRouter.route().last().failureHandler(
-                new QuarkusErrorHandler(launchMode.isDevOrTest(), httpConfiguration.unhandledErrorContentTypeDefault));
+                new QuarkusErrorHandler(launchMode.isDevOrTest(), launchMode.equals(LaunchMode.DEVELOPMENT),
+                        httpConfiguration.unhandledErrorContentTypeDefault));
 
         for (BooleanSupplier requireBodyHandlerCondition : requireBodyHandlerConditions) {
             if (requireBodyHandlerCondition.getAsBoolean()) {
@@ -533,7 +534,8 @@ public class VertxHttpRecorder {
             addHotReplacementHandlerIfNeeded(mr);
 
             mr.route().last().failureHandler(
-                    new QuarkusErrorHandler(launchMode.isDevOrTest(), httpConfiguration.unhandledErrorContentTypeDefault));
+                    new QuarkusErrorHandler(launchMode.isDevOrTest(), launchMode.equals(LaunchMode.DEVELOPMENT),
+                            httpConfiguration.unhandledErrorContentTypeDefault));
 
             mr.route().order(RouteConstants.ROUTE_ORDER_BODY_HANDLER_MANAGEMENT)
                     .handler(createBodyHandlerForManagementInterface());
