@@ -22,6 +22,7 @@ import io.quarkus.dev.spi.DevModeType;
 import io.quarkus.vertx.http.deployment.HttpRootPathBuildItem;
 import io.quarkus.vertx.http.deployment.VertxWebRouterBuildItem;
 import io.quarkus.vertx.http.runtime.devmode.AdditionalRouteDescription;
+import io.quarkus.vertx.http.runtime.devmode.NotFoundAction;
 import io.quarkus.vertx.http.runtime.devmode.ResourceNotFoundData;
 import io.quarkus.vertx.http.runtime.devmode.ResourceNotFoundRecorder;
 import io.quarkus.vertx.http.runtime.devmode.RouteDescription;
@@ -48,7 +49,8 @@ public class NotFoundProcessor {
             LaunchModeBuildItem launchMode,
             ApplicationArchivesBuildItem applicationArchivesBuildItem,
             List<RouteDescriptionBuildItem> routeDescriptions,
-            List<NotFoundPageDisplayableEndpointBuildItem> additionalEndpoints) {
+            List<NotFoundPageDisplayableEndpointBuildItem> additionalEndpoints,
+            List<NotFoundPageActionBuildItem> actions) {
 
         // Route Endpoints
         List<RouteDescription> routes = new ArrayList<>();
@@ -72,6 +74,12 @@ public class NotFoundProcessor {
                 .sorted()
                 .collect(Collectors.toList());
 
+        // Actions contributed by extensions
+        List<NotFoundAction> combinedActions = new ArrayList<>();
+        for(NotFoundPageActionBuildItem action:actions){
+            combinedActions.addAll(action.getActions());
+        }
+        
         // Not found handler
         Handler<RoutingContext> notFoundHandler = recorder.registerNotFoundHandler(
                 router.getHttpRouter(),
@@ -82,7 +90,8 @@ public class NotFoundProcessor {
                 httpRoot.getRootPath(),
                 routes,
                 staticRoots,
-                endpoints);
+                endpoints,
+                combinedActions);
     }
 
     private String getBaseUrl(LaunchModeBuildItem launchMode) {

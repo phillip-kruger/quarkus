@@ -21,7 +21,8 @@ public class ResourceNotFoundRecorder {
             String httpRoot,
             List<RouteDescription> endpointRoutes,
             Set<String> staticRoots,
-            List<AdditionalRouteDescription> additionalEndpoints) {
+            List<AdditionalRouteDescription> additionalEndpoints,
+            List<NotFoundAction> actions) {
 
         ResourceNotFoundData resourceNotFoundData = beanContainer.beanInstance(ResourceNotFoundData.class);
         resourceNotFoundData.setBaseUrl(baseUrl);
@@ -29,7 +30,7 @@ public class ResourceNotFoundRecorder {
         resourceNotFoundData.setEndpointRoutes(endpointRoutes);
         resourceNotFoundData.setStaticRoots(staticRoots);
         resourceNotFoundData.setAdditionalEndpoints(additionalEndpoints);
-
+        resourceNotFoundData.setActions(actions);
         ResourceNotFoundHandler rbfh = new ResourceNotFoundHandler();
 
         addErrorHandler(mainRouter, rbfh);

@@ -42,7 +42,8 @@ public class ResourceNotFoundData {
     private List<RouteDescription> endpointRoutes;
     private Set<String> staticRoots;
     private List<AdditionalRouteDescription> additionalEndpoints;
-
+    private List<NotFoundAction> actions;
+    
     public void setBaseUrl(String baseUrl) {
         this.baseUrl = baseUrl;
     }
@@ -63,6 +64,10 @@ public class ResourceNotFoundData {
         this.additionalEndpoints = additionalEndpoints;
     }
 
+    public void setActions(List<NotFoundAction> actions){
+        this.actions = actions;
+    }
+    
     public static void addServlet(String mapping) {
         servletMappings.add(mapping);
     }
@@ -70,7 +75,7 @@ public class ResourceNotFoundData {
     public static void setRuntimeRoutes(List<RouteDescription> routeDescriptions) {
         runtimeRoutes = routeDescriptions;
     }
-
+    
     public String getHTMLContent() {
 
         List<RouteDescription> combinedRoutes = getCombinedRoutes();
