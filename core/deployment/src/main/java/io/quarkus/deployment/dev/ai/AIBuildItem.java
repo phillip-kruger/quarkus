@@ -9,11 +9,13 @@ import io.quarkus.builder.item.SimpleBuildItem;
  */
 public final class AIBuildItem extends SimpleBuildItem {
 
-    public AIBuildItem() {
+    private final AIClient aiClient;
 
+    public AIBuildItem(AIClient aiClient) {
+        this.aiClient = aiClient;
     }
 
-    public String sayHello(String name) {
-        return "Hello " + name;
+    public AIClient getAIClient() {
+        return aiClient;
     }
 }
