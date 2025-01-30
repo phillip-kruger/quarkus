@@ -23,13 +23,14 @@ import org.eclipse.microprofile.openapi.models.security.SecurityRequirement;
 import org.eclipse.microprofile.openapi.models.security.SecurityScheme;
 
 /**
- * This filter replaces the former AutoTagFilter and AutoRolesAllowedFilter and has three functions:
+ * This filter has the following functions:
  * <ul>
- * <li>Add operation descriptions based on the associated Java method name handling the operation
- * <li>Add operation tags based on the associated Java class of the operation
+ * <li>Add operation descriptions based on the associated Java method name handling the operation</li>
+ * <li>Add operation tags based on the associated Java class of the operation</li>
  * <li>Add security requirements based on discovered {@link jakarta.annotation.security.RolesAllowed},
  * {@link io.quarkus.security.PermissionsAllowed}, and {@link io.quarkus.security.Authenticated}
- * annotations.
+ * annotations. Also add the expected security responses if needed.</li>
+ * <li>Add Bad Request (400) response for invalid input (if none is provided)</li>
  * </ul>
  */
 public class OperationFilter implements OASFilter {
@@ -42,13 +43,14 @@ public class OperationFilter implements OASFilter {
     private final String defaultSecuritySchemeName;
     private final boolean doAutoTag;
     private final boolean doAutoOperation;
+    private final boolean doAutoBadRequest;
     private final boolean alwaysIncludeScopesValidForScheme;
 
     public OperationFilter(Map<String, ClassAndMethod> classNameMap,
             Map<String, List<String>> rolesAllowedMethodReferences,
             List<String> authenticatedMethodReferences,
             String defaultSecuritySchemeName,
-            boolean doAutoTag, boolean doAutoOperation, boolean alwaysIncludeScopesValidForScheme) {
+            boolean doAutoTag, boolean doAutoOperation, boolean doAutoBadRequest, boolean alwaysIncludeScopesValidForScheme) {
 
         this.classNameMap = Objects.requireNonNull(classNameMap);
         this.rolesAllowedMethodReferences = Objects.requireNonNull(rolesAllowedMethodReferences);
@@ -56,6 +58,7 @@ public class OperationFilter implements OASFilter {
         this.defaultSecuritySchemeName = Objects.requireNonNull(defaultSecuritySchemeName);
         this.doAutoTag = doAutoTag;
         this.doAutoOperation = doAutoOperation;
+        this.doAutoBadRequest = doAutoBadRequest;
         this.alwaysIncludeScopesValidForScheme = alwaysIncludeScopesValidForScheme;
     }
 
@@ -77,24 +80,38 @@ public class OperationFilter implements OASFilter {
                 .map(Map.Entry::getValue)
                 .map(PathItem::getOperations)
                 .filter(Objects::nonNull)
-                .map(Map::values)
-                .flatMap(Collection::stream)
+                .flatMap(operations -> operations.entrySet().stream())
                 .forEach(operation -> {
-                    final String methodRef = methodRef(operation);
+                    final String methodRef = methodRef(operation.getValue());
 
                     if (methodRef != null) {
-                        maybeSetSummaryAndTag(operation, methodRef);
-                        maybeAddSecurityRequirement(operation, methodRef, schemeName, scopesValidForScheme,
+                        maybeSetSummaryAndTag(operation.getValue(), methodRef);
+                        maybeAddSecurityRequirement(operation.getValue(), methodRef, schemeName, scopesValidForScheme,
                                 defaultSecurityErrors);
+                        maybeAddBadRequestResponse(operation, methodRef);
                     }
 
-                    operation.removeExtension(EXT_METHOD_REF);
+                    operation.getValue().removeExtension(EXT_METHOD_REF);
                 });
     }
 
     private String methodRef(Operation operation) {
         final Map<String, Object> extensions = operation.getExtensions();
         return (String) (extensions != null ? extensions.get(EXT_METHOD_REF) : null);
+    }
+
+    private void maybeAddBadRequestResponse(Map.Entry<PathItem.HttpMethod, Operation> operation, String methodRef) {
+        if (!classNameMap.containsKey(methodRef)) {
+            return;
+        }
+        if (doAutoBadRequest && (operation.getKey().equals(PathItem.HttpMethod.POST)
+                || operation.getKey().equals(PathItem.HttpMethod.PUT))) { // Only applies to input
+            if (!operation.getValue().getResponses().hasAPIResponse("400")) { // Only when the user has not already added one
+                operation.getValue().getResponses().addAPIResponse("400",
+                        OASFactory.createAPIResponse().description("Bad Request"));
+            }
+        }
+
     }
 
     private void maybeSetSummaryAndTag(Operation operation, String methodRef) {
