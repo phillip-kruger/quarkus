@@ -6,13 +6,13 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface AIClient {
-    @Deprecated
-    default CompletableFuture<String> request(String method, Map<String, String> params) {
-        return request(method, Optional.empty(), params);
-    }
-
-    @Deprecated
-    public CompletableFuture<String> request(String method, Optional<String> extraContext, Map<String, String> params);
+    //    @Deprecated
+    //    default CompletableFuture<String> request(String method, Map<String, String> params) {
+    //        return request(method, Optional.empty(), params);
+    //    }
+    //
+    //    @Deprecated
+    //    public CompletableFuture<String> request(String method, Optional<String> extraContext, Map<String, String> params);
 
     default CompletableFuture<ManipulationOutput> manipulate(String userMessage, Path path, String content) {
         return manipulate(Optional.empty(), userMessage, path, content);
@@ -42,4 +42,10 @@ public interface AIClient {
     public CompletableFuture<ExceptionOutput> exception(Optional<String> systemMessage, String userMessage, String stacktrace,
             Path path, String content);
 
+    default CompletableFuture<DynamicOutput> dynamic(String userMessage, Map<String, String> variables) {
+        return dynamic(Optional.empty(), userMessage, variables);
+    }
+
+    public CompletableFuture<DynamicOutput> dynamic(Optional<String> systemMessage, String userMessage,
+            Map<String, String> variables);
 }

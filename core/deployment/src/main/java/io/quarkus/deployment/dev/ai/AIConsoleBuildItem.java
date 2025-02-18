@@ -1,11 +1,14 @@
 package io.quarkus.deployment.dev.ai;
 
+import java.util.Optional;
+
 import io.quarkus.builder.item.MultiBuildItem;
 import io.quarkus.deployment.console.ConsoleCommand;
-import java.util.Optional;
+import java.util.Map;
 
 /**
  * Add an menu item in the Assistant console menu
+ *
  * @author Phillip Kruger (phillip.kruger@gmail.com)
  */
 public final class AIConsoleBuildItem extends MultiBuildItem {
@@ -16,16 +19,17 @@ public final class AIConsoleBuildItem extends MultiBuildItem {
     private final String userMessage;
     private final Optional<String> initMessage;
     private final Optional<String> messageFormat;
-    private final Optional<Runnable> runnable;        
-    
-    public AIConsoleBuildItem(String label, char key, Optional<String> systemMessage, String userMessage, Optional<String> initMessage, Optional<String> messageFormat, Optional<Runnable> runnable){
+    private final Map<String,String> variables;
+
+    public AIConsoleBuildItem(String label, char key, Optional<String> systemMessage, String userMessage,
+            Optional<String> initMessage, Optional<String> messageFormat, Map<String,String> variables) {
         this.label = label;
         this.key = key;
         this.systemMessage = systemMessage;
         this.userMessage = userMessage;
         this.initMessage = initMessage;
         this.messageFormat = messageFormat;
-        this.runnable = runnable;
+        this.variables = variables;
         this.consoleCommand = null;
     }
 
@@ -37,21 +41,23 @@ public final class AIConsoleBuildItem extends MultiBuildItem {
         this.userMessage = null;
         this.initMessage = Optional.empty();
         this.messageFormat = Optional.empty();
-        this.runnable = Optional.empty();
+        this.variables = Map.of();
     }
 
     public ConsoleCommand getConsoleCommand() {
         return consoleCommand;
     }
-    
+
     public String getLabel() {
+        if (consoleCommand != null)
+            return consoleCommand.getDescription();
         return label;
     }
 
     public char getKey() {
         return key;
     }
-    
+
     public Optional<String> getSystemMessage() {
         return systemMessage;
     }
@@ -68,7 +74,7 @@ public final class AIConsoleBuildItem extends MultiBuildItem {
         return messageFormat;
     }
 
-    public Optional<Runnable> getRunnable() {
-        return runnable;
+    public Map<String, String> getVariables() {
+        return variables;
     }
 }
