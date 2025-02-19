@@ -9,14 +9,14 @@ import java.util.regex.Pattern;
 
 import io.quarkus.builder.item.MultiBuildItem;
 
-public abstract class AbstractWorkspaceActionBuildItem extends MultiBuildItem {
+public abstract class AbstractWorkspaceBuildItem extends MultiBuildItem {
     private final String label;
     private final String methodName;
     private final Optional<Pattern> filter;
     private final Optional<String> systemMessage;
     private final String userMessage;
 
-    public AbstractWorkspaceActionBuildItem(String label, Optional<String> systemMessage, String userMessage,
+    public AbstractWorkspaceBuildItem(String label, Optional<String> systemMessage, String userMessage,
             Optional<Pattern> filter) {
         this.label = label;
         this.methodName = generateMethodName(label);

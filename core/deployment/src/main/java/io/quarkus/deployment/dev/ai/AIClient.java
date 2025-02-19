@@ -6,13 +6,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface AIClient {
-    //    @Deprecated
-    //    default CompletableFuture<String> request(String method, Map<String, String> params) {
-    //        return request(method, Optional.empty(), params);
-    //    }
-    //
-    //    @Deprecated
-    //    public CompletableFuture<String> request(String method, Optional<String> extraContext, Map<String, String> params);
 
     default CompletableFuture<ManipulationOutput> manipulate(String userMessage, Path path, String content) {
         return manipulate(Optional.empty(), userMessage, path, content);
