@@ -2,10 +2,13 @@ package io.quarkus.deployment.dev.ai;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import io.quarkus.builder.item.MultiBuildItem;
 import io.quarkus.deployment.console.ConsoleCommand;
+import io.quarkus.deployment.dev.testing.MessageFormat;
 
 /**
  * Add a menu item in the Assistant console menu
@@ -13,34 +16,34 @@ import io.quarkus.deployment.console.ConsoleCommand;
 public final class AIConsoleBuildItem extends MultiBuildItem {
     private final ConsoleCommand consoleCommand;
 
-    private final String label;
+    private final String description;
     private final char key;
     private final Optional<String> systemMessage;
     private final String userMessage;
-    private final Optional<String> initMessage;
-    private final Optional<String> messageFormat;
+    private final Supplier<String> colorSupplier;
+    private final Supplier<String> stateSupplier;
     private final Map<String, String> variables;
-    private final Optional<Function<AIClient, String>> function;
+    private final Optional<Function<AIClient, CompletionStage<?>>> function;
 
     public AIConsoleBuildItem(ConsoleCommand consoleCommand) {
         this.consoleCommand = consoleCommand;
-        this.function = null;
-        this.label = null;
-        this.key = '-';
+        this.function = Optional.empty();
+        this.description = consoleCommand.getDescription();
+        this.key = consoleCommand.getKey();
         this.systemMessage = Optional.empty();
         this.userMessage = null;
-        this.initMessage = Optional.empty();
-        this.messageFormat = Optional.empty();
+        this.colorSupplier = consoleCommand.getHelpState().getColorSupplier();
+        this.stateSupplier = consoleCommand.getHelpState().getStateSupplier();
         this.variables = Map.of();
     }
 
     private AIConsoleBuildItem(Builder builder) {
-        this.label = builder.label;
+        this.description = builder.description;
         this.key = builder.key;
         this.systemMessage = builder.systemMessage;
         this.userMessage = builder.userMessage;
-        this.initMessage = builder.initMessage;
-        this.messageFormat = builder.messageFormat;
+        this.colorSupplier = builder.colorSupplier;
+        this.stateSupplier = builder.stateSupplier;
         this.variables = builder.variables;
         this.consoleCommand = null;
         this.function = builder.function;
@@ -51,17 +54,22 @@ public final class AIConsoleBuildItem extends MultiBuildItem {
     }
 
     public static class Builder {
-        private String label;
+        private String description;
         private char key = Character.MIN_VALUE;
         private Optional<String> systemMessage = Optional.empty();
         private String userMessage;
-        private Optional<String> initMessage = Optional.empty();
-        private Optional<String> messageFormat = Optional.empty();
+        private Supplier<String> colorSupplier = new Supplier<String>() {
+            @Override
+            public String get() {
+                return MessageFormat.RESET;
+            }
+        };
+        private Supplier<String> stateSupplier = null;
         private Map<String, String> variables = Map.of();
-        private Optional<Function<AIClient, String>> function;
+        private Optional<Function<AIClient, CompletionStage<?>>> function = Optional.empty();
 
-        public Builder label(String label) {
-            this.label = label;
+        public Builder description(String description) {
+            this.description = description;
             return this;
         }
 
@@ -70,8 +78,8 @@ public final class AIConsoleBuildItem extends MultiBuildItem {
             return this;
         }
 
-        public Builder systemMessage(Optional<String> systemMessage) {
-            this.systemMessage = systemMessage;
+        public Builder systemMessage(String systemMessage) {
+            this.systemMessage = Optional.of(systemMessage);
             return this;
         }
 
@@ -80,13 +88,13 @@ public final class AIConsoleBuildItem extends MultiBuildItem {
             return this;
         }
 
-        public Builder initMessage(Optional<String> initMessage) {
-            this.initMessage = initMessage;
+        public Builder colorSupplier(Supplier<String> colorSupplier) {
+            this.colorSupplier = colorSupplier;
             return this;
         }
 
-        public Builder messageFormat(Optional<String> messageFormat) {
-            this.messageFormat = messageFormat;
+        public Builder stateSupplier(Supplier<String> stateSupplier) {
+            this.stateSupplier = stateSupplier;
             return this;
         }
 
@@ -95,12 +103,25 @@ public final class AIConsoleBuildItem extends MultiBuildItem {
             return this;
         }
 
-        public Builder function(Function<AIClient, String> function) {
+        public Builder function(Function<AIClient, CompletionStage<?>> function) {
             this.function = Optional.of(function);
             return this;
         }
 
         public AIConsoleBuildItem build() {
+            if (key == Character.MIN_VALUE) {
+                throw new IllegalStateException(
+                        "You have to specify a key. This is the key the user will press to get to your function");
+            }
+            if (description == null || description.isBlank()) {
+                throw new IllegalStateException(
+                        "You have to specify a description. This is what the user will see in the console menu");
+            }
+            if (userMessage == null && !function.isPresent()) {
+                throw new IllegalStateException(
+                        "You have to specify userMessage that will be send to AI, or implement your own using the function");
+            }
+
             return new AIConsoleBuildItem(this);
         }
     }
@@ -109,8 +130,8 @@ public final class AIConsoleBuildItem extends MultiBuildItem {
         return consoleCommand;
     }
 
-    public String getLabel() {
-        return consoleCommand != null ? consoleCommand.getDescription() : label;
+    public String getDescription() {
+        return consoleCommand != null ? consoleCommand.getDescription() : description;
     }
 
     public char getKey() {
@@ -125,19 +146,19 @@ public final class AIConsoleBuildItem extends MultiBuildItem {
         return userMessage;
     }
 
-    public Optional<String> getInitMessage() {
-        return initMessage;
+    public Supplier<String> getColorSupplier() {
+        return consoleCommand != null ? consoleCommand.getHelpState().getColorSupplier() : colorSupplier;
     }
 
-    public Optional<String> getMessageFormat() {
-        return messageFormat;
+    public Supplier<String> getStateSupplier() {
+        return consoleCommand != null ? consoleCommand.getHelpState().getStateSupplier() : stateSupplier;
     }
 
     public Map<String, String> getVariables() {
         return variables;
     }
 
-    public Optional<Function<AIClient, String>> getFunction() {
+    public Optional<Function<AIClient, CompletionStage<?>>> getFunction() {
         return function;
     }
 }

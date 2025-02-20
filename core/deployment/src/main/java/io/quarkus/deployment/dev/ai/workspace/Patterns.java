@@ -1,31 +1,30 @@
 package io.quarkus.deployment.dev.ai.workspace;
 
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
  * Common patterns for filters
  */
 public interface Patterns {
-    public static Optional<Pattern> JAVA_ANY = Optional.of(Pattern.compile(".*\\.java$"));
-    public static Optional<Pattern> JAVA_SRC = Optional.of(Pattern.compile("^((?!test).)*\\.java$"));
-    public static Optional<Pattern> JAVA_TEST = Optional.of(Pattern.compile("^.*test.*\\.java$"));
+    public static Pattern JAVA_ANY = Pattern.compile(".*\\.java$");
+    public static Pattern JAVA_SRC = Pattern.compile("^((?!test).)*\\.java$");
+    public static Pattern JAVA_TEST = Pattern.compile("^.*test.*\\.java$");
 
-    public static Optional<Pattern> README_MD = Optional.of(Pattern.compile("^README\\.md$"));
+    public static Pattern README_MD = Pattern.compile("^README\\.md$");
 
-    public static Optional<Pattern> POM_XML = Optional.of(Pattern.compile("^pom\\.xml$"));
-    public static Optional<Pattern> APPLICATION_PROPERTIES = Optional.of(Pattern.compile("^.*application\\.properties$"));
+    public static Pattern POM_XML = Pattern.compile("^pom\\.xml$");
+    public static Pattern APPLICATION_PROPERTIES = Pattern.compile("^.*application\\.properties$");
 
-    public static Optional<Pattern> DOCKER_FILE = Optional.of(Pattern.compile("^.*Dockerfile(\\..*)?$"));
+    public static Pattern DOCKER_FILE = Pattern.compile("^.*Dockerfile(\\..*)?$");
 
-    public static Optional<Pattern> SHELL_SCRIPT = Optional.of(Pattern.compile(".*\\.(sh|bash|zsh|ksh)$"));
+    public static Pattern SHELL_SCRIPT = Pattern.compile(".*\\.(sh|bash|zsh|ksh)$");
 
-    public static Optional<Pattern> HTML = Optional.of(Pattern.compile(".*\\.(html|htm)$"));
-    public static Optional<Pattern> CSS = Optional.of(Pattern.compile(".*\\.css$"));
-    public static Optional<Pattern> JS = Optional.of(Pattern.compile(".*\\.js$"));
-    public static Optional<Pattern> JSON = Optional.of(Pattern.compile(".*\\.json$"));
-    public static Optional<Pattern> XML = Optional.of(Pattern.compile(".*\\.xml$"));
-    public static Optional<Pattern> WSDL = Optional.of(Pattern.compile(".*\\.wsdl$"));
-    public static Optional<Pattern> PROPERTIES = Optional.of(Pattern.compile(".*\\.properties$"));
-    public static Optional<Pattern> YAML = Optional.of(Pattern.compile(".*\\.(yaml|yml)$"));
+    public static Pattern HTML = Pattern.compile(".*\\.(html|htm)$");
+    public static Pattern CSS = Pattern.compile(".*\\.css$");
+    public static Pattern JS = Pattern.compile(".*\\.js$");
+    public static Pattern JSON = Pattern.compile(".*\\.json$");
+    public static Pattern XML = Pattern.compile(".*\\.xml$");
+    public static Pattern WSDL = Pattern.compile(".*\\.wsdl$");
+    public static Pattern PROPERTIES = Pattern.compile(".*\\.properties$");
+    public static Pattern YAML = Pattern.compile(".*\\.(yaml|yml)$");
 }
