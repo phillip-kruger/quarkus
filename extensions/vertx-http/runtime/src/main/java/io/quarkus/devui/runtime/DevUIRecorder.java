@@ -77,8 +77,37 @@ public class DevUIRecorder {
                 }));
     }
 
-    public Handler<RoutingContext> communicationHandler() {
+    public Handler<RoutingContext> webSocketHandler() {
         return new DevUIWebSocket();
+    }
+
+    public Handler<RoutingContext> serverSendEventHandler() {
+        return new DevUIServerSentEvents();
+    }
+
+    public Handler<RoutingContext> mcpWellKnownHandler(String mcpPath) {
+        return new Handler<RoutingContext>() {
+            @Override
+            public void handle(RoutingContext rc) {
+                JsonObject json = new JsonObject()
+                        .put("protocolVersion", "2025-03-26")
+                        .put("endpoints", new JsonObject()
+                                .put("jsonrpc", new JsonObject()
+                                        .put("url", mcpPath)
+                                        .put("protocol", "sse")))
+                        .put("features", new JsonObject()
+                                .put("tools", true)
+                                .put("resources", true)
+                                .put("sampling", false)
+                                .put("log", false));
+
+                System.out.println(json.encodePrettily());
+
+                rc.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(json.encodePrettily());
+            }
+        };
     }
 
     public Handler<RoutingContext> uiHandler(String finalDestination,

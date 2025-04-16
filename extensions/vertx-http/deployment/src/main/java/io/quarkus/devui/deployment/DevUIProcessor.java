@@ -160,7 +160,7 @@ public class DevUIProcessor {
         routeProducer.produce(
                 nonApplicationRootPathBuildItem
                         .routeBuilder().route(DEVUI + SLASH + JSONRPC)
-                        .handler(recorder.communicationHandler())
+                        .handler(recorder.webSocketHandler())
                         .build());
 
         // Static handler for components
@@ -341,9 +341,9 @@ public class DevUIProcessor {
 
                             // Create list of available methods for the Javascript side.
                             if (method.returnType().name().equals(DotName.createSimple(Multi.class.getName()))) {
-                                subscriptionMethods.add(extension + DOT + method.name());
+                                subscriptionMethods.add(extension + SLASH + method.name());
                             } else {
-                                requestResponseMethods.add(extension + DOT + method.name());
+                                requestResponseMethods.add(extension + SLASH + method.name());
                             }
 
                             // Also create the map to pass to the runtime for the relection calls
