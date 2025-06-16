@@ -3,17 +3,164 @@ This guide is maintained in the main Quarkus repository
 and pull requests should be submitted there:
 https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
 ////
-= Dev UI for extension developers
+= Dev UI
 include::_attributes.adoc[]
 :categories: writing-extensions
-:summary: Learn how to get your extension to contribute features to the Dev UI (v2).
+:summary: Learn more about Dev UI
 :topics: dev-ui,testing
 
-[NOTE]
-.Dev UI v2
-====
-This guide covers the Dev UI v2, which is the default from Quarkus 3 onwards.
-====
+== General overview
+
+Quarkus Dev UI is a developer-friendly user interface that comes to life when you run your application in development mode (`./mvnw quarkus:dev`). 
+It serves as a powerful portal for exploring, debugging, and interacting with your application - all while it’s running - with zero code changes or restarts.
+
+=== What is Dev UI?
+
+The Dev UI is designed to boost developer joy by making Quarkus' inner workings observable and extensible. It offers:
+
+- Insight into available extensions and their capabilities
+- Access to runtime metadata and tools
+- A responsive frontend that integrates tightly with hot reload
+- A flexible way for extensions to expose configuration, documentation, and actions
+
+Whether you're a developer exploring your project or an extension author enhancing the experience, Dev UI is your entry point.
+
+=== Layout at a Glance
+
+When running in dev mode, Quarkus provides a dynamic, modular web interface accessible at http://localhost:8080/q/dev-ui. Below is a visual overview of the layout:
+
+image::devui_layout_light.png[Dev UI Layout, width=100%]
+
+==== Menu (Left Sidebar)
+
+The *menu* on the left-hand side provides structured access to built-in pages:
+
+[cols="1,3", options="header"]
+|===
+| Menu Item | Description
+
+| *Extensions*
+| Displays all Quarkus extensions (used by the current application) as cards. Each card may provide configuration, documentation, or tools.
+
+| *Configuration*
+| Shows all configuration options (with current, default, and documentation info). Includes a config editor (text & form modes).
+
+| *Workspace*
+| A project file browser. Files can be opened and edited inline. Extensions may add workspace actions.
+
+| *Endpoints*
+| Lists all HTTP endpoints (REST, GraphQL, internal, etc.). Helps you inspect available routes in your app.
+
+| *Continuous Testing*
+| Monitors and controls continuous testing. View test results, rerun tests, or toggle testing state.
+
+| *Dev Services*
+| Displays information about automatically started services (e.g., databases, Kafka brokers).
+
+| *Build Metrics*
+| Provides performance metrics from the last build and reload cycle.
+
+| *Readme*
+| Renders your project's `README.md`, if available. Useful for onboarding or project context.
+
+| *Dependencies*
+| Shows all runtime and deployment dependencies with dependency path exploration and search functionality.
+|===
+
+TIP: You can drag a page from an extension card into the menu to *bookmark* it for quick access.
+
+==== Page Area (Main Content)
+
+The *main panel* displays content for the selected menu item or extension. Depending on the selected page, it may render:
+
+- Extension-specific tools and UIs (e.g., GraphQL UI, Swagger UI)
+- JSON viewers, code editors, or metrics charts
+- Interactive actions (e.g., buttons, toggles)
+- Documentation and links
+
+Pages are modular and dynamically loaded. Extensions can contribute custom pages written using Web Components and interact with the backend via JSON-RPC.
+
+==== Footer
+
+The *footer* at the bottom is primarily used to display logs while the application runs in dev mode.
+
+By default, the `Server` log (standard Quarkus log output) is selected, but additional log tabs may appear depending on which extensions are present. For example:
+
+- `HTTP`, `GraphQL`,`Scheduler`, etc., may appear when relevant extensions are in use
+- `Dev Services` log output from started services like databases, Kafka brokers, etc.
+
+This live log view helps developers track behavior, debug issues, and monitor Dev Services without switching to the terminal.
+
+==== Extension cards
+
+Each Quarkus extension that contributes to Dev UI is represented as a card in the *Extensions* page. These cards provide quick access to features, documentation, configuration, and runtime tools offered by the extension.
+
+image::devui_card_light.png[Extension Card Anatomy, width=400]
+
+Each card may include the following elements:
+
+[cols="1,3", options="header"]
+|===
+| Element | Description
+
+| *Logo* _(optional)_
+|  An optional logo representing the extension or its domain
+
+| *Title*
+| The name of the extension as recognized in the Dev UI.
+
+| *Favorite*
+| Marks the card as a favorite. Favorited cards are always displayed first in the Extensions view for easier access.
+
+| *Guide* _(optional)_
+| Links to the online Quarkus guide for the extension (if available).
+
+| *Description*
+| A short explanation of what the extension does or enables.
+
+| *Page Links* _(optional)_
+| Interactive entries that navigate to custom pages contributed by the extension.
+
+| *Configuration*
+| A shortcut to the configuration editor filtered to settings relevant to this extension.
+
+| *Underlying Library* _(optional)_
+| Shows the version of the main library powering the extension (if any).
+
+| *More Details*
+| Opens a dialog with all information
+|===
+
+TIP: Clicking a page link inside a card navigates to a dedicated UI page for that feature. These pages can be bookmarked into the menu for quick access.
+
+Extensions are free to customize their cards and add interactive behaviors based on what they provide at runtime.
+
+== Guide for extension developers
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 This guide covers the Quarkus Dev UI for xref:building-my-first-extension.adoc[extension authors].
 
