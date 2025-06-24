@@ -48,7 +48,7 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-vertx-http-dev</artifactId>
+            <artifactId>quarkus-devui</artifactId>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -157,6 +157,9 @@
                         <excludedArtifact>javax.persistence:javax.persistence-api</excludedArtifact>
                         <excludedArtifact>javax.persistence:persistence-api</excludedArtifact>
                     </excludedArtifacts>
+                    <conditionalDevDependencies>
+                        <dependency>io.quarkus:quarkus-devui:${project.version}</dependency>
+                    </conditionalDevDependencies>
                 </configuration>
             </plugin>
             <plugin>
