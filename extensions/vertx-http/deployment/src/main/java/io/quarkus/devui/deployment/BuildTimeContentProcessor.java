@@ -224,7 +224,7 @@ public class BuildTimeContentProcessor {
         for (BuildTimeActionBuildItem actions : buildTimeActions) {
             String extensionPathName = actions.getExtensionPathName(curateOutcomeBuildItem);
             for (BuildTimeAction bta : actions.getActions()) {
-                String fullName = extensionPathName + "." + bta.getMethodName();
+                String fullName = extensionPathName + SLASH + bta.getMethodName();
                 if (bta.hasRuntimeValue()) {
                     recordedValues.put(fullName, bta.getRuntimeValue());
                     methodNames.add(fullName);
@@ -237,7 +237,7 @@ public class BuildTimeContentProcessor {
                 }
             }
             for (BuildTimeAction bts : actions.getSubscriptions()) {
-                String fullName = extensionPathName + "." + bts.getMethodName();
+                String fullName = extensionPathName + SLASH + bts.getMethodName();
                 if (bts.hasRuntimeValue()) {
                     recordedValues.put(fullName, bts.getRuntimeValue());
                     subscriptionNames.add(fullName);
