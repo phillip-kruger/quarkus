@@ -157,9 +157,6 @@
                         <excludedArtifact>javax.persistence:javax.persistence-api</excludedArtifact>
                         <excludedArtifact>javax.persistence:persistence-api</excludedArtifact>
                     </excludedArtifacts>
-                    <conditionalDevDependencies>
-                        <dependency>io.quarkus:quarkus-devui:${project.version}</dependency>
-                    </conditionalDevDependencies>
                 </configuration>
             </plugin>
             <plugin>
