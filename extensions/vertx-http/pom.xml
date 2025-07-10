@@ -17,6 +17,5 @@
         <module>deployment</module>
         <module>runtime</module>
         <module>deployment-spi</module>
-        <module>dev-ui-tests</module>
     </modules>
 </project>

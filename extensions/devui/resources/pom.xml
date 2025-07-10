@@ -7,8 +7,9 @@
         <version>999-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
-    <artifactId>quarkus-vertx-http-dev-ui-resources</artifactId>
-    <name>Quarkus - Vert.x - HTTP - Dev UI Resources</name>
+    <artifactId>quarkus-devui-resources</artifactId>
+    <name>Quarkus - Dev UI - Resources</name>
+    <description>Quarkus Dev UI Resources (Javascript, CSS and HTML)</description>
     
     <dependencies>
         <!-- Vaadin Router -->

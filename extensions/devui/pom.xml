@@ -18,5 +18,6 @@
         <module>resources</module>
         <module>runtime</module>
         <module>deployment</module>
+        <module>tests</module>
     </modules>
 </project>
