@@ -23,6 +23,7 @@ import io.quarkus.devui.runtime.jsonrpc.JsonRpcCodec;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcMethod;
 import io.quarkus.devui.runtime.jsonrpc.JsonRpcRequest;
 import io.quarkus.devui.runtime.jsonrpc.json.JsonMapper;
+import io.quarkus.devui.runtime.mcp.McpResponseWriter;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -30,6 +31,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.Cancellable;
 import io.smallrye.mutiny.unchecked.Unchecked;
 import io.vertx.core.http.ServerWebSocket;
+import io.vertx.ext.web.RoutingContext;
 
 /**
  * Route JsonRPC message to the correct method
@@ -53,7 +55,9 @@ public class JsonRpcRouter {
     // Map json-rpc subscriptions responses that is recorded
     private Map<String, JsonRpcMethod> recordedSubscriptionsMap;
 
-    private static final List<JsonRpcResponseWriter> SESSIONS = Collections.synchronizedList(new ArrayList<>());
+    private static final List<JsonRpcResponseWriter> WS_SESSIONS = Collections.synchronizedList(new ArrayList<>());
+    private static final List<JsonRpcResponseWriter> SSE_SESSIONS = Collections.synchronizedList(new ArrayList<>());
+
     private JsonRpcCodec codec;
 
     @Produces
@@ -95,7 +99,7 @@ public class JsonRpcRouter {
 
     public void addSocket(ServerWebSocket socket) {
         JavaScriptResponseWriter writer = new JavaScriptResponseWriter(socket);
-        SESSIONS.add(writer);
+        WS_SESSIONS.add(writer);
         socket.textMessageHandler((e) -> {
             JsonRpcRequest jsonRpcRequest = codec.readRequest(e);
             route(jsonRpcRequest, writer);
@@ -103,6 +107,14 @@ public class JsonRpcRouter {
             purge();
         });
         purge();
+    }
+
+    public void addSseSession(RoutingContext ctx) {
+        McpResponseWriter writer = new McpResponseWriter(ctx.response());
+        SSE_SESSIONS.add(writer);
+        ctx.request().connection().closeHandler(v -> {
+            SSE_SESSIONS.remove(writer);
+        });
     }
 
     @Produces
@@ -136,15 +148,15 @@ public class JsonRpcRouter {
 
     void onStart(@Observes StartupEvent ev) {
         purge();
-        for (JsonRpcResponseWriter jrrw : new ArrayList<>(SESSIONS)) {
+        for (JsonRpcResponseWriter jrrw : new ArrayList<>(WS_SESSIONS)) {
             if (!jrrw.isClosed()) {
-                codec.writeResponse(jrrw, -1, LocalDateTime.now().toString(), MessageType.HotReload);
+                codec.writeResponse(jrrw, null, LocalDateTime.now().toString(), MessageType.HotReload);
             }
         }
     }
 
     private void purge() {
-        SESSIONS.removeIf(JsonRpcResponseWriter::isClosed);
+        WS_SESSIONS.removeIf(JsonRpcResponseWriter::isClosed);
     }
 
     @Inject
@@ -180,7 +192,7 @@ public class JsonRpcRouter {
             Cancellable cancellable = this.activeSubscriptions.remove(jsonRpcRequest.getId());
             cancellable.cancel();
         }
-        codec.writeResponse(jrrw, jsonRpcRequest.getId(), null, MessageType.Void);
+        codec.writeResponse(jrrw, jsonRpcRequest, null, MessageType.Void);
     }
 
     private void routeToRuntimeMethod(JsonRpcRequest jsonRpcRequest, JsonRpcResponseWriter jrrw) {
@@ -210,10 +222,10 @@ public class JsonRpcRouter {
                             jrrw.write("{\"id\":" + jsonRpcRequest.getId() + ",\"result\":{\"messageType\":\""
                                     + jsonRpcMessage.getMessageType().name() + "\",\"object\":" + response + "}}");
                         } else {
-                            codec.writeResponse(jrrw, jsonRpcRequest.getId(), response, jsonRpcMessage.getMessageType());
+                            codec.writeResponse(jrrw, jsonRpcRequest, response, jsonRpcMessage.getMessageType());
                         }
                     } else {
-                        codec.writeResponse(jrrw, jsonRpcRequest.getId(), item, MessageType.Response);
+                        codec.writeResponse(jrrw, jsonRpcRequest, item, MessageType.Response);
                     }
                 }, failure -> {
                     Throwable actualFailure;
@@ -260,7 +272,7 @@ public class JsonRpcRouter {
         Cancellable cancellable = multi.subscribe()
                 .with(
                         item -> {
-                            codec.writeResponse(jrrw, jsonRpcRequest.getId(), item, MessageType.SubscriptionMessage);
+                            codec.writeResponse(jrrw, jsonRpcRequest, item, MessageType.SubscriptionMessage);
                         },
                         failure -> {
                             codec.writeErrorResponse(jrrw, jsonRpcRequest.getId(), jsonRpcRequest.getMethod(), failure);
@@ -269,7 +281,7 @@ public class JsonRpcRouter {
                         () -> this.activeSubscriptions.remove(jsonRpcRequest.getId()));
 
         this.activeSubscriptions.put(jsonRpcRequest.getId(), cancellable);
-        codec.writeResponse(jrrw, jsonRpcRequest.getId(), null, MessageType.Void);
+        codec.writeResponse(jrrw, jsonRpcRequest, null, MessageType.Void);
     }
 
     private void routeToDeployment(JsonRpcRequest jsonRpcRequest, JsonRpcResponseWriter jrrw) {
@@ -298,7 +310,7 @@ public class JsonRpcRouter {
                 Cancellable cancellable = Multi.createFrom().publisher(publisher).subscribe()
                         .with(
                                 item -> {
-                                    codec.writeResponse(jrrw, jsonRpcRequest.getId(), item, MessageType.SubscriptionMessage);
+                                    codec.writeResponse(jrrw, jsonRpcRequest, item, MessageType.SubscriptionMessage);
                                 },
                                 failure -> {
                                     codec.writeErrorResponse(jrrw, jsonRpcRequest.getId(), jsonRpcMethodName, failure);
@@ -307,18 +319,18 @@ public class JsonRpcRouter {
                                 () -> this.activeSubscriptions.remove(jsonRpcRequest.getId()));
 
                 this.activeSubscriptions.put(jsonRpcRequest.getId(), cancellable);
-                codec.writeResponse(jrrw, jsonRpcRequest.getId(), null, MessageType.Void);
+                codec.writeResponse(jrrw, jsonRpcRequest, null, MessageType.Void);
             } else if (returnedObject instanceof CompletionStage) {
                 CompletionStage<?> future = (CompletionStage) returnedObject;
                 future.thenAccept(r -> {
-                    codec.writeResponse(jrrw, jsonRpcRequest.getId(), r,
+                    codec.writeResponse(jrrw, jsonRpcRequest, r,
                             MessageType.Response);
                 }).exceptionally(throwable -> {
                     codec.writeErrorResponse(jrrw, jsonRpcRequest.getId(), jsonRpcMethodName, throwable);
                     return null;
                 });
             } else {
-                codec.writeResponse(jrrw, jsonRpcRequest.getId(), returnedObject,
+                codec.writeResponse(jrrw, jsonRpcRequest, returnedObject,
                         MessageType.Response);
             }
         }

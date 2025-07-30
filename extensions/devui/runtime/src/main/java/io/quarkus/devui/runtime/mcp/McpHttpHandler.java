@@ -50,34 +50,33 @@ public class McpHttpHandler implements Handler<RoutingContext> {
     }
 
     private void handleSSEInitRequest(RoutingContext ctx) {
-        // TODO: Add SSE Support
         // The client MAY issue an HTTP GET to the MCP endpoint.
         // This can be used to open an SSE stream, allowing the server to communicate to the client,
         // without the client first sending data via HTTP POST.
         // The client MUST include an Accept header, listing text/event-stream as a supported content type.
 
-        //        ctx.response()
-        //                .putHeader("Content-Type", "text/event-stream; charset=utf-8")
-        //                .putHeader("Cache-Control", "no-cache")
-        //                .putHeader("Connection", "keep-alive")
-        //                .setChunked(true);
-        //
-        //        try {
-        //            JsonRpcRouter jsonRpcRouter = CDI.current().select(JsonRpcRouter.class).get();
-        //            jsonRpcRouter.addSseSession(ctx);
-        //        } catch (IllegalStateException e) {
-        //            LOG.debug("Failed to connect to dev sse server", e);
-        //            ctx.response().end();
-        //        }
+        ctx.response()
+                .putHeader("Content-Type", "text/event-stream; charset=utf-8")
+                .putHeader("Cache-Control", "no-cache")
+                .putHeader("Connection", "keep-alive")
+                .setChunked(true);
+
+        try {
+            JsonRpcRouter jsonRpcRouter = CDI.current().select(JsonRpcRouter.class).get();
+            jsonRpcRouter.addSseSession(ctx);
+        } catch (IllegalStateException e) {
+            LOG.debug("Failed to connect to dev sse server", e);
+            ctx.response().end();
+        }
 
         // The server MUST either return Content-Type: text/event-stream in response to this HTTP GET,
         // or else return HTTP 405 Method Not Allowed, indicating that the server does not offer an SSE stream at this endpoint.
 
-        ctx.response()
-                .setStatusCode(405)
-                .putHeader("Allow", "POST")
-                .putHeader("Content-Type", "text/plain")
-                .end("Method Not Allowed");
+        //ctx.response()
+        //        .setStatusCode(405)
+        //        .putHeader("Allow", "POST")
+        //        .putHeader("Content-Type", "text/plain")
+        //        .end("Method Not Allowed");
 
     }
 
@@ -89,7 +88,7 @@ public class McpHttpHandler implements Handler<RoutingContext> {
             JsonRpcRequest jsonRpcRequest = codec.readMCPRequest(input);
 
             String methodName = jsonRpcRequest.getMethod();
-            McpResponseWriter writer = new McpResponseWriter(ctx.response(), this.jsonMapper, methodName);
+            McpResponseWriter writer = new McpResponseWriter(ctx.response());
             // First see if this a protocol specific method
 
             if (methodName.equalsIgnoreCase(McpBuiltinMethods.INITIALIZE)) {
@@ -117,7 +116,7 @@ public class McpHttpHandler implements Handler<RoutingContext> {
             devMcpJsonRpcService.addClientInfo(McpClientInfo.fromMap(map));
         }
         String input = jsonMapper.toString(jsonRpcRequest, true);
-        codec.writeResponse(writer, jsonRpcRequest.getId(), new InitializeResponse(this.quarkusVersion), MessageType.Void);
+        codec.writeResponse(writer, jsonRpcRequest, new InitializeResponse(this.quarkusVersion), MessageType.Void);
     }
 
     private void routeToMCPNotification(JsonRpcRequest jsonRpcRequest, JsonRpcCodec codec, McpResponseWriter writer) {

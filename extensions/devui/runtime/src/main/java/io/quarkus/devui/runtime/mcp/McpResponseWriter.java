@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 import io.quarkus.devui.runtime.comms.JsonRpcResponseWriter;
 import io.quarkus.devui.runtime.comms.MessageType;
+import io.quarkus.devui.runtime.jsonrpc.JsonRpcRequest;
 import io.quarkus.devui.runtime.jsonrpc.json.JsonMapper;
 import io.quarkus.devui.runtime.mcp.model.tool.CallToolResult;
 import io.vertx.core.http.HttpServerResponse;
@@ -13,13 +14,9 @@ import io.vertx.core.http.HttpServerResponse;
  */
 public class McpResponseWriter implements JsonRpcResponseWriter {
     private final HttpServerResponse response;
-    private final String requestMethodName;
-    private final JsonMapper jsonMapper;
 
-    public McpResponseWriter(HttpServerResponse response, JsonMapper jsonMapper, String requestMethodName) {
+    public McpResponseWriter(HttpServerResponse response) {
         this.response = response;
-        this.jsonMapper = jsonMapper;
-        this.requestMethodName = requestMethodName;
     }
 
     @Override
@@ -54,12 +51,12 @@ public class McpResponseWriter implements JsonRpcResponseWriter {
     }
 
     @Override
-    public Object decorateObject(Object object, MessageType messageType) {
-        if (requestMethodName.equalsIgnoreCase(McpBuiltinMethods.INITIALIZE) ||
-                requestMethodName.equalsIgnoreCase(McpBuiltinMethods.NOTIFICATION) ||
-                requestMethodName.equalsIgnoreCase(McpBuiltinMethods.TOOLS_LIST) ||
-                requestMethodName.equalsIgnoreCase(McpBuiltinMethods.RESOURCES_LIST) ||
-                requestMethodName.equalsIgnoreCase(McpBuiltinMethods.RESOURCES_READ)) {
+    public Object decorateObject(JsonMapper jsonMapper, JsonRpcRequest jsonRpcRequest, Object object, MessageType messageType) {
+        if (jsonRpcRequest != null && (jsonRpcRequest.getMethod().equalsIgnoreCase(McpBuiltinMethods.INITIALIZE) ||
+                jsonRpcRequest.getMethod().equalsIgnoreCase(McpBuiltinMethods.NOTIFICATION) ||
+                jsonRpcRequest.getMethod().equalsIgnoreCase(McpBuiltinMethods.TOOLS_LIST) ||
+                jsonRpcRequest.getMethod().equalsIgnoreCase(McpBuiltinMethods.RESOURCES_LIST) ||
+                jsonRpcRequest.getMethod().equalsIgnoreCase(McpBuiltinMethods.RESOURCES_READ))) {
             return object;
         } else { // Anyting else is a Tools call that we need to wrap in a call result objectc
             String text = jsonMapper.toString(object, true);

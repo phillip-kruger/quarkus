@@ -1,5 +1,8 @@
 package io.quarkus.devui.runtime.comms;
 
+import io.quarkus.devui.runtime.jsonrpc.JsonRpcRequest;
+import io.quarkus.devui.runtime.jsonrpc.json.JsonMapper;
+
 public interface JsonRpcResponseWriter {
 
     void write(String message);
@@ -10,6 +13,6 @@ public interface JsonRpcResponseWriter {
 
     boolean isClosed();
 
-    Object decorateObject(Object object, MessageType messageType);
+    Object decorateObject(JsonMapper jsonMapper, JsonRpcRequest jsonRpcRequest, Object object, MessageType messageType);
 
 }

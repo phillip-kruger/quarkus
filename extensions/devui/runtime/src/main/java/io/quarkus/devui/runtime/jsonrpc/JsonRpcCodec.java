@@ -28,8 +28,14 @@ public final class JsonRpcCodec {
         return jsonRpcRequestCreator.mcpCreate((JsonObject) jsonMapper.fromString(json, Object.class));
     }
 
-    public void writeResponse(JsonRpcResponseWriter writer, int id, Object object, MessageType messageType) {
-        Object decoratedObject = writer.decorateObject(object, messageType);
+    public void writeResponse(JsonRpcResponseWriter writer, JsonRpcRequest jsonRpcRequest, Object object,
+            MessageType messageType) {
+        int id = -1;
+        if (jsonRpcRequest != null) {
+            id = jsonRpcRequest.getId();
+        }
+
+        Object decoratedObject = writer.decorateObject(jsonMapper, jsonRpcRequest, object, messageType);
         writeResponse(writer, new JsonRpcResponse(id, decoratedObject));
     }
 
