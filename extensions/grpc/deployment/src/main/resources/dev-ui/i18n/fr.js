@@ -1,18 +1,17 @@
-// fr.js (auto-generated from en.js)
+// fr.js
 import { str } from '@lit/localize';
 
 export const templates = {
-    // Metadata
-    'quarkus-grpc-meta-description':'Serve and consume gRPC services',
+    // Métadonnées
+    'quarkus-grpc-meta-description':'Servir et consommer des services gRPC',
     // Pages
     'quarkus-grpc-services':'Services',
-    // General
-    'quarkus-grpc-status': 'Status',
+    // Général
+    'quarkus-grpc-status': 'Statut',
     'quarkus-grpc-name': 'Nom',
-    'quarkus-grpc-implementation-class': 'Implementation Class',
-    'quarkus-grpc-methods': 'Methods',
-    'quarkus-grpc-reset': 'Reset',
-    'quarkus-grpc-send': 'Send',
-    'quarkus-grpc-disconnect': 'Disconnect'
+    'quarkus-grpc-implementation-class': 'Classe d’implémentation',
+    'quarkus-grpc-methods': 'Méthodes',
+    'quarkus-grpc-reset': 'Réinitialiser',
+    'quarkus-grpc-send': 'Envoyer',
+    'quarkus-grpc-disconnect': 'Déconnecter'
 };
-
