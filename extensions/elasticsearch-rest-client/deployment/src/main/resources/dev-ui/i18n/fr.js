@@ -1,8 +1,7 @@
-// fr.js (auto-generated from en.js)
+// fr.js
 import { str } from '@lit/localize';
 
 export const templates = {
-    // Metadata
-    'quarkus-elasticsearch-rest-client-meta-description':'Connect to an Elasticsearch cluster using the REST low level client'
+    // Métadonnées
+    'quarkus-elasticsearch-rest-client-meta-description':'Se connecter à un cluster Elasticsearch à l’aide du client REST bas niveau'
 };
-

@@ -1,21 +1,21 @@
-// fr.js (auto-generated from en.js)
+// fr.js
 import { str } from '@lit/localize';
 
 export const templates = {
-    // Metadata
-    'quarkus-hibernate-search-orm-elasticsearch-meta-description': 'Indexer automatiquement vos entités Hibernate dans Elasticsearch',
+    // Métadonnées
+    'quarkus-hibernate-search-orm-elasticsearch-meta-description':'Indexer automatiquement vos entités Hibernate dans Elasticsearch',
     // Pages
-    'quarkus-hibernate-search-orm-elasticsearch-indexed_entity_types':'Indexed Entity Types',
-    // General
+    'quarkus-hibernate-search-orm-elasticsearch-indexed_entity_types':'Types d’entités indexées',
+    // Général
     'quarkus-hibernate-search-orm-elasticsearch-loading': 'Chargement…',
     'quarkus-hibernate-search-orm-elasticsearch-no-persistence-units':
-        'No persistence units were found.',
+        'Aucune unité de persistance trouvée.',
     'quarkus-hibernate-search-orm-elasticsearch-persistence-unit':
-        'Persistence Unit',
+        'Unité de persistance',
     'quarkus-hibernate-search-orm-elasticsearch-no-indexed-entities':
-        'No indexed entities were found.',
+        'Aucune entité indexée trouvée.',
     'quarkus-hibernate-search-orm-elasticsearch-selected-entity-types':
-        str`Selected ${0} entity types`,
+        str`${0} types d’entités sélectionnés`,
     'quarkus-hibernate-search-orm-elasticsearch-reindex-selected':
         'Réindexer la sélection',
     'quarkus-hibernate-search-orm-elasticsearch-entity-name':
@@ -25,11 +25,11 @@ export const templates = {
     'quarkus-hibernate-search-orm-elasticsearch-index-names':
         'Noms d’index',
     'quarkus-hibernate-search-orm-elasticsearch-select-entity-types-to-reindex':
-        str`Select entity types to reindex for persistence unit '${0}'.`,
+        str`Sélectionnez les types d’entités à réindexer pour l’unité de persistance « ${0} ».`,
     'quarkus-hibernate-search-orm-elasticsearch-reindex-started':
-        str`Requested reindexing of ${0} entity types for persistence unit '${1}'.`,
+        str`Réindexation demandée de ${0} types d’entités pour l’unité de persistance « ${1} ».`,
     'quarkus-hibernate-search-orm-elasticsearch-reindex-success':
-        str`Successfully reindexed ${0} entity types for persistence unit '${1}'.`,
+        str`Réindexation réussie de ${0} types d’entités pour l’unité de persistance « ${1} ».`,
     'quarkus-hibernate-search-orm-elasticsearch-reindex-error':
-        str`An error occurred while reindexing ${0} entity types for persistence unit '${1}':\n${2}`
+        str`Une erreur s’est produite lors de la réindexation de ${0} types d’entités pour l’unité de persistance « ${1} » :\n${2}`
 };
