@@ -1,0 +1,15 @@
+export const templates = {
+    'quarkus-messaging-meta-description': 'Phuma kwaye uthenge imiyalezo kwaye wenze izicelo ezisebenzisa imicimbi kunye nomjikelo wedatha.',
+    'quarkus-smallrye-reactive-messaging-channels': 'Imigca',
+    'quarkus-smallrye-reactive-messaging-loading-channels': 'Ukulayisha iichanile...',
+    'quarkus-smallrye-reactive-messaging-channel': 'Umjikelo',
+    'quarkus-smallrye-reactive-messaging-publishers': 'Umshicileli(yi)',
+    'quarkus-smallrye-reactive-messaging-subscribers': 'Umthumeli(nci)',
+    'quarkus-smallrye-reactive-messaging-no-subscribers': 'Akukho abathengi',
+    'quarkus-smallrye-reactive-messaging-no-publishers': 'Abenzi bekhankasela abukho',
+    'quarkus-smallrye-reactive-messaging-publisher': 'umphuhlisi',
+    'quarkus-smallrye-reactive-messaging-subscriber': 'umthumeli',
+    'quarkus-smallrye-reactive-messaging-processor': 'umqhubi',
+    'quarkus-smallrye-reactive-messaging-connector': 'uxhumano',
+    'quarkus-smallrye-reactive-messaging-emitter': 'umthumeli',
+};

@@ -1,0 +1,16 @@
+export const templates = {
+    'quarkus-rest-meta-description': 'I-Jakarta REST ichanilelwe ukusebenzisa uku processing kwesikhathi sokwakha kunye ne-Vert.x.',
+    'quarkus-rest-endpoints': 'Iindawo zokugcwalisa',
+    'quarkus-rest-endpoint_scores': 'Izikhumbuzo ze-Endpointhi',
+    'quarkus-rest-exception_mappers': 'Iingqapheli zeMphumela',
+    'quarkus-rest-parameter_converter_providers': 'Abanikezeli benguqulelo yepharamitha',
+    'quarkus-rest-no-rest-endpoints': 'Awunayo nayiphi na i-REST endpoints.',
+    'quarkus-rest-learn-rest': 'Funda indlela yokubhala iiseva ze-REST nge-Quarkus REST.',
+    'quarkus-rest-produces': 'Uphumelela',
+    'quarkus-rest-consumes': 'Isebenzisa',
+    'quarkus-rest-resource-class': 'Umgubo Wendlela',
+    'quarkus-rest-priority': 'Umgangatho ophakameweyo',
+    'quarkus-rest-exception': 'Imphumela ephukile',
+    'quarkus-rest-mapper': 'Umhlalutyi',
+    'quarkus-rest-class-name': 'Igama leklasi',
+};
