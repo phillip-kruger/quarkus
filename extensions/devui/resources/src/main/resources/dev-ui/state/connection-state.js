@@ -4,9 +4,10 @@ import { LitState } from 'lit-element-state';
  * This keeps state of the JsonRPC Connection
  */
 class ConnectionState extends LitState {
-    
+
     constructor() {
         super();
+        this._previousState = null;
     }
 
     static get stateVars() {
@@ -14,7 +15,27 @@ class ConnectionState extends LitState {
             current: {}
         };
     }
-    
+
+    _dispatchStateChange(newState) {
+        const previousStateName = this._previousState?.name || null;
+        this._previousState = newState;
+
+        const event = new CustomEvent('connection-state-changed', {
+            detail: {
+                state: newState.name,
+                previousState: previousStateName,
+                serverUri: newState.serverUri,
+                isConnected: newState.isConnected,
+                isDisconnected: newState.isDisconnected,
+                isConnecting: newState.isConnecting,
+                isHotreloading: newState.isHotreloading
+            },
+            bubbles: true,
+            composed: true
+        });
+        document.dispatchEvent(event);
+    }
+
     disconnected(serverUri){
         const newState = new Object();
         newState.name = "disconnected";
@@ -28,8 +49,9 @@ class ConnectionState extends LitState {
         newState.isHotreloading = false;
         connectionState.current = newState;
         document.body.style.cursor = 'wait';
+        this._dispatchStateChange(newState);
     }
-    
+
     connecting(serverUri){
         const newState = new Object();
         newState.name = "connecting";
@@ -43,8 +65,9 @@ class ConnectionState extends LitState {
         newState.isHotreloading = false;
         connectionState.current = newState;
         document.body.style.cursor = 'progress';
+        this._dispatchStateChange(newState);
     }
-    
+
     hotreload(serverUri){
         const newState = new Object();
         newState.name = "hotreload";
@@ -57,9 +80,10 @@ class ConnectionState extends LitState {
         newState.isConnecting = false;
         newState.isHotreloading = true;
         connectionState.current = newState;
-        document.body.style.cursor = 'progress'; 
+        document.body.style.cursor = 'progress';
+        this._dispatchStateChange(newState);
     }
-    
+
     connected(serverUri){
         const newState = new Object();
         newState.name = "connected";
@@ -73,6 +97,7 @@ class ConnectionState extends LitState {
         newState.isHotreloading = false;
         connectionState.current = newState;
         document.body.style.cursor = 'default';
+        this._dispatchStateChange(newState);
     }
 }
 

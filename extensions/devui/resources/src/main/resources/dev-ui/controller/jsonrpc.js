@@ -2,6 +2,7 @@ import { jsonRPCSubscriptions } from 'devui-jsonrpc-data';
 import { jsonRPCMethods } from 'devui-jsonrpc-data';
 import { connectionState } from 'connection-state';
 import { RouterController } from 'router-controller';
+import { notifier } from 'notifier';
 
 class Level {
     static Info = new Level("info");
@@ -49,23 +50,32 @@ class MessageType {
 class Observer {
     constructor(id) {
         this.id = id;
+        // Set default error handler that logs and shows notification
+        this.onErrorCallback = this._defaultErrorHandler;
     }
-    
+
     onNext(callback){
         this.onNextCallback = callback;
         return this;
     }
-    
+
     onError(callback){
         this.onErrorCallback = callback;
         return this;
     }
-    
+
     cancel(){
         JsonRpc.observerQueue.delete(this.id);
         JsonRpc.cancelSubscription(this.id);
     }
-    
+
+    _defaultErrorHandler(response) {
+        const errorMessage = response.error?.message || 'Unknown subscription error';
+        const errorType = response.error?.type || 'Error';
+        console.error('Unhandled subscription error:', response);
+        notifier.showErrorMessage('[' + errorType + '] ' + errorMessage);
+    }
+
     toString() {
         return "Observer for + " + this.id;
     }
@@ -85,7 +95,9 @@ export class JsonRpc {
     static serverUri;
     static retryCount = 0;
     static maxRetries = 10;
-    
+    static requestTimeout = 30000; // 30 seconds timeout for requests
+    static timeoutCheckInterval = null;
+
     _extensionName;
     _logTraffic;
 
@@ -184,14 +196,26 @@ export class JsonRpc {
                             };
                             JsonRpc.promiseQueue.set(uid, {
                                 promise: promise,
-                                log: this._logTraffic
+                                log: this._logTraffic,
+                                timestamp: Date.now(),
+                                method: method
                             });
                             JsonRpc.sendJsonRPCMessage(jsonrpcpayload, this._logTraffic);
                             return promise;
                         } else {
-                            // TODO: Send error ?
-                            console.log("method not found " + method);
-                            return Reflect.get(target, prop);
+                            // Method not found - return rejected promise with error
+                            console.error("JSON-RPC method not found: " + method);
+                            JsonRpc.dispatchMessageLogEntry(Level.Error, MessageDirection.Stationary,
+                                "Method not found: " + method + ". Check that the method is registered.");
+                            notifier.showErrorMessage("Method not found: " + method);
+                            return Promise.reject({
+                                error: {
+                                    code: -32601,
+                                    message: "Method not found: " + method,
+                                    type: "MethodNotFound",
+                                    method: method
+                                }
+                            });
                         }
                     };
                 } else {
@@ -249,6 +273,8 @@ export class JsonRpc {
                 while (JsonRpc.initQueue.length > 0) {
                     JsonRpc.webSocket.send(JsonRpc.initQueue.pop());
                 }
+                // Start timeout checker if not already running
+                JsonRpc.startTimeoutChecker();
             };
 
             JsonRpc.webSocket.onmessage = function (event) {
@@ -318,14 +344,26 @@ export class JsonRpc {
         JsonRpc.webSocket.onclose = function (event) {
             connectionState.disconnected(JsonRpc.serverUri);
             JsonRpc.dispatchMessageLogEntry(Level.Warning, MessageDirection.Stationary, "Closed connection to " + JsonRpc.serverUri);
+            // Stop timeout checker when disconnected
+            JsonRpc.stopTimeoutChecker();
             if (JsonRpc.retryCount < JsonRpc.maxRetries) {
                 JsonRpc.reconnect();
-            }else{
+            } else {
                 // Dispatch a custom event when the maximum retries have been reached
-                const event = new CustomEvent('max-retries-reached', {
+                const maxRetriesEvent = new CustomEvent('max-retries-reached', {
                     detail: { message: "Failed to reconnect after multiple attempts." }
                 });
-                document.dispatchEvent(event);
+                document.dispatchEvent(maxRetriesEvent);
+                // Show prominent error notification to the user
+                notifier.showPrimaryErrorMessage(
+                    'Lost connection to Dev UI server. Please restart the application or refresh the page.',
+                    'middle',
+                    0  // duration 0 = persistent until dismissed
+                );
+                JsonRpc.dispatchMessageLogEntry(Level.Error, MessageDirection.Stationary,
+                    "Max retries reached. Connection to Dev UI server lost.");
+                // Reject all pending promises with connection error
+                JsonRpc.rejectAllPending("Connection lost after max retries");
             }
         };
 
@@ -363,5 +401,69 @@ export class JsonRpc {
             JsonRpc.connect();
             JsonRpc.retryCount++;
         }, delay);
+    }
+
+    static startTimeoutChecker() {
+        if (JsonRpc.timeoutCheckInterval === null) {
+            JsonRpc.timeoutCheckInterval = setInterval(() => {
+                JsonRpc.cleanupStaleRequests();
+            }, 5000); // Check every 5 seconds
+        }
+    }
+
+    static stopTimeoutChecker() {
+        if (JsonRpc.timeoutCheckInterval !== null) {
+            clearInterval(JsonRpc.timeoutCheckInterval);
+            JsonRpc.timeoutCheckInterval = null;
+        }
+    }
+
+    static cleanupStaleRequests() {
+        const now = Date.now();
+        JsonRpc.promiseQueue.forEach((value, key) => {
+            if (now - value.timestamp > JsonRpc.requestTimeout) {
+                const methodName = value.method || 'unknown';
+                JsonRpc.dispatchMessageLogEntry(Level.Warning, MessageDirection.Stationary,
+                    "Request timed out for method: " + methodName + " (id: " + key + ")");
+                value.promise.reject_ex({
+                    error: {
+                        code: -32003,
+                        message: "Request timed out after " + (JsonRpc.requestTimeout / 1000) + " seconds",
+                        type: "TimeoutError",
+                        method: methodName
+                    }
+                });
+                JsonRpc.promiseQueue.delete(key);
+            }
+        });
+    }
+
+    static rejectAllPending(reason) {
+        JsonRpc.promiseQueue.forEach((value, key) => {
+            const methodName = value.method || 'unknown';
+            value.promise.reject_ex({
+                error: {
+                    code: -32003,
+                    message: reason,
+                    type: "ConnectionError",
+                    method: methodName
+                }
+            });
+        });
+        JsonRpc.promiseQueue.clear();
+
+        // Also notify observers
+        JsonRpc.observerQueue.forEach((value, key) => {
+            if (typeof value.observer.onErrorCallback === "function") {
+                value.observer.onErrorCallback({
+                    error: {
+                        code: -32003,
+                        message: reason,
+                        type: "ConnectionError"
+                    }
+                });
+            }
+        });
+        JsonRpc.observerQueue.clear();
     }
 }

@@ -2,6 +2,10 @@ package io.quarkus.devui.runtime.jsonrpc;
 
 import static io.quarkus.devui.runtime.jsonrpc.JsonRpcKeys.INTERNAL_ERROR;
 import static io.quarkus.devui.runtime.jsonrpc.JsonRpcKeys.METHOD_NOT_FOUND;
+import static io.quarkus.devui.runtime.jsonrpc.JsonRpcKeys.PARSE_ERROR;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import org.jboss.logging.Logger;
 
@@ -35,14 +39,45 @@ public final class JsonRpcCodec {
 
     public void writeMethodNotFoundResponse(JsonRpcResponseWriter writer, int id, String jsonRpcMethodName) {
         writeResponse(writer, new JsonRpcResponse(id,
-                new JsonRpcResponse.Error(METHOD_NOT_FOUND, "Method [" + jsonRpcMethodName + "] not found")));
+                new JsonRpcResponse.Error(METHOD_NOT_FOUND, "Method [" + jsonRpcMethodName + "] not found",
+                        "MethodNotFound", jsonRpcMethodName, null)));
     }
 
     public void writeErrorResponse(JsonRpcResponseWriter writer, int id, String jsonRpcMethodName, Throwable exception) {
         LOG.error("Error in JsonRPC Call", exception);
+        String exceptionType = exception.getClass().getSimpleName();
+        String stackTrace = getStackTrace(exception);
+        String message = exception.getMessage() != null ? exception.getMessage() : exceptionType;
         writeResponse(writer, new JsonRpcResponse(id,
                 new JsonRpcResponse.Error(INTERNAL_ERROR,
-                        "Method [" + jsonRpcMethodName + "] failed: " + exception.getMessage())));
+                        "[" + exceptionType + "] Method [" + jsonRpcMethodName + "] failed: " + message,
+                        exceptionType, jsonRpcMethodName, stackTrace)));
+    }
+
+    public void writeErrorResponse(JsonRpcResponseWriter writer, int id, int errorCode, String jsonRpcMethodName,
+            Throwable exception) {
+        LOG.error("Error in JsonRPC Call", exception);
+        String exceptionType = exception.getClass().getSimpleName();
+        String stackTrace = getStackTrace(exception);
+        String message = exception.getMessage() != null ? exception.getMessage() : exceptionType;
+        writeResponse(writer, new JsonRpcResponse(id,
+                new JsonRpcResponse.Error(errorCode,
+                        "[" + exceptionType + "] Method [" + jsonRpcMethodName + "] failed: " + message,
+                        exceptionType, jsonRpcMethodName, stackTrace)));
+    }
+
+    public void writeParseErrorResponse(JsonRpcResponseWriter writer, int id, String errorMessage) {
+        LOG.error("Parse error in JsonRPC Call: " + errorMessage);
+        writeResponse(writer, new JsonRpcResponse(id,
+                new JsonRpcResponse.Error(PARSE_ERROR, "Parse error: " + errorMessage,
+                        "ParseError", null, null)));
+    }
+
+    private String getStackTrace(Throwable exception) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        exception.printStackTrace(pw);
+        return sw.toString();
     }
 
     private void writeResponse(JsonRpcResponseWriter writer, JsonRpcResponse response) {

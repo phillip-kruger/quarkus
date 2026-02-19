@@ -20,4 +20,14 @@ public interface JsonRpcKeys {
     public static final int INVALID_PARAMS = -32602; // Invalid params.	Invalid method parameter(s).
     public static final int INTERNAL_ERROR = -32603; //	Internal error. Internal JSON-RPC error.
 
+    // Domain-specific error codes (server error range: -32000 to -32099)
+    public static final int VALIDATION_ERROR = -32001; // Validation error. Invalid input data.
+    public static final int NOT_ENABLED_ERROR = -32002; // Feature not enabled. The requested feature is disabled.
+    public static final int TIMEOUT_ERROR = -32003; // Timeout error. The operation timed out.
+    public static final int AUTHORIZATION_ERROR = -32004; // Authorization error. The operation is not authorized.
+
+    // Additional keys for enhanced error responses
+    public static final String ERROR_TYPE = "type";
+    public static final String ERROR_STACK_TRACE = "stackTrace";
+
 }

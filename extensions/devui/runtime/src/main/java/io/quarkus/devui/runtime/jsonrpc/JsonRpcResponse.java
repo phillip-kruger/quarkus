@@ -37,10 +37,20 @@ public final class JsonRpcResponse {
     public static final class Error {
         public final int code;
         public final String message;
+        public final String type;
+        public final String method;
+        public final String stackTrace;
 
         public Error(int code, String message) {
+            this(code, message, null, null, null);
+        }
+
+        public Error(int code, String message, String type, String method, String stackTrace) {
             this.code = code;
             this.message = message;
+            this.type = type;
+            this.method = method;
+            this.stackTrace = stackTrace;
         }
 
         @Override
@@ -48,6 +58,8 @@ public final class JsonRpcResponse {
             return "Error{" +
                     "code=" + code +
                     ", message='" + message + '\'' +
+                    ", type='" + type + '\'' +
+                    ", method='" + method + '\'' +
                     '}';
         }
     }

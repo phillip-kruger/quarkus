@@ -102,8 +102,13 @@ public class JsonRpcRouter {
         JavaScriptResponseWriter writer = new JavaScriptResponseWriter(socket);
         SESSIONS.add(writer);
         socket.textMessageHandler((e) -> {
-            JsonRpcRequest jsonRpcRequest = codec.readRequest(e);
-            route(jsonRpcRequest, writer);
+            try {
+                JsonRpcRequest jsonRpcRequest = codec.readRequest(e);
+                route(jsonRpcRequest, writer);
+            } catch (Exception ex) {
+                logger.errorf(ex, "Failed to parse JSON-RPC request: %s", e);
+                codec.writeParseErrorResponse(writer, -1, ex.getMessage());
+            }
         }).closeHandler((e) -> {
             purge();
         });
@@ -355,6 +360,9 @@ public class JsonRpcRouter {
                 codec.writeResponse(jrrw, jsonRpcRequest.getId(), returnedObject,
                         MessageType.Response);
             }
+        } else {
+            // Method returned null - send a void response to acknowledge the request was processed
+            codec.writeResponse(jrrw, jsonRpcRequest.getId(), null, MessageType.Void);
         }
     }
 
