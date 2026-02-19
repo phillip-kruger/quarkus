@@ -702,6 +702,27 @@
                 <artifactId>quarkus-devui-deployment-spi</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <!-- Prod UI -->
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-produi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-produi-deployment</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-produi-deployment-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-produi-resources</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-extension-processor</artifactId>
