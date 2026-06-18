@@ -74,3 +74,6 @@ io.vertx.mutiny.core.Vertx#executeBlockingAndForget(java.util.concurrent.Callabl
 io.vertx.mutiny.core.Context#executeBlocking(java.util.concurrent.Callable)
 io.vertx.mutiny.core.Context#executeBlockingAndAwait(java.util.concurrent.Callable)
 io.vertx.mutiny.core.Context#executeBlockingAndForget(java.util.concurrent.Callable)
+
+@defaultMessage The use of Jackson 2 is not allowed
+com.fasterxml.jackson.**
