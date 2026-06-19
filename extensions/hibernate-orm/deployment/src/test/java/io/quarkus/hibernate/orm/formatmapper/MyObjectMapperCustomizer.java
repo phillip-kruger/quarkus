@@ -2,14 +2,13 @@ package io.quarkus.hibernate.orm.formatmapper;
 
 import jakarta.inject.Singleton;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.quarkus.jackson.ObjectMapperCustomizer;
+import io.quarkus.jackson.JsonMapperBuilderCustomizer;
+import tools.jackson.databind.json.JsonMapper;
 
 @Singleton
-public class MyObjectMapperCustomizer implements ObjectMapperCustomizer {
+public class MyObjectMapperCustomizer implements JsonMapperBuilderCustomizer {
     @Override
-    public void customize(ObjectMapper objectMapper) {
+    public void customize(JsonMapper.Builder builder) {
         // we don't really have to do anything here, it is enough that we have the customizer...
     }
 }

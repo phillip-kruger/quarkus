@@ -11,12 +11,11 @@ import jakarta.json.bind.Jsonb;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.quarkus.arc.ArcContainer;
 import io.quarkus.arc.InstanceHandle;
-import io.quarkus.jackson.ObjectMapperCustomizer;
+import io.quarkus.jackson.JsonMapperBuilderCustomizer;
 import io.quarkus.jsonb.JsonbConfigCustomizer;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Test whether the underlying Jackson Object Mapper / JSON-B used to create the "built-in" format mapper
@@ -59,7 +58,7 @@ public interface JsonFormatterCustomizationCheck extends Function<ArcContainer, 
                         "ObjectMapper instance is not the Quarkus default one. A bean producer was likely used to replace it.");
             }
 
-            Instance<ObjectMapperCustomizer> customizers = container.select(ObjectMapperCustomizer.class);
+            Instance<JsonMapperBuilderCustomizer> customizers = container.select(JsonMapperBuilderCustomizer.class);
             if (!customizers.isUnsatisfied()) {
                 // There most likely are the following customizer available:
                 //  - io.quarkus.jackson.customizer.RegisterSerializersAndDeserializersCustomizer  --- this one ... Do we need to check if any serializers were added?
@@ -69,7 +68,7 @@ public interface JsonFormatterCustomizationCheck extends Function<ArcContainer, 
                         "io.quarkus.jackson.customizer.RegisterSerializersAndDeserializersCustomizer",
                         "io.quarkus.jackson.runtime.ConfigurationCustomizer",
                         "io.quarkus.jackson.runtime.VertxHybridPoolObjectMapperCustomizer");
-                for (Instance.Handle<ObjectMapperCustomizer> handle : customizers.handles()) {
+                for (Instance.Handle<JsonMapperBuilderCustomizer> handle : customizers.handles()) {
                     if (allowedCustomizers.contains(handle.getBean().getBeanClass().getName())) {
                         continue;
                     }

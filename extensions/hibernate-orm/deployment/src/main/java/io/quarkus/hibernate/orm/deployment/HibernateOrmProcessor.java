@@ -67,8 +67,6 @@ import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 import org.jboss.logmanager.Level;
 
-import com.fasterxml.jackson.databind.Module;
-
 import io.quarkus.agroal.spi.JdbcDataSourceBuildItem;
 import io.quarkus.agroal.spi.JdbcDataSourceSchemaReadyBuildItem;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
@@ -168,6 +166,7 @@ import net.bytebuddy.pool.TypePool;
 import net.bytebuddy.pool.TypePool.CacheProvider;
 import net.bytebuddy.pool.TypePool.Default.ReaderMode;
 import net.bytebuddy.utility.GraalImageCode;
+import tools.jackson.databind.JacksonModule;
 
 /**
  * Simulacrum of JPA bootstrap.
@@ -391,7 +390,7 @@ public final class HibernateOrmProcessor {
         }
         // Hibernate's default FormatMapper relying on Jackson requires
         // service loading to discover modules in the classpath.
-        serviceProviders.produce(ServiceProviderBuildItem.allProvidersFromClassPath(Module.class.getName()));
+        serviceProviders.produce(ServiceProviderBuildItem.allProvidersFromClassPath(JacksonModule.class.getName()));
     }
 
     @BuildStep
