@@ -14,9 +14,7 @@ public class JacksonRestClientTest {
     static final QuarkusExtensionTest config = new QuarkusExtensionTest()
             .withConfigurationResource("application.properties")
             .withApplicationRoot((jar) -> jar
-                    .addClasses(ZonedDateTimeObjectMapperCustomizer.class, DateDto.class, HelloResource.class,
-                            RestInterface.class,
-                            ClientResource.class));
+                    .addClasses(DateDto.class, HelloResource.class, RestInterface.class, ClientResource.class));
 
     @Test
     public void testCustomDeserialization() {
