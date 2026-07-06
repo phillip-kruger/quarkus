@@ -45,6 +45,13 @@
             <groupId>io.strimzi</groupId>
             <artifactId>kafka-oauth-common</artifactId>
             <scope>provided</scope>
+            <!-- TODO: need to figure out what to do with this -->
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
