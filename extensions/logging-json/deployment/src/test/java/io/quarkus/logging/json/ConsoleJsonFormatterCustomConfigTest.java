@@ -12,12 +12,11 @@ import org.jboss.logmanager.formatters.StructuredFormatter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.quarkus.logging.json.runtime.JsonFormatter;
 import io.quarkus.logging.json.runtime.JsonLogConfig.AdditionalFieldConfig;
 import io.quarkus.test.QuarkusExtensionTest;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 public class ConsoleJsonFormatterCustomConfigTest {
 
