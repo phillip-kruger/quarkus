@@ -2,11 +2,13 @@ package io.quarkus.vertx.runtime.jackson;
 
 import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 
+import java.io.InputStream;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+import io.quarkus.runtime.ImageMode;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -113,11 +115,45 @@ public final class JsonUtil {
 
     public static JsonCodec loadJacksonCodec() {
         try {
-            // we need to resort to reflection as we can't directly reference `io.vertx.core.json.jackson.v3.JacksonCodec` due to it being part of the MR resources
-            return (JsonCodec) Class.forName("io.vertx.core.json.jackson.v3.JacksonCodec", true, Thread.currentThread()
-                    .getContextClassLoader()).getConstructor().newInstance();
+            if (ImageMode.current().isNativeImage()) {
+                // in native mode, we can't use a custom ClassLoader and moreover we don't support Java 17 anyway
+                return (JsonCodec) Class.forName("io.vertx.core.json.jackson.v3.JacksonCodec")
+                        .getConstructor().newInstance();
+            }
+            ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+            // JacksonCodec lives in META-INF/versions/21/ of vertx-core (MR JAR).
+            MrJarClassLoader loader = new MrJarClassLoader(tccl);
+            try {
+                return (JsonCodec) loader.loadClass("io.vertx.core.json.jackson.v3.JacksonCodec")
+                        .getConstructor().newInstance();
+            } finally {
+                loader = null;
+            }
         } catch (Exception e) {
             throw new IllegalStateException("Unable to create instance of `io.vertx.core.json.jackson.v3.JacksonCodec`", e);
+        }
+    }
+
+    private static class MrJarClassLoader extends ClassLoader {
+
+        MrJarClassLoader(ClassLoader parent) {
+            super(parent);
+        }
+
+        @Override
+        protected Class<?> findClass(String name) throws ClassNotFoundException {
+            if (name.startsWith("io.vertx.core.json.jackson.v3.")) {
+                String path = "META-INF/versions/21/" + name.replace('.', '/') + ".class";
+                try (InputStream is = getParent().getResourceAsStream(path)) {
+                    if (is != null) {
+                        byte[] bytes = is.readAllBytes();
+                        return defineClass(name, bytes, 0, bytes.length);
+                    }
+                } catch (java.io.IOException ex) {
+                    throw new ClassNotFoundException(name, ex);
+                }
+            }
+            throw new ClassNotFoundException(name);
         }
     }
 }
